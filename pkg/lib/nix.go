@@ -69,6 +69,7 @@ func toNixAttributesNil(elems map[string]*string, depth int, quoteKeys bool) str
 // https://search.nixos.org/options?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=oci-container
 type NixContainer struct {
 	Name         string
+	Prefix       string
 	Image        string
 	Environment  map[string]*string
 	Ports        []string
@@ -76,18 +77,17 @@ type NixContainer struct {
 	Volumes      []string
 	User         string
 	ExtraOptions []string
+	DependsOn    []string
+	AutoStart    bool
 }
 
 func (n *NixContainer) ToNix(depth int) string {
 	s := strings.Builder{}
 	indent := strings.Repeat(" ", depth*2)
-	s.WriteString(fmt.Sprintf("%s%s = {\n", indent, n.Name))
+	s.WriteString(fmt.Sprintf("%s%q = {\n", indent, fmt.Sprintf("%s%s", n.Prefix, n.Name)))
 	s.WriteString(fmt.Sprintf("%s  image = %q;\n", indent, n.Image))
 	if len(n.Environment) > 0 {
 		s.WriteString(fmt.Sprintf("%s  environment = %s;\n", indent, toNixAttributesNil(n.Environment, depth+2, false)))
-	}
-	if len(n.Labels) > 0 {
-		s.WriteString(fmt.Sprintf("%s  labels = %s;\n", indent, toNixAttributes(n.Labels, depth+2, true)))
 	}
 	if len(n.Volumes) > 0 {
 		s.WriteString(fmt.Sprintf("%s  volumes = %s;\n", indent, toNixList(n.Volumes, depth+2)))
@@ -97,6 +97,15 @@ func (n *NixContainer) ToNix(depth int) string {
 	}
 	if n.User != "" {
 		s.WriteString(fmt.Sprintf("%s  user = %q;\n", indent, n.User))
+	}
+	if len(n.Labels) > 0 {
+		s.WriteString(fmt.Sprintf("%s  labels = %s;\n", indent, toNixAttributes(n.Labels, depth+2, true)))
+	}
+	if len(n.DependsOn) > 0 {
+		s.WriteString(fmt.Sprintf("%s  dependsOn = %s;\n", indent, toNixList(n.DependsOn, depth+2)))
+	}
+	if !n.AutoStart {
+		s.WriteString(fmt.Sprintf("%s  autoStart = false;\n", indent))
 	}
 	s.WriteString(fmt.Sprintf("%s};\n", indent))
 	// TODO(aksiksi): Extra options.
