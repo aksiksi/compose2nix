@@ -1,3 +1,4 @@
 bin/
 docker-compose.yml
+out.nix
 
