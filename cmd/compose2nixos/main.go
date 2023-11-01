@@ -15,6 +15,7 @@ var envFiles = flag.String("env_files", "", "paths to .env files")
 var envFilesOnly = flag.Bool("env_files_only", false, "only use env files in the NixOS container definitions")
 var output = flag.String("output", "", "path to output Nix file")
 var project = flag.String("project", "", "project name used as a prefix for generated resources")
+var projectSeparator = flag.String("project_separator", compose2nixos.DefaultProjectSeparator, "seperator for project prefix")
 var autoStart = flag.Bool("auto_start", true, "control auto-start setting for containers")
 
 func main() {
@@ -29,13 +30,21 @@ func main() {
 	paths := strings.Split(*paths, ",")
 	envFiles := strings.Split(*envFiles, ",")
 
-	containers, err := compose2nixos.ParseWithEnv(ctx, paths, *project, *autoStart, envFiles, *envFilesOnly)
+	p := compose2nixos.Parser{
+		Project:          *project,
+		ProjectSeparator: *projectSeparator,
+		Paths:            paths,
+		EnvFiles:         envFiles,
+		EnvFilesOnly:     *envFilesOnly,
+		AutoStart:        *autoStart,
+	}
+	containerConfig, err := p.Parse(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	if *output != "" {
-		if err := os.WriteFile(*output, []byte(containers.ToNix()), os.FileMode(0644)); err != nil {
+		if err := os.WriteFile(*output, []byte(containerConfig.ToNix()), os.FileMode(0644)); err != nil {
 			log.Fatal(err)
 		}
 	}

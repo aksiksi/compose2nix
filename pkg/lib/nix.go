@@ -11,6 +11,14 @@ import (
 
 const nixContainerOption = "virtualisation.oci-containers.containers"
 
+func containerToServiceName(name, project, projectSeparator string) string {
+	if project != "" {
+		return fmt.Sprintf("podman-%s%s%s.service", project, projectSeparator, name)
+	} else {
+		return fmt.Sprintf("podman-%s.service", name)
+	}
+}
+
 func toNixList(elems []string, depth int) string {
 	b := strings.Builder{}
 	indent := strings.Repeat(" ", depth*2)
@@ -48,15 +56,14 @@ func toNixAttributes(elems map[string]string, depth int, quoteKeys bool) string 
 }
 
 type NixNetwork struct {
-	Project    string
 	Name       string
 	Labels     map[string]string
 	Containers []string
 }
 
 // https://discourse.nixos.org/t/podman-container-to-container-networking/11647/2
-func (n NixNetwork) ToNix(depth int) string {
-	networkName := fmt.Sprintf("%s%s", n.Project, n.Name)
+func (n NixNetwork) ToNix(project, projectSeparator string, depth int) string {
+	networkName := resourceNameWithProject(n.Name, project, projectSeparator)
 
 	// TODO(aksiksi): Docker support.
 	labels := mapToKeyValArray(n.Labels)
@@ -66,7 +73,7 @@ func (n NixNetwork) ToNix(depth int) string {
 
 	var wantedBy []string
 	for _, name := range n.Containers {
-		wantedBy = append(wantedBy, fmt.Sprintf("podman-%s%s.service", n.Project, name))
+		wantedBy = append(wantedBy, containerToServiceName(name, project, projectSeparator))
 	}
 
 	s := strings.Builder{}
@@ -91,10 +98,10 @@ func (n NixNetwork) ToNix(depth int) string {
 
 type NixNextworks []NixNetwork
 
-func (n NixNextworks) ToNix() string {
+func (n NixNextworks) ToNix(project, projectSeparator string) string {
 	s := strings.Builder{}
 	for _, net := range n {
-		s.WriteString(net.ToNix(1))
+		s.WriteString(net.ToNix(project, projectSeparator, 1))
 	}
 	return s.String()
 }
@@ -107,12 +114,12 @@ type NixVolume struct {
 	Containers []string
 }
 
-func (v *NixVolume) ToNix(depth int) string {
+func (v *NixVolume) ToNix(project, projectSeparator string, depth int) string {
 	driverOptsString := strings.Join(mapToKeyValArray(v.DriverOpts), ",")
 
 	var wantedBy []string
 	for _, name := range v.Containers {
-		wantedBy = append(wantedBy, fmt.Sprintf("podman-%s.service", name))
+		wantedBy = append(wantedBy, containerToServiceName(name, project, projectSeparator))
 	}
 
 	s := strings.Builder{}
@@ -134,17 +141,16 @@ func (v *NixVolume) ToNix(depth int) string {
 
 type NixVolumes []NixVolume
 
-func (n NixVolumes) ToNix() string {
+func (n NixVolumes) ToNix(project, projectSeparator string) string {
 	s := strings.Builder{}
 	for _, v := range n {
-		s.WriteString(v.ToNix(1))
+		s.WriteString(v.ToNix(project, projectSeparator, 1))
 	}
 	return s.String()
 }
 
 // https://search.nixos.org/options?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=oci-container
 type NixContainer struct {
-	Project      string
 	Name         string
 	Image        string
 	Environment  map[string]string
@@ -159,12 +165,19 @@ type NixContainer struct {
 	AutoStart    bool
 }
 
-func (c *NixContainer) ToNix(depth int) string {
+func (c *NixContainer) ToNix(project, projectSeparator string, depth int) string {
 	s := strings.Builder{}
 	indent := strings.Repeat(" ", depth*2)
-	s.WriteString(fmt.Sprintf("%s%q = {\n", indent, fmt.Sprintf("%s%s", c.Project, c.Name)))
-	s.WriteString(fmt.Sprintf("%s  image = %q;\n", indent, c.Image))
 
+	var name string
+	if project != "" {
+		name = fmt.Sprintf("%s%s%s", project, projectSeparator, c.Name)
+	} else {
+		name = c.Name
+	}
+	s.WriteString(fmt.Sprintf("%s%q = {\n", indent, name))
+
+	s.WriteString(fmt.Sprintf("%s  image = %q;\n", indent, c.Image))
 	if len(c.Environment) > 0 {
 		s.WriteString(fmt.Sprintf("%s  environment = %s;\n", indent, toNixAttributes(c.Environment, depth+2, false)))
 	}
@@ -203,20 +216,23 @@ func (c *NixContainer) ToNix(depth int) string {
 
 type NixContainers []NixContainer
 
-func (n NixContainers) ToNix() string {
+func (n NixContainers) ToNix(project, projectSeparator string) string {
 	s := strings.Builder{}
 	s.WriteString(fmt.Sprintf("  %s = {\n", nixContainerOption))
 	for _, c := range n {
-		s.WriteString(c.ToNix(2))
+		s.WriteString(c.ToNix(project, projectSeparator, 2))
 	}
 	s.WriteString("  };\n")
 	return s.String()
 }
 
 type NixContainerConfig struct {
-	Containers NixContainers
-	Networks   NixNextworks
-	Volumes    NixVolumes
+	// TODO(aksiksi): Merge project and sep. into a type.
+	Project          string
+	ProjectSeparator string
+	Containers       NixContainers
+	Networks         NixNextworks
+	Volumes          NixVolumes
 }
 
 func (c NixContainerConfig) ToNix() string {
@@ -225,18 +241,53 @@ func (c NixContainerConfig) ToNix() string {
 	s.WriteString("{\n")
 
 	s.WriteString("  # Containers\n")
-	s.WriteString(c.Containers.ToNix())
+	s.WriteString(c.Containers.ToNix(c.Project, c.ProjectSeparator))
 
 	if len(c.Networks) > 0 {
 		s.WriteString("  # Networks\n")
-		s.WriteString(c.Networks.ToNix())
+		s.WriteString(c.Networks.ToNix(c.Project, c.ProjectSeparator))
 	}
 
 	if len(c.Volumes) > 0 {
 		s.WriteString("  # Volumes\n")
-		s.WriteString(c.Volumes.ToNix())
+		s.WriteString(c.Volumes.ToNix(c.Project, c.ProjectSeparator))
 	}
 
+	s.WriteString(c.NixUpScript())
+	s.WriteString(c.NixDownScript())
+
 	s.WriteString("}\n")
+	return s.String()
+}
+
+func (c NixContainerConfig) NixUpScript() string {
+	s := strings.Builder{}
+
+	var scriptName string
+	if c.Project != "" {
+		scriptName = fmt.Sprintf("compose-%s-up.sh", c.Project)
+	} else {
+		scriptName = "compose-up.sh"
+	}
+
+	s.WriteString(fmt.Sprintf("  up = writeShellScript \"%s\" ''\n", scriptName))
+	s.WriteString("    echo \"TODO: Create all resources.\"\n")
+	s.WriteString("  '';\n")
+	return s.String()
+}
+
+func (c NixContainerConfig) NixDownScript() string {
+	s := strings.Builder{}
+
+	var scriptName string
+	if c.Project != "" {
+		scriptName = fmt.Sprintf("compose-%s-down.sh", c.Project)
+	} else {
+		scriptName = "compose-down.sh"
+	}
+
+	s.WriteString(fmt.Sprintf("  down = writeShellScript \"%s\" ''\n", scriptName))
+	s.WriteString("    echo \"TODO: Delete all resources.\"\n")
+	s.WriteString("  '';\n")
 	return s.String()
 }

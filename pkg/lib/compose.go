@@ -13,6 +13,8 @@ import (
 	"golang.org/x/exp/maps"
 )
 
+const DefaultProjectSeparator = "-"
+
 func composeEnvironmentToMap(env types.MappingWithEquals) map[string]string {
 	m := make(map[string]string)
 	for k, v := range env {
@@ -47,15 +49,36 @@ func portConfigsToPortStrings(portConfigs []types.ServicePortConfig) []string {
 	return ports
 }
 
-func nixContainerFromService(service types.ServiceConfig, project string, envFiles []string, autoStart bool, envFilesOnly bool) NixContainer {
-	dependsOn := service.GetDependencies()
+func projectWithSeparator(project, projectSeparator string) string {
+	return fmt.Sprintf("%s%s", project, projectSeparator)
+}
+
+func resourceNameWithProject(name, project, projectSeparator string) string {
 	if project != "" {
+		return fmt.Sprintf("%s%s", projectWithSeparator(project, projectSeparator), name)
+	} else {
+		return name
+	}
+}
+
+type Parser struct {
+	Project          string
+	ProjectSeparator string
+	Paths            []string
+	EnvFiles         []string
+	AutoStart        bool
+	EnvFilesOnly     bool
+	composeProject   *types.Project
+}
+
+func (p *Parser) buildNixContainer(service types.ServiceConfig) NixContainer {
+	dependsOn := service.GetDependencies()
+	if p.Project != "" {
 		for i := range dependsOn {
-			dependsOn[i] = fmt.Sprintf("%s%s", project, dependsOn[i])
+			dependsOn[i] = fmt.Sprintf("%s%s", p.Project, dependsOn[i])
 		}
 	}
 	c := NixContainer{
-		Project:   project,
 		Name:      service.Name,
 		Image:     service.Image,
 		Labels:    service.Labels,
@@ -64,18 +87,18 @@ func nixContainerFromService(service types.ServiceConfig, project string, envFil
 		Volumes:   make(map[string]string),
 		Networks:  maps.Keys(service.Networks),
 		DependsOn: dependsOn,
-		AutoStart: autoStart,
+		AutoStart: p.AutoStart,
 	}
 	slices.Sort(c.Networks)
 
-	if !envFilesOnly {
+	if !p.EnvFilesOnly {
 		c.Environment = composeEnvironmentToMap(service.Environment)
 	} else {
-		c.EnvFiles = envFiles
+		c.EnvFiles = p.EnvFiles
 	}
 
 	for _, name := range c.Networks {
-		networkName := fmt.Sprintf("%s%s", project, name)
+		networkName := resourceNameWithProject(name, p.Project, p.ProjectSeparator)
 		// TODO(aksiksi): Change this based on Podman vs. Docker.
 		c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--network=%s", networkName))
 	}
@@ -87,10 +110,10 @@ func nixContainerFromService(service types.ServiceConfig, project string, envFil
 	return c
 }
 
-func nixContainersFromServices(services []types.ServiceConfig, project string, envFiles []string, autoStart bool, envFilesOnly bool) NixContainers {
+func (p *Parser) buildNixContainers() NixContainers {
 	var containers []NixContainer
-	for _, s := range services {
-		containers = append(containers, nixContainerFromService(s, project, envFiles, autoStart, envFilesOnly))
+	for _, s := range p.composeProject.Services {
+		containers = append(containers, p.buildNixContainer(s))
 	}
 	slices.SortFunc(containers, func(c1, c2 NixContainer) int {
 		return cmp.Compare(c1.Name, c2.Name)
@@ -98,13 +121,12 @@ func nixContainersFromServices(services []types.ServiceConfig, project string, e
 	return containers
 }
 
-func nixNetworksFromProject(p *types.Project, project string, containers NixContainers) NixNextworks {
+func (p *Parser) buildNixNetworks(containers NixContainers) NixNextworks {
 	var networks []NixNetwork
-	for name, network := range p.Networks {
+	for name, network := range p.composeProject.Networks {
 		n := NixNetwork{
-			Project: project,
-			Name:    name,
-			Labels:  network.Labels,
+			Name:   name,
+			Labels: network.Labels,
 		}
 		// Keep track of all containers that are in this network.
 		for _, c := range containers {
@@ -120,9 +142,9 @@ func nixNetworksFromProject(p *types.Project, project string, containers NixCont
 	return networks
 }
 
-func nixVolumesFromProject(p *types.Project, project string, containers NixContainers) NixVolumes {
+func (p *Parser) buildNixVolumes(containers NixContainers) NixVolumes {
 	var volumes []NixVolume
-	for name, volume := range p.Volumes {
+	for name, volume := range p.composeProject.Volumes {
 		v := NixVolume{
 			Name:       name,
 			Driver:     volume.Driver,
@@ -151,7 +173,7 @@ func nixVolumesFromProject(p *types.Project, project string, containers NixConta
 		for _, c := range containers {
 			if _, ok := c.Volumes[name]; ok {
 				// Need to include project here b/c volumes are not project-aware.
-				v.Containers = append(v.Containers, fmt.Sprintf("%s%s", project, c.Name))
+				v.Containers = append(v.Containers, resourceNameWithProject(c.Name, p.Project, p.ProjectSeparator))
 			}
 		}
 		volumes = append(volumes, v)
@@ -162,26 +184,33 @@ func nixVolumesFromProject(p *types.Project, project string, containers NixConta
 	return volumes
 }
 
-func ParseWithEnv(ctx context.Context, paths []string, project string, autoStart bool, envFiles []string, envFilesOnly bool) (*NixContainerConfig, error) {
-	env, err := ReadEnvFiles(envFiles, !envFilesOnly)
+func (p *Parser) Parse(ctx context.Context) (*NixContainerConfig, error) {
+	if p.Project != "" && p.ProjectSeparator == "" {
+		p.ProjectSeparator = DefaultProjectSeparator
+	}
+
+	env, err := ReadEnvFiles(p.EnvFiles, !p.EnvFilesOnly)
 	if err != nil {
 		return nil, err
 	}
-	p, err := loader.LoadWithContext(ctx, types.ConfigDetails{
-		ConfigFiles: types.ToConfigFiles(paths),
+	composeProject, err := loader.LoadWithContext(ctx, types.ConfigDetails{
+		ConfigFiles: types.ToConfigFiles(p.Paths),
 		Environment: types.NewMapping(env),
 	})
 	if err != nil {
 		return nil, err
 	}
+	p.composeProject = composeProject
 
-	containers := nixContainersFromServices(p.Services, project, envFiles, autoStart, envFilesOnly)
-	networks := nixNetworksFromProject(p, project, containers)
-	volumes := nixVolumesFromProject(p, project, containers)
+	containers := p.buildNixContainers()
+	networks := p.buildNixNetworks(containers)
+	volumes := p.buildNixVolumes(containers)
 
 	return &NixContainerConfig{
-		Networks:   networks,
-		Containers: containers,
-		Volumes:    volumes,
+		Project:          p.Project,
+		ProjectSeparator: p.ProjectSeparator,
+		Containers:       containers,
+		Networks:         networks,
+		Volumes:          volumes,
 	}, nil
 }
