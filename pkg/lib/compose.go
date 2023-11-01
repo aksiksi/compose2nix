@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"context"
 	"fmt"
+	"log"
 	"slices"
 	"strings"
 
@@ -73,12 +74,11 @@ func nixContainerFromService(service types.ServiceConfig, project string, envFil
 		c.EnvFiles = envFiles
 	}
 
-	var networkNames []string
 	for _, name := range c.Networks {
-		networkNames = append(networkNames, fmt.Sprintf("%s%s", project, name))
+		networkName := fmt.Sprintf("%s%s", project, name)
+		// TODO(aksiksi): Change this based on Podman vs. Docker.
+		c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--network=%s", networkName))
 	}
-	// TODO(aksiksi): Change this based on Podman vs. Docker.
-	c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--networks=%s", strings.Join(networkNames, ",")))
 
 	for _, v := range service.Volumes {
 		c.Volumes[v.Source] = v.String()
@@ -128,6 +128,25 @@ func nixVolumesFromProject(p *types.Project, project string, containers NixConta
 			Driver:     volume.Driver,
 			DriverOpts: volume.DriverOpts,
 		}
+
+		// FIXME(aksiksi): Podman does not properly handle NFS if the volume
+		// is a regular mount. So, we can just "patch" each container's volume
+		// mapping to use a direct bind mount instead of a volume and then skip
+		// creation of the volume entirely.
+		if v.Driver == "" {
+			bindPath := v.DriverOpts["device"]
+			if bindPath == "" {
+				log.Fatalf("volume %q has no device set", name)
+			}
+			for _, c := range containers {
+				if volumeString, ok := c.Volumes[name]; ok {
+					volumeString = strings.TrimPrefix(volumeString, name)
+					c.Volumes[name] = bindPath + volumeString
+				}
+			}
+			continue
+		}
+
 		// Keep track of all containers that use this named volume.
 		for _, c := range containers {
 			if _, ok := c.Volumes[name]; ok {

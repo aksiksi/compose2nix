@@ -66,7 +66,7 @@ func (n NixNetwork) ToNix(depth int) string {
 
 	var wantedBy []string
 	for _, name := range n.Containers {
-		wantedBy = append(wantedBy, fmt.Sprintf("%s%s", n.Project, name))
+		wantedBy = append(wantedBy, fmt.Sprintf("podman-%s%s.service", n.Project, name))
 	}
 
 	s := strings.Builder{}
@@ -110,11 +110,16 @@ type NixVolume struct {
 func (v *NixVolume) ToNix(depth int) string {
 	driverOptsString := strings.Join(mapToKeyValArray(v.DriverOpts), ",")
 
+	var wantedBy []string
+	for _, name := range v.Containers {
+		wantedBy = append(wantedBy, fmt.Sprintf("podman-%s.service", name))
+	}
+
 	s := strings.Builder{}
 	indent := strings.Repeat(" ", depth*2)
 	s.WriteString(fmt.Sprintf("%ssystemd.services.\"create-volume-%s\" = {\n", indent, v.Name))
 	s.WriteString(fmt.Sprintf("%s  serviceConfig.Type = \"oneshot\";\n", indent))
-	s.WriteString(fmt.Sprintf("%s  wantedBy = %s;\n", indent, toNixList(v.Containers, depth+2)))
+	s.WriteString(fmt.Sprintf("%s  wantedBy = %s;\n", indent, toNixList(wantedBy, depth+2)))
 	s.WriteString(fmt.Sprintf("%s  script = ''\n", indent))
 	if v.Driver != "" {
 		s.WriteString(fmt.Sprintf("%s    ${pkgs.podman}/bin/podman volume create %s --driver %s --opt %s --ignore\n", indent, v.Name, v.Driver, driverOptsString))
