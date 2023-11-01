@@ -12,6 +12,18 @@ import (
 	"golang.org/x/exp/maps"
 )
 
+func composeEnvironmentToMap(env types.MappingWithEquals) map[string]string {
+	m := make(map[string]string)
+	for k, v := range env {
+		// Skip empty env variables.
+		if v == nil {
+			continue
+		}
+		m[k] = *v
+	}
+	return m
+}
+
 func portConfigsToPortStrings(portConfigs []types.ServicePortConfig) []string {
 	var ports []string
 	for _, c := range portConfigs {
@@ -34,7 +46,7 @@ func portConfigsToPortStrings(portConfigs []types.ServicePortConfig) []string {
 	return ports
 }
 
-func nixContainerFromService(service types.ServiceConfig, project string, autoStart bool) NixContainer {
+func nixContainerFromService(service types.ServiceConfig, project string, envFiles []string, autoStart bool, envFilesOnly bool) NixContainer {
 	dependsOn := service.GetDependencies()
 	if project != "" {
 		for i := range dependsOn {
@@ -42,19 +54,24 @@ func nixContainerFromService(service types.ServiceConfig, project string, autoSt
 		}
 	}
 	c := NixContainer{
-		Project:     project,
-		Name:        service.Name,
-		Image:       service.Image,
-		Environment: service.Environment,
-		Labels:      service.Labels,
-		Ports:       portConfigsToPortStrings(service.Ports),
-		User:        service.User,
-		Volumes:     make(map[string]string),
-		Networks:    maps.Keys(service.Networks),
-		DependsOn:   dependsOn,
-		AutoStart:   autoStart,
+		Project:   project,
+		Name:      service.Name,
+		Image:     service.Image,
+		Labels:    service.Labels,
+		Ports:     portConfigsToPortStrings(service.Ports),
+		User:      service.User,
+		Volumes:   make(map[string]string),
+		Networks:  maps.Keys(service.Networks),
+		DependsOn: dependsOn,
+		AutoStart: autoStart,
 	}
 	slices.Sort(c.Networks)
+
+	if !envFilesOnly {
+		c.Environment = composeEnvironmentToMap(service.Environment)
+	} else {
+		c.EnvFiles = envFiles
+	}
 
 	var networkNames []string
 	for _, name := range c.Networks {
@@ -70,10 +87,10 @@ func nixContainerFromService(service types.ServiceConfig, project string, autoSt
 	return c
 }
 
-func nixContainersFromServices(services []types.ServiceConfig, project string, autoStart bool) NixContainers {
+func nixContainersFromServices(services []types.ServiceConfig, project string, envFiles []string, autoStart bool, envFilesOnly bool) NixContainers {
 	var containers []NixContainer
 	for _, s := range services {
-		containers = append(containers, nixContainerFromService(s, project, autoStart))
+		containers = append(containers, nixContainerFromService(s, project, envFiles, autoStart, envFilesOnly))
 	}
 	slices.SortFunc(containers, func(c1, c2 NixContainer) int {
 		return cmp.Compare(c1.Name, c2.Name)
@@ -126,8 +143,8 @@ func nixVolumesFromProject(p *types.Project, project string, containers NixConta
 	return volumes
 }
 
-func ParseWithEnv(ctx context.Context, paths []string, project string, autoStart bool, envFiles []string, mergeWithEnv bool) (*NixContainerConfig, error) {
-	env, err := ReadEnvFiles(envFiles, mergeWithEnv)
+func ParseWithEnv(ctx context.Context, paths []string, project string, autoStart bool, envFiles []string, envFilesOnly bool) (*NixContainerConfig, error) {
+	env, err := ReadEnvFiles(envFiles, !envFilesOnly)
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +156,7 @@ func ParseWithEnv(ctx context.Context, paths []string, project string, autoStart
 		return nil, err
 	}
 
-	containers := nixContainersFromServices(p.Services, project, autoStart)
+	containers := nixContainersFromServices(p.Services, project, envFiles, autoStart, envFilesOnly)
 	networks := nixNetworksFromProject(p, project, containers)
 	volumes := nixVolumesFromProject(p, project, containers)
 

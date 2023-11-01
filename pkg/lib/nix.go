@@ -2,6 +2,7 @@ package compose2nixos
 
 import (
 	"fmt"
+	"path"
 	"slices"
 	"strings"
 
@@ -46,30 +47,6 @@ func toNixAttributes(elems map[string]string, depth int, quoteKeys bool) string 
 	return b.String()
 }
 
-func toNixAttributesNil(elems map[string]*string, depth int, quoteKeys bool) string {
-	b := strings.Builder{}
-	b.WriteString("{\n")
-
-	// Sort keys for stability.
-	keys := maps.Keys(elems)
-	slices.Sort(keys)
-	indent := strings.Repeat(" ", depth*2)
-	for _, k := range keys {
-		v := elems[k]
-		var s string
-		if v != nil {
-			s = *v
-		}
-		if !quoteKeys {
-			b.WriteString(fmt.Sprintf("%s%s = %q;\n", indent, k, s))
-		} else {
-			b.WriteString(fmt.Sprintf("%s%q = %q;\n", indent, k, s))
-		}
-	}
-	b.WriteString(fmt.Sprintf("%s}", indent[:len(indent)-2]))
-	return b.String()
-}
-
 type NixNetwork struct {
 	Project    string
 	Name       string
@@ -98,6 +75,7 @@ func (n NixNetwork) ToNix(depth int) string {
 	s.WriteString(fmt.Sprintf("%s  serviceConfig.Type = \"oneshot\";\n", indent))
 	s.WriteString(fmt.Sprintf("%s  wantedBy = %s;\n", indent, toNixList(wantedBy, depth+2)))
 	s.WriteString(fmt.Sprintf("%s  script = ''\n", indent))
+
 	// The isolate option ensures that different networks cannot communicate.
 	// See: https://github.com/containers/podman/issues/5805
 	if len(labels) == 0 {
@@ -105,6 +83,7 @@ func (n NixNetwork) ToNix(depth int) string {
 	} else {
 		s.WriteString(fmt.Sprintf("%s    ${pkgs.podman}/bin/podman network create %s --opt isolate=true --ignore %s\n", indent, networkName, strings.Join(labels, " ")))
 	}
+
 	s.WriteString(fmt.Sprintf("%s  '';\n", indent))
 	s.WriteString(fmt.Sprintf("%s};\n", indent))
 	return s.String()
@@ -163,7 +142,8 @@ type NixContainer struct {
 	Project      string
 	Name         string
 	Image        string
-	Environment  map[string]*string
+	Environment  map[string]string
+	EnvFiles     []string
 	Volumes      map[string]string
 	Ports        []string
 	Labels       map[string]string
@@ -181,7 +161,14 @@ func (c *NixContainer) ToNix(depth int) string {
 	s.WriteString(fmt.Sprintf("%s  image = %q;\n", indent, c.Image))
 
 	if len(c.Environment) > 0 {
-		s.WriteString(fmt.Sprintf("%s  environment = %s;\n", indent, toNixAttributesNil(c.Environment, depth+2, false)))
+		s.WriteString(fmt.Sprintf("%s  environment = %s;\n", indent, toNixAttributes(c.Environment, depth+2, false)))
+	}
+	if len(c.EnvFiles) > 0 {
+		var nixEnvFiles []string
+		for _, p := range c.EnvFiles {
+			nixEnvFiles = append(nixEnvFiles, fmt.Sprintf("${./%s}", path.Base(p)))
+		}
+		s.WriteString(fmt.Sprintf("%s  environmentFiles = %s;\n", indent, toNixList(nixEnvFiles, depth+2)))
 	}
 	if len(c.Volumes) > 0 {
 		s.WriteString(fmt.Sprintf("%s  volumes = %s;\n", indent, toNixList(maps.Values(c.Volumes), depth+2)))

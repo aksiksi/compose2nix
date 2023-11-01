@@ -1,4 +1,4 @@
 bin/
 docker-compose.yml
-out.nix
-
+out.nix*
+*.env
