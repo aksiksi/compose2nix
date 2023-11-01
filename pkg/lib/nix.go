@@ -14,9 +14,13 @@ func toNixList(elems []string, depth int) string {
 	b := strings.Builder{}
 	indent := strings.Repeat(" ", depth*2)
 	b.WriteString("[\n")
+
+	// Sort elements for stability.
+	slices.Sort(elems)
 	for _, elem := range elems {
 		b.WriteString(fmt.Sprintf("%s%q\n", indent, elem))
 	}
+
 	b.WriteString(fmt.Sprintf("%s]", indent[:len(indent)-2]))
 	return b.String()
 }
@@ -106,7 +110,7 @@ func (n NixNetwork) ToNix(depth int) string {
 	return s.String()
 }
 
-type NixNextworks map[string]NixNetwork
+type NixNextworks []NixNetwork
 
 func (n NixNextworks) ToNix() string {
 	s := strings.Builder{}
@@ -144,7 +148,7 @@ func (v *NixVolume) ToNix(depth int) string {
 	return s.String()
 }
 
-type NixVolumes map[string]NixVolume
+type NixVolumes []NixVolume
 
 func (n NixVolumes) ToNix() string {
 	s := strings.Builder{}
@@ -156,11 +160,10 @@ func (n NixVolumes) ToNix() string {
 
 // https://search.nixos.org/options?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=oci-container
 type NixContainer struct {
-	Project     string
-	Name        string
-	Image       string
-	Environment map[string]*string
-	// TODO(aksiksi): Sort these.
+	Project      string
+	Name         string
+	Image        string
+	Environment  map[string]*string
 	Volumes      map[string]string
 	Ports        []string
 	Labels       map[string]string

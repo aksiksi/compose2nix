@@ -82,8 +82,7 @@ func nixContainersFromServices(services []types.ServiceConfig, project string, a
 }
 
 func nixNetworksFromProject(p *types.Project, project string, containers NixContainers) NixNextworks {
-	// TODO(aksiksi): Use a slice to ensure stable order. Name is redundant anyways.
-	m := make(map[string]NixNetwork)
+	var networks []NixNetwork
 	for name, network := range p.Networks {
 		n := NixNetwork{
 			Project: project,
@@ -96,14 +95,16 @@ func nixNetworksFromProject(p *types.Project, project string, containers NixCont
 				n.Containers = append(n.Containers, c.Name)
 			}
 		}
-		m[name] = n
+		networks = append(networks, n)
 	}
-	return m
+	slices.SortFunc(networks, func(n1, n2 NixNetwork) int {
+		return cmp.Compare(n1.Name, n2.Name)
+	})
+	return networks
 }
 
 func nixVolumesFromProject(p *types.Project, project string, containers NixContainers) NixVolumes {
-	// TODO(aksiksi): Use a slice to ensure stable order. Name is redundant anyways.
-	m := make(map[string]NixVolume)
+	var volumes []NixVolume
 	for name, volume := range p.Volumes {
 		v := NixVolume{
 			Name:       name,
@@ -117,9 +118,12 @@ func nixVolumesFromProject(p *types.Project, project string, containers NixConta
 				v.Containers = append(v.Containers, fmt.Sprintf("%s%s", project, c.Name))
 			}
 		}
-		m[name] = v
+		volumes = append(volumes, v)
 	}
-	return m
+	slices.SortFunc(volumes, func(n1, n2 NixVolume) int {
+		return cmp.Compare(n1.Name, n2.Name)
+	})
+	return volumes
 }
 
 func ParseWithEnv(ctx context.Context, paths []string, project string, autoStart bool, envFiles []string, mergeWithEnv bool) (*NixContainerConfig, error) {
