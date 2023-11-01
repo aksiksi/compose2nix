@@ -1,1 +1,0 @@
-package compose2nixos

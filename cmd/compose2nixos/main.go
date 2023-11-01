@@ -14,7 +14,7 @@ var paths = flag.String("paths", "", "paths to Compose files")
 var readEnv = flag.Bool("use_env", true, "whether or not to read the env")
 var envFiles = flag.String("env_files", "", "paths to .env files")
 var output = flag.String("output", "", "path to output Nix file")
-var namePrefix = flag.String("name_prefix", "", "prefix for generated container names")
+var project = flag.String("project", "", "project name used as a prefix for generated resources")
 var autoStart = flag.Bool("auto_start", true, "control auto-start setting for containers")
 
 func main() {
@@ -29,7 +29,7 @@ func main() {
 	paths := strings.Split(*paths, ",")
 	envFiles := strings.Split(*envFiles, ",")
 
-	containers, err := compose2nixos.ParseWithEnv(ctx, paths, *namePrefix, *autoStart, envFiles, *readEnv)
+	containers, err := compose2nixos.ParseWithEnv(ctx, paths, *project, *autoStart, envFiles, *readEnv)
 	if err != nil {
 		log.Fatal(err)
 	}

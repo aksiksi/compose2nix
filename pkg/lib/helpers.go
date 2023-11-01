@@ -5,18 +5,18 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"slices"
 	"strings"
-
-	"github.com/compose-spec/compose-go/types"
 )
 
-func FindService(services types.Services, name string) *types.ServiceConfig {
-	for i, s := range services {
-		if s.Name == name {
-			return &services[i]
-		}
+// mapToKeyValArray converts a map into a _sorted_ list of KEY=VAL entries.
+func mapToKeyValArray(m map[string]string) []string {
+	var arr []string
+	for k, v := range m {
+		arr = append(arr, fmt.Sprintf("%s=%s", k, v))
 	}
-	return nil
+	slices.Sort(arr)
+	return arr
 }
 
 func ReadEnvFiles(envFiles []string, mergeWithEnv bool) (env []string, _ error) {

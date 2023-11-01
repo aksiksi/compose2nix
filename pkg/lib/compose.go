@@ -9,6 +9,7 @@ import (
 
 	"github.com/compose-spec/compose-go/loader"
 	"github.com/compose-spec/compose-go/types"
+	"golang.org/x/exp/maps"
 )
 
 func portConfigsToPortStrings(portConfigs []types.ServicePortConfig) []string {
@@ -33,54 +34,114 @@ func portConfigsToPortStrings(portConfigs []types.ServicePortConfig) []string {
 	return ports
 }
 
-func nixContainerFromService(service types.ServiceConfig, namePrefix string, autoStart bool) *NixContainer {
+func nixContainerFromService(service types.ServiceConfig, project string, autoStart bool) NixContainer {
 	dependsOn := service.GetDependencies()
-	if namePrefix != "" {
+	if project != "" {
 		for i := range dependsOn {
-			dependsOn[i] = fmt.Sprintf("%s%s", namePrefix, dependsOn[i])
+			dependsOn[i] = fmt.Sprintf("%s%s", project, dependsOn[i])
 		}
 	}
-
-	n := &NixContainer{
+	c := NixContainer{
+		Project:     project,
 		Name:        service.Name,
-		Prefix:      namePrefix,
 		Image:       service.Image,
 		Environment: service.Environment,
 		Labels:      service.Labels,
 		Ports:       portConfigsToPortStrings(service.Ports),
 		User:        service.User,
+		Volumes:     make(map[string]string),
+		Networks:    maps.Keys(service.Networks),
 		DependsOn:   dependsOn,
 		AutoStart:   autoStart,
-		// TODO(aksiksi): Extra options.
 	}
+	slices.Sort(c.Networks)
+
+	var networkNames []string
+	for _, name := range c.Networks {
+		networkNames = append(networkNames, fmt.Sprintf("%s%s", project, name))
+	}
+	// TODO(aksiksi): Change this based on Podman vs. Docker.
+	c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--networks=%s", strings.Join(networkNames, ",")))
+
 	for _, v := range service.Volumes {
-		n.Volumes = append(n.Volumes, v.String())
+		c.Volumes[v.Source] = v.String()
 	}
-	return n
+
+	return c
 }
 
-func nixContainersFromServices(services []types.ServiceConfig, namePrefix string, autoStart bool) NixContainers {
-	var containers []*NixContainer
+func nixContainersFromServices(services []types.ServiceConfig, project string, autoStart bool) NixContainers {
+	var containers []NixContainer
 	for _, s := range services {
-		containers = append(containers, nixContainerFromService(s, namePrefix, autoStart))
+		containers = append(containers, nixContainerFromService(s, project, autoStart))
 	}
-	slices.SortFunc(containers, func(c1, c2 *NixContainer) int {
+	slices.SortFunc(containers, func(c1, c2 NixContainer) int {
 		return cmp.Compare(c1.Name, c2.Name)
 	})
 	return containers
 }
 
-func ParseWithEnv(ctx context.Context, paths []string, namePrefix string, autoStart bool, envFiles []string, mergeWithEnv bool) (NixContainers, error) {
+func nixNetworksFromProject(p *types.Project, project string, containers NixContainers) NixNextworks {
+	// TODO(aksiksi): Use a slice to ensure stable order. Name is redundant anyways.
+	m := make(map[string]NixNetwork)
+	for name, network := range p.Networks {
+		n := NixNetwork{
+			Project: project,
+			Name:    name,
+			Labels:  network.Labels,
+		}
+		// Keep track of all containers that are in this network.
+		for _, c := range containers {
+			if slices.Contains(c.Networks, name) {
+				n.Containers = append(n.Containers, c.Name)
+			}
+		}
+		m[name] = n
+	}
+	return m
+}
+
+func nixVolumesFromProject(p *types.Project, project string, containers NixContainers) NixVolumes {
+	// TODO(aksiksi): Use a slice to ensure stable order. Name is redundant anyways.
+	m := make(map[string]NixVolume)
+	for name, volume := range p.Volumes {
+		v := NixVolume{
+			Name:       name,
+			Driver:     volume.Driver,
+			DriverOpts: volume.DriverOpts,
+		}
+		// Keep track of all containers that use this named volume.
+		for _, c := range containers {
+			if _, ok := c.Volumes[name]; ok {
+				// Need to include project here b/c volumes are not project-aware.
+				v.Containers = append(v.Containers, fmt.Sprintf("%s%s", project, c.Name))
+			}
+		}
+		m[name] = v
+	}
+	return m
+}
+
+func ParseWithEnv(ctx context.Context, paths []string, project string, autoStart bool, envFiles []string, mergeWithEnv bool) (*NixContainerConfig, error) {
 	env, err := ReadEnvFiles(envFiles, mergeWithEnv)
 	if err != nil {
 		return nil, err
 	}
-	project, err := loader.LoadWithContext(ctx, types.ConfigDetails{
+	p, err := loader.LoadWithContext(ctx, types.ConfigDetails{
 		ConfigFiles: types.ToConfigFiles(paths),
 		Environment: types.NewMapping(env),
 	})
 	if err != nil {
 		return nil, err
 	}
-	return nixContainersFromServices(project.Services, namePrefix, autoStart), nil
+
+	containers := nixContainersFromServices(p.Services, project, autoStart)
+	networks := nixNetworksFromProject(p, project, containers)
+	volumes := nixVolumesFromProject(p, project, containers)
+
+	return &NixContainerConfig{
+		Networks:   networks,
+		Containers: containers,
+		Volumes:    volumes,
+	}, nil
 }
