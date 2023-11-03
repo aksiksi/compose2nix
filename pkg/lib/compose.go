@@ -15,6 +15,27 @@ import (
 
 const DefaultProjectSeparator = "-"
 
+type ContainerRuntime int
+
+const (
+	ContainerRuntimeInvalid ContainerRuntime = iota
+	ContainerRuntimeDocker
+	ContainerRuntimePodman
+)
+
+func (c ContainerRuntime) String() string {
+	switch c {
+	case ContainerRuntimeDocker:
+		return "docker"
+	case ContainerRuntimePodman:
+		return "podman"
+	case ContainerRuntimeInvalid:
+		return "invalid-container-runtime"
+	default:
+		panic("unreachable")
+	}
+}
+
 func composeEnvironmentToMap(env types.MappingWithEquals) map[string]string {
 	m := make(map[string]string)
 	for k, v := range env {
@@ -61,21 +82,54 @@ func resourceNameWithProject(name, project, projectSeparator string) string {
 	}
 }
 
-type Parser struct {
+type Generator struct {
 	Project          string
 	ProjectSeparator string
 	Paths            []string
 	EnvFiles         []string
 	AutoStart        bool
 	EnvFilesOnly     bool
+	Runtime          ContainerRuntime
 	composeProject   *types.Project
 }
 
-func (p *Parser) buildNixContainer(service types.ServiceConfig) NixContainer {
+func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
+	if g.Project != "" && g.ProjectSeparator == "" {
+		g.ProjectSeparator = DefaultProjectSeparator
+	}
+
+	env, err := ReadEnvFiles(g.EnvFiles, !g.EnvFilesOnly)
+	if err != nil {
+		return nil, err
+	}
+	composeProject, err := loader.LoadWithContext(ctx, types.ConfigDetails{
+		ConfigFiles: types.ToConfigFiles(g.Paths),
+		Environment: types.NewMapping(env),
+	})
+	if err != nil {
+		return nil, err
+	}
+	g.composeProject = composeProject
+
+	containers := g.buildNixContainers()
+	networks := g.buildNixNetworks(containers)
+	volumes := g.buildNixVolumes(containers)
+
+	return &NixContainerConfig{
+		Project:          g.Project,
+		ProjectSeparator: g.ProjectSeparator,
+		Containers:       containers,
+		Networks:         networks,
+		Volumes:          volumes,
+		Runtime:          g.Runtime,
+	}, nil
+}
+
+func (g *Generator) buildNixContainer(service types.ServiceConfig) NixContainer {
 	dependsOn := service.GetDependencies()
-	if p.Project != "" {
+	if g.Project != "" {
 		for i := range dependsOn {
-			dependsOn[i] = fmt.Sprintf("%s%s", p.Project, dependsOn[i])
+			dependsOn[i] = fmt.Sprintf("%s%s", g.Project, dependsOn[i])
 		}
 	}
 	c := NixContainer{
@@ -87,19 +141,18 @@ func (p *Parser) buildNixContainer(service types.ServiceConfig) NixContainer {
 		Volumes:   make(map[string]string),
 		Networks:  maps.Keys(service.Networks),
 		DependsOn: dependsOn,
-		AutoStart: p.AutoStart,
+		AutoStart: g.AutoStart,
 	}
 	slices.Sort(c.Networks)
 
-	if !p.EnvFilesOnly {
+	if !g.EnvFilesOnly {
 		c.Environment = composeEnvironmentToMap(service.Environment)
 	} else {
-		c.EnvFiles = p.EnvFiles
+		c.EnvFiles = g.EnvFiles
 	}
 
 	for _, name := range c.Networks {
-		networkName := resourceNameWithProject(name, p.Project, p.ProjectSeparator)
-		// TODO(aksiksi): Change this based on Podman vs. Docker.
+		networkName := resourceNameWithProject(name, g.Project, g.ProjectSeparator)
 		c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--network=%s", networkName))
 	}
 
@@ -110,10 +163,10 @@ func (p *Parser) buildNixContainer(service types.ServiceConfig) NixContainer {
 	return c
 }
 
-func (p *Parser) buildNixContainers() NixContainers {
+func (g *Generator) buildNixContainers() NixContainers {
 	var containers []NixContainer
-	for _, s := range p.composeProject.Services {
-		containers = append(containers, p.buildNixContainer(s))
+	for _, s := range g.composeProject.Services {
+		containers = append(containers, g.buildNixContainer(s))
 	}
 	slices.SortFunc(containers, func(c1, c2 NixContainer) int {
 		return cmp.Compare(c1.Name, c2.Name)
@@ -121,9 +174,9 @@ func (p *Parser) buildNixContainers() NixContainers {
 	return containers
 }
 
-func (p *Parser) buildNixNetworks(containers NixContainers) NixNextworks {
+func (g *Generator) buildNixNetworks(containers NixContainers) NixNextworks {
 	var networks []NixNetwork
-	for name, network := range p.composeProject.Networks {
+	for name, network := range g.composeProject.Networks {
 		n := NixNetwork{
 			Name:   name,
 			Labels: network.Labels,
@@ -142,9 +195,9 @@ func (p *Parser) buildNixNetworks(containers NixContainers) NixNextworks {
 	return networks
 }
 
-func (p *Parser) buildNixVolumes(containers NixContainers) NixVolumes {
+func (g *Generator) buildNixVolumes(containers NixContainers) NixVolumes {
 	var volumes []NixVolume
-	for name, volume := range p.composeProject.Volumes {
+	for name, volume := range g.composeProject.Volumes {
 		v := NixVolume{
 			Name:       name,
 			Driver:     volume.Driver,
@@ -155,7 +208,7 @@ func (p *Parser) buildNixVolumes(containers NixContainers) NixVolumes {
 		// is a regular mount. So, we can just "patch" each container's volume
 		// mapping to use a direct bind mount instead of a volume and then skip
 		// creation of the volume entirely.
-		if v.Driver == "" {
+		if g.Runtime == ContainerRuntimePodman && v.Driver == "" {
 			bindPath := v.DriverOpts["device"]
 			if bindPath == "" {
 				log.Fatalf("volume %q has no device set", name)
@@ -173,7 +226,7 @@ func (p *Parser) buildNixVolumes(containers NixContainers) NixVolumes {
 		for _, c := range containers {
 			if _, ok := c.Volumes[name]; ok {
 				// Need to include project here b/c volumes are not project-aware.
-				v.Containers = append(v.Containers, resourceNameWithProject(c.Name, p.Project, p.ProjectSeparator))
+				v.Containers = append(v.Containers, resourceNameWithProject(c.Name, g.Project, g.ProjectSeparator))
 			}
 		}
 		volumes = append(volumes, v)
@@ -182,35 +235,4 @@ func (p *Parser) buildNixVolumes(containers NixContainers) NixVolumes {
 		return cmp.Compare(n1.Name, n2.Name)
 	})
 	return volumes
-}
-
-func (p *Parser) Parse(ctx context.Context) (*NixContainerConfig, error) {
-	if p.Project != "" && p.ProjectSeparator == "" {
-		p.ProjectSeparator = DefaultProjectSeparator
-	}
-
-	env, err := ReadEnvFiles(p.EnvFiles, !p.EnvFilesOnly)
-	if err != nil {
-		return nil, err
-	}
-	composeProject, err := loader.LoadWithContext(ctx, types.ConfigDetails{
-		ConfigFiles: types.ToConfigFiles(p.Paths),
-		Environment: types.NewMapping(env),
-	})
-	if err != nil {
-		return nil, err
-	}
-	p.composeProject = composeProject
-
-	containers := p.buildNixContainers()
-	networks := p.buildNixNetworks(containers)
-	volumes := p.buildNixVolumes(containers)
-
-	return &NixContainerConfig{
-		Project:          p.Project,
-		ProjectSeparator: p.ProjectSeparator,
-		Containers:       containers,
-		Networks:         networks,
-		Volumes:          volumes,
-	}, nil
 }

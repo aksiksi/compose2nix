@@ -11,11 +11,11 @@ import (
 
 const nixContainerOption = "virtualisation.oci-containers.containers"
 
-func containerToServiceName(name, project, projectSeparator string) string {
+func containerToServiceName(name, project, projectSeparator string, runtime ContainerRuntime) string {
 	if project != "" {
-		return fmt.Sprintf("podman-%s%s%s.service", project, projectSeparator, name)
+		return fmt.Sprintf("%s-%s%s%s.service", runtime, project, projectSeparator, name)
 	} else {
-		return fmt.Sprintf("podman-%s.service", name)
+		return fmt.Sprintf("%s-%s.service", runtime, name)
 	}
 }
 
@@ -61,8 +61,7 @@ type NixNetwork struct {
 	Containers []string
 }
 
-// https://discourse.nixos.org/t/podman-container-to-container-networking/11647/2
-func (n NixNetwork) ToNix(project, projectSeparator string, depth int) string {
+func (n NixNetwork) ToNix(project, projectSeparator string, runtime ContainerRuntime, depth int) string {
 	networkName := resourceNameWithProject(n.Name, project, projectSeparator)
 
 	// TODO(aksiksi): Docker support.
@@ -73,22 +72,31 @@ func (n NixNetwork) ToNix(project, projectSeparator string, depth int) string {
 
 	var wantedBy []string
 	for _, name := range n.Containers {
-		wantedBy = append(wantedBy, containerToServiceName(name, project, projectSeparator))
+		wantedBy = append(wantedBy, containerToServiceName(name, project, projectSeparator, runtime))
 	}
 
 	s := strings.Builder{}
 	indent := strings.Repeat(" ", depth*2)
-	s.WriteString(fmt.Sprintf("%ssystemd.services.\"create-network-%s\" = {\n", indent, networkName))
+	s.WriteString(fmt.Sprintf("%ssystemd.services.\"create-%s-network-%s\" = {\n", indent, runtime, networkName))
 	s.WriteString(fmt.Sprintf("%s  serviceConfig.Type = \"oneshot\";\n", indent))
+	s.WriteString(fmt.Sprintf("%s  path = [ pkgs.%s ];\n", indent, runtime))
 	s.WriteString(fmt.Sprintf("%s  wantedBy = %s;\n", indent, toNixList(wantedBy, depth+2)))
 	s.WriteString(fmt.Sprintf("%s  script = ''\n", indent))
 
-	// The isolate option ensures that different networks cannot communicate.
-	// See: https://github.com/containers/podman/issues/5805
+	var cmd string
+	switch runtime {
+	case ContainerRuntimeDocker:
+		cmd = fmt.Sprintf("docker network inspect %s || docker network create %s", networkName, networkName)
+	case ContainerRuntimePodman:
+		// The isolate option ensures that different networks cannot communicate.
+		// See: https://github.com/containers/podman/issues/5805
+		cmd = fmt.Sprintf("podman network create %s --opt isolate=true --ignore", networkName)
+	}
+
 	if len(labels) == 0 {
-		s.WriteString(fmt.Sprintf("%s    ${pkgs.podman}/bin/podman network create %s --opt isolate=true --ignore\n", indent, networkName))
+		s.WriteString(fmt.Sprintf("%s    %s\n", indent, cmd))
 	} else {
-		s.WriteString(fmt.Sprintf("%s    ${pkgs.podman}/bin/podman network create %s --opt isolate=true --ignore %s\n", indent, networkName, strings.Join(labels, " ")))
+		s.WriteString(fmt.Sprintf("%s    %s %s\n", indent, cmd, strings.Join(labels, " ")))
 	}
 
 	s.WriteString(fmt.Sprintf("%s  '';\n", indent))
@@ -98,10 +106,10 @@ func (n NixNetwork) ToNix(project, projectSeparator string, depth int) string {
 
 type NixNextworks []NixNetwork
 
-func (n NixNextworks) ToNix(project, projectSeparator string) string {
+func (n NixNextworks) ToNix(project, projectSeparator string, runtime ContainerRuntime) string {
 	s := strings.Builder{}
 	for _, net := range n {
-		s.WriteString(net.ToNix(project, projectSeparator, 1))
+		s.WriteString(net.ToNix(project, projectSeparator, runtime, 1))
 	}
 	return s.String()
 }
@@ -114,25 +122,39 @@ type NixVolume struct {
 	Containers []string
 }
 
-func (v *NixVolume) ToNix(project, projectSeparator string, depth int) string {
+func (v *NixVolume) ToNix(project, projectSeparator string, runtime ContainerRuntime, depth int) string {
 	driverOptsString := strings.Join(mapToKeyValArray(v.DriverOpts), ",")
 
 	var wantedBy []string
 	for _, name := range v.Containers {
-		wantedBy = append(wantedBy, containerToServiceName(name, project, projectSeparator))
+		wantedBy = append(wantedBy, fmt.Sprintf("%s-%s.service", runtime, name))
 	}
 
 	s := strings.Builder{}
 	indent := strings.Repeat(" ", depth*2)
-	s.WriteString(fmt.Sprintf("%ssystemd.services.\"create-volume-%s\" = {\n", indent, v.Name))
+	s.WriteString(fmt.Sprintf("%ssystemd.services.\"create-%s-volume-%s\" = {\n", indent, runtime, v.Name))
 	s.WriteString(fmt.Sprintf("%s  serviceConfig.Type = \"oneshot\";\n", indent))
+	s.WriteString(fmt.Sprintf("%s  path = [ pkgs.%s ];\n", indent, runtime))
 	s.WriteString(fmt.Sprintf("%s  wantedBy = %s;\n", indent, toNixList(wantedBy, depth+2)))
 	s.WriteString(fmt.Sprintf("%s  script = ''\n", indent))
-	if v.Driver != "" {
-		s.WriteString(fmt.Sprintf("%s    ${pkgs.podman}/bin/podman volume create %s --driver %s --opt %s --ignore\n", indent, v.Name, v.Driver, driverOptsString))
-	} else {
-		s.WriteString(fmt.Sprintf("%s    ${pkgs.podman}/bin/podman volume create %s --opt %s --ignore\n", indent, v.Name, driverOptsString))
+
+	var cmd string
+	switch runtime {
+	case ContainerRuntimeDocker:
+		if v.Driver == "" {
+			cmd = fmt.Sprintf("docker volume inspect %s || docker volume create %s --opt %s --ignore", v.Name, v.Name, driverOptsString)
+		} else {
+			cmd = fmt.Sprintf("docker volume inspect %s || docker volume create %s --driver %s --opt %s --ignore", v.Name, v.Name, v.Driver, driverOptsString)
+		}
+	case ContainerRuntimePodman:
+		if v.Driver == "" {
+			cmd = fmt.Sprintf("podman volume create %s --opt %s --ignore", v.Name, driverOptsString)
+		} else {
+			cmd = fmt.Sprintf("podman volume create %s --driver %s --opt %s --ignore", v.Name, v.Driver, driverOptsString)
+		}
 	}
+
+	s.WriteString(fmt.Sprintf("%s    %s\n", indent, cmd))
 	s.WriteString(fmt.Sprintf("%s  '';\n", indent))
 	s.WriteString(fmt.Sprintf("%s};\n", indent))
 
@@ -141,10 +163,10 @@ func (v *NixVolume) ToNix(project, projectSeparator string, depth int) string {
 
 type NixVolumes []NixVolume
 
-func (n NixVolumes) ToNix(project, projectSeparator string) string {
+func (n NixVolumes) ToNix(project, projectSeparator string, runtime ContainerRuntime) string {
 	s := strings.Builder{}
 	for _, v := range n {
-		s.WriteString(v.ToNix(project, projectSeparator, 1))
+		s.WriteString(v.ToNix(project, projectSeparator, runtime, 1))
 	}
 	return s.String()
 }
@@ -233,30 +255,61 @@ type NixContainerConfig struct {
 	Containers       NixContainers
 	Networks         NixNextworks
 	Volumes          NixVolumes
+	Runtime          ContainerRuntime
 }
 
-func (c NixContainerConfig) ToNix() string {
+func (c NixContainerConfig) String() string {
 	s := strings.Builder{}
 	s.WriteString("{ pkgs, ... }:\n\n")
 	s.WriteString("{\n")
+
+	s.WriteString("  # Runtime\n")
+	s.WriteString(c.NixRuntime() + "\n")
 
 	s.WriteString("  # Containers\n")
 	s.WriteString(c.Containers.ToNix(c.Project, c.ProjectSeparator))
 
 	if len(c.Networks) > 0 {
 		s.WriteString("  # Networks\n")
-		s.WriteString(c.Networks.ToNix(c.Project, c.ProjectSeparator))
+		s.WriteString(c.Networks.ToNix(c.Project, c.ProjectSeparator, c.Runtime))
 	}
 
 	if len(c.Volumes) > 0 {
 		s.WriteString("  # Volumes\n")
-		s.WriteString(c.Volumes.ToNix(c.Project, c.ProjectSeparator))
+		s.WriteString(c.Volumes.ToNix(c.Project, c.ProjectSeparator, c.Runtime))
 	}
 
 	s.WriteString(c.NixUpScript())
 	s.WriteString(c.NixDownScript())
 
 	s.WriteString("}\n")
+	return s.String()
+}
+
+func (c NixContainerConfig) NixRuntime() string {
+	s := strings.Builder{}
+	switch c.Runtime {
+	case ContainerRuntimeDocker:
+		s.WriteString("  virtualisation.docker = {\n")
+		s.WriteString("    enable = true;\n")
+		s.WriteString("    autoPrune.enable = true;\n")
+		s.WriteString("  };\n")
+		s.WriteString("  virtualisation.oci-containers.backend = \"docker\";\n")
+	case ContainerRuntimePodman:
+		s.WriteString("  virtualisation.podman = {\n")
+		s.WriteString("    enable = true;\n")
+		s.WriteString("    dockerCompat = true;\n")
+		s.WriteString("    defaultNetwork.settings = {\n")
+		s.WriteString("      # Required for container networking to be able to use names.\n")
+		s.WriteString("      dns_enabled = true;\n")
+		s.WriteString("    };\n")
+		s.WriteString("    autoPrune.enable = true;\n")
+		s.WriteString("  };\n")
+		s.WriteString("  virtualisation.oci-containers.backend = \"podman\";\n")
+		s.WriteString("  # Need this for DNS to work inside the Podman network.\n")
+		s.WriteString("  # See: https://github.com/NixOS/nixpkgs/issues/226365#issuecomment-1565696237\n")
+		s.WriteString("  networking.firewall.interfaces.podman1.allowedUDPPorts = [ 53 ];\n")
+	}
 	return s.String()
 }
 

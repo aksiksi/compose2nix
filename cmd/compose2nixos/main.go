@@ -17,6 +17,7 @@ var output = flag.String("output", "", "path to output Nix file")
 var project = flag.String("project", "", "project name used as a prefix for generated resources")
 var projectSeparator = flag.String("project_separator", compose2nixos.DefaultProjectSeparator, "seperator for project prefix")
 var autoStart = flag.Bool("auto_start", true, "control auto-start setting for containers")
+var runtime = flag.String("runtime", "podman", `"podman" or "docker"`)
 
 func main() {
 	flag.Parse()
@@ -30,21 +31,31 @@ func main() {
 	paths := strings.Split(*paths, ",")
 	envFiles := strings.Split(*envFiles, ",")
 
-	p := compose2nixos.Parser{
+	var containerRuntime compose2nixos.ContainerRuntime
+	if *runtime == "podman" {
+		containerRuntime = compose2nixos.ContainerRuntimePodman
+	} else if *runtime == "docker" {
+		containerRuntime = compose2nixos.ContainerRuntimeDocker
+	} else {
+		log.Fatalf("invalid --runtime: %q", *runtime)
+	}
+
+	g := compose2nixos.Generator{
 		Project:          *project,
 		ProjectSeparator: *projectSeparator,
 		Paths:            paths,
 		EnvFiles:         envFiles,
 		EnvFilesOnly:     *envFilesOnly,
 		AutoStart:        *autoStart,
+		Runtime:          containerRuntime,
 	}
-	containerConfig, err := p.Parse(ctx)
+	containerConfig, err := g.Run(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	if *output != "" {
-		if err := os.WriteFile(*output, []byte(containerConfig.ToNix()), os.FileMode(0644)); err != nil {
+		if err := os.WriteFile(*output, []byte(containerConfig.String()), os.FileMode(0644)); err != nil {
 			log.Fatal(err)
 		}
 	}
