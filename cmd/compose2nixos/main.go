@@ -41,13 +41,12 @@ func main() {
 	}
 
 	g := compose2nixos.Generator{
-		Project:          *project,
-		ProjectSeparator: *projectSeparator,
-		Paths:            paths,
-		EnvFiles:         envFiles,
-		EnvFilesOnly:     *envFilesOnly,
-		AutoStart:        *autoStart,
-		Runtime:          containerRuntime,
+		Project:      compose2nixos.NewProject(*project, *projectSeparator),
+		Runtime:      containerRuntime,
+		Paths:        paths,
+		EnvFiles:     envFiles,
+		EnvFilesOnly: *envFilesOnly,
+		AutoStart:    *autoStart,
 	}
 	containerConfig, err := g.Run(ctx)
 	if err != nil {

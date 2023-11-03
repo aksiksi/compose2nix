@@ -70,34 +70,44 @@ func portConfigsToPortStrings(portConfigs []types.ServicePortConfig) []string {
 	return ports
 }
 
-func projectWithSeparator(project, projectSeparator string) string {
-	return fmt.Sprintf("%s%s", project, projectSeparator)
+type Project struct {
+	name      string
+	separator string
 }
 
-func resourceNameWithProject(name, project, projectSeparator string) string {
-	if project != "" {
-		return fmt.Sprintf("%s%s", projectWithSeparator(project, projectSeparator), name)
-	} else {
-		return name
+func NewProject(name, separator string) *Project {
+	if name == "" {
+		return nil
 	}
+	if separator == "" {
+		separator = DefaultProjectSeparator
+	}
+	return &Project{name, separator}
+}
+
+func (c *Project) Name() string {
+	return c.name
+}
+
+func (c *Project) With(s string) string {
+	if c == nil {
+		return s
+	}
+	return fmt.Sprintf("%s%s%s", c.name, c.separator, s)
 }
 
 type Generator struct {
-	Project          string
-	ProjectSeparator string
-	Paths            []string
-	EnvFiles         []string
-	AutoStart        bool
-	EnvFilesOnly     bool
-	Runtime          ContainerRuntime
-	composeProject   *types.Project
+	Project      *Project
+	Runtime      ContainerRuntime
+	Paths        []string
+	EnvFiles     []string
+	AutoStart    bool
+	EnvFilesOnly bool
+
+	composeProject *types.Project
 }
 
 func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
-	if g.Project != "" && g.ProjectSeparator == "" {
-		g.ProjectSeparator = DefaultProjectSeparator
-	}
-
 	env, err := ReadEnvFiles(g.EnvFiles, !g.EnvFilesOnly)
 	if err != nil {
 		return nil, err
@@ -116,23 +126,24 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 	volumes := g.buildNixVolumes(containers)
 
 	return &NixContainerConfig{
-		Project:          g.Project,
-		ProjectSeparator: g.ProjectSeparator,
-		Containers:       containers,
-		Networks:         networks,
-		Volumes:          volumes,
-		Runtime:          g.Runtime,
+		Project:    g.Project,
+		Runtime:    g.Runtime,
+		Containers: containers,
+		Networks:   networks,
+		Volumes:    volumes,
 	}, nil
 }
 
 func (g *Generator) buildNixContainer(service types.ServiceConfig) NixContainer {
 	dependsOn := service.GetDependencies()
-	if g.Project != "" {
+	if g.Project != nil {
 		for i := range dependsOn {
-			dependsOn[i] = fmt.Sprintf("%s%s", g.Project, dependsOn[i])
+			dependsOn[i] = g.Project.With(dependsOn[i])
 		}
 	}
 	c := NixContainer{
+		Project:   g.Project,
+		Runtime:   g.Runtime,
 		Name:      service.Name,
 		Image:     service.Image,
 		Labels:    service.Labels,
@@ -152,8 +163,10 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) NixContainer 
 	}
 
 	for _, name := range c.Networks {
-		networkName := resourceNameWithProject(name, g.Project, g.ProjectSeparator)
+		networkName := g.Project.With(name)
 		c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--network=%s", networkName))
+		// Allow other containers to use bare container name as an alias even when a project is set.
+		c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--network-alias=%s", service.Name))
 	}
 
 	for _, v := range service.Volumes {
@@ -163,7 +176,7 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) NixContainer 
 	return c
 }
 
-func (g *Generator) buildNixContainers() NixContainers {
+func (g *Generator) buildNixContainers() []NixContainer {
 	var containers []NixContainer
 	for _, s := range g.composeProject.Services {
 		containers = append(containers, g.buildNixContainer(s))
@@ -174,17 +187,19 @@ func (g *Generator) buildNixContainers() NixContainers {
 	return containers
 }
 
-func (g *Generator) buildNixNetworks(containers NixContainers) NixNextworks {
+func (g *Generator) buildNixNetworks(containers []NixContainer) []NixNetwork {
 	var networks []NixNetwork
 	for name, network := range g.composeProject.Networks {
 		n := NixNetwork{
-			Name:   name,
-			Labels: network.Labels,
+			Project: g.Project,
+			Runtime: g.Runtime,
+			Name:    name,
+			Labels:  network.Labels,
 		}
 		// Keep track of all containers that are in this network.
 		for _, c := range containers {
 			if slices.Contains(c.Networks, name) {
-				n.Containers = append(n.Containers, c.Name)
+				n.Containers = append(n.Containers, fmt.Sprintf("%s-%s", g.Runtime, g.Project.With(c.Name)))
 			}
 		}
 		networks = append(networks, n)
@@ -195,10 +210,12 @@ func (g *Generator) buildNixNetworks(containers NixContainers) NixNextworks {
 	return networks
 }
 
-func (g *Generator) buildNixVolumes(containers NixContainers) NixVolumes {
+func (g *Generator) buildNixVolumes(containers []NixContainer) []NixVolume {
 	var volumes []NixVolume
 	for name, volume := range g.composeProject.Volumes {
 		v := NixVolume{
+			Project:    g.Project,
+			Runtime:    g.Runtime,
 			Name:       name,
 			Driver:     volume.Driver,
 			DriverOpts: volume.DriverOpts,
@@ -225,8 +242,7 @@ func (g *Generator) buildNixVolumes(containers NixContainers) NixVolumes {
 		// Keep track of all containers that use this named volume.
 		for _, c := range containers {
 			if _, ok := c.Volumes[name]; ok {
-				// Need to include project here b/c volumes are not project-aware.
-				v.Containers = append(v.Containers, resourceNameWithProject(c.Name, g.Project, g.ProjectSeparator))
+				v.Containers = append(v.Containers, fmt.Sprintf("%s-%s", g.Runtime, g.Project.With(c.Name)))
 			}
 		}
 		volumes = append(volumes, v)

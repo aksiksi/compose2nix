@@ -1,0 +1,70 @@
+{{- $name := .Project.With .Name}}
+{{- $runtime := .Runtime | printf "%s"}}
+{{- $labels := labelMapToLabelFlags .Labels}}
+virtualisation.oci-containers.containers."{{$name}}" = {
+  image = "{{.Image}}";
+
+  {{- if .Environment}}
+  environment = {
+    {{- range $k, $v := .Environment}}
+    {{$k}} = "{{$v}}";
+    {{- end}}
+  };
+  {{- end -}}
+
+  {{- if .EnvFiles}}
+  environmentFiles = [
+    {{- range .EnvFiles}}
+    "${./{{.}}}"
+    {{- end}}
+  ];
+  {{- end -}}
+
+  {{- if .Volumes}}
+  volumes = [
+    {{- range $k, $v := .Volumes}}
+    "{{$v}}"
+    {{- end}}
+  ];
+  {{- end -}}
+
+  {{- if .Ports}}
+  ports = [
+    {{- range .Ports}}
+    "{{.}}"
+    {{- end}}
+  ];
+  {{- end -}}
+
+  {{- if .Labels}}
+  labels = {
+    {{- range $k, $v := .Labels}}
+    "{{$k}}" = "{{$v}}";
+    {{- end}}
+  };
+  {{- end -}}
+
+  {{- if .DependsOn}}
+  dependsOn = [
+    {{- range .DependsOn}}
+    "{{.}}"
+    {{- end}}
+  ];
+  {{- end -}}
+
+  {{- if .ExtraOptions}}
+  extraOptions = [
+    {{- range .ExtraOptions}}
+    "{{.}}"
+    {{- end}}
+  ];
+  {{- end -}}
+
+  {{- if .User}}
+  user = "{{.User}}";
+  {{- end -}}
+
+  {{- if not .AutoStart}}
+  autoStart = false;
+  {{- end}}
+};

@@ -1,0 +1,35 @@
+{{- $runtime := .Runtime | printf "%s"}}
+{ pkgs, ... }:
+
+{
+  # Runtime
+  virtualisation.{{$runtime}} = {
+    enable = true;
+    autoPrune.enable = true;
+    {{- if eq $runtime "podman"}}
+    dockerCompat = true;
+    defaultNetwork.settings = {
+      # Required for container networking to be able to use names.
+      dns_enabled = true;
+    };
+    {{- end}}
+  };
+  virtualisation.oci-containers.backend = "{{$runtime}}";
+
+  # Containers
+  {{- range .Containers}}{{execTemplate "container.tmpl" . | indent 2}}{{end}}
+
+  # Networks
+  {{- range .Networks}}{{execTemplate "network.tmpl" . | indent 2}}{{end}}
+
+  # Volumes
+  {{- range .Volumes}}{{execTemplate "volume.tmpl" . | indent 2}}{{end}}
+
+  # Scripts
+  up = writeShellScript "compose-{{.Project.Name}}-up.sh" ''
+    echo "TODO: Create resources."
+  '';
+  down = writeShellScript "compose-{{.Project.Name}}-down.sh" ''
+    echo "TODO: Remove resources."
+  '';
+}
