@@ -1,4 +1,4 @@
-package compose2nixos
+package nixose
 
 import (
 	"embed"
@@ -32,6 +32,51 @@ func execTemplate(t *template.Template) func(string, interface{}) (string, error
 var funcMap template.FuncMap = template.FuncMap{
 	"labelMapToLabelFlags": labelMapToLabelFlags,
 	"mapToKeyValArray":     mapToKeyValArray,
+}
+
+const DefaultProjectSeparator = "-"
+
+type ContainerRuntime int
+
+const (
+	ContainerRuntimeInvalid ContainerRuntime = iota
+	ContainerRuntimeDocker
+	ContainerRuntimePodman
+)
+
+func (c ContainerRuntime) String() string {
+	switch c {
+	case ContainerRuntimeDocker:
+		return "docker"
+	case ContainerRuntimePodman:
+		return "podman"
+	case ContainerRuntimeInvalid:
+		return "invalid-container-runtime"
+	default:
+		panic("Unreachable")
+	}
+}
+
+type Project struct {
+	Name      string
+	separator string
+}
+
+func NewProject(name, separator string) *Project {
+	if name == "" {
+		return nil
+	}
+	if separator == "" {
+		separator = DefaultProjectSeparator
+	}
+	return &Project{name, separator}
+}
+
+func (p *Project) With(name string) string {
+	if p == nil {
+		return name
+	}
+	return fmt.Sprintf("%s%s%s", p.Name, p.separator, name)
 }
 
 type NixNetwork struct {

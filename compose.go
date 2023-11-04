@@ -1,4 +1,4 @@
-package compose2nixos
+package nixose
 
 import (
 	"cmp"
@@ -12,29 +12,6 @@ import (
 	"github.com/compose-spec/compose-go/types"
 	"golang.org/x/exp/maps"
 )
-
-const DefaultProjectSeparator = "-"
-
-type ContainerRuntime int
-
-const (
-	ContainerRuntimeInvalid ContainerRuntime = iota
-	ContainerRuntimeDocker
-	ContainerRuntimePodman
-)
-
-func (c ContainerRuntime) String() string {
-	switch c {
-	case ContainerRuntimeDocker:
-		return "docker"
-	case ContainerRuntimePodman:
-		return "podman"
-	case ContainerRuntimeInvalid:
-		return "invalid-container-runtime"
-	default:
-		panic("unreachable")
-	}
-}
 
 func composeEnvironmentToMap(env types.MappingWithEquals) map[string]string {
 	m := make(map[string]string)
@@ -68,32 +45,6 @@ func portConfigsToPortStrings(portConfigs []types.ServicePortConfig) []string {
 		ports = append(ports, port)
 	}
 	return ports
-}
-
-type Project struct {
-	name      string
-	separator string
-}
-
-func NewProject(name, separator string) *Project {
-	if name == "" {
-		return nil
-	}
-	if separator == "" {
-		separator = DefaultProjectSeparator
-	}
-	return &Project{name, separator}
-}
-
-func (c *Project) Name() string {
-	return c.name
-}
-
-func (c *Project) With(s string) string {
-	if c == nil {
-		return s
-	}
-	return fmt.Sprintf("%s%s%s", c.name, c.separator, s)
 }
 
 type Generator struct {
@@ -228,7 +179,7 @@ func (g *Generator) buildNixVolumes(containers []NixContainer) []NixVolume {
 		if g.Runtime == ContainerRuntimePodman && v.Driver == "" {
 			bindPath := v.DriverOpts["device"]
 			if bindPath == "" {
-				log.Fatalf("volume %q has no device set", name)
+				log.Fatalf("Volume %q has no device set", name)
 			}
 			for _, c := range containers {
 				if volumeString, ok := c.Volumes[name]; ok {

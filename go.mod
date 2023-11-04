@@ -1,4 +1,4 @@
-module github.com/aksiksi/compose2nixos
+module github.com/aksiksi/nixose
 
 go 1.21
 

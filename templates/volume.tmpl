@@ -5,7 +5,7 @@
 systemd.services."create-{{$runtime}}-volume-{{$name}}" = {
   serviceConfig.Type = "oneshot";
   path = [ pkgs.{{$runtime}} ];
-  {{if eq $runtime "docker" -}}
+  {{- if eq $runtime "docker"}}
   script = ''
     {{- if eq .Driver ""}}
     docker volume inspect {{$name}} || docker volume create {{$name}} --opt {{$driverOptsString}}
@@ -21,12 +21,12 @@ systemd.services."create-{{$runtime}}-volume-{{$name}}" = {
 	podman volume create {{$name}} --driver {{.Driver}} --opt {{$driverOptsString}} --ignore
     {{- end}}
   '';
-  {{end}}
+  {{- end}}
   {{- if .Containers}}
   wantedBy = [
-  {{range .Containers}}
-  {{- . | printf "\"%s.service\"" | indent 2}}
-  {{end -}}
+  {{- range .Containers}}
+  {{. | printf "\"%s.service\"" | indent 2}}
+  {{- end}}
   ];
   {{- end}}
 };

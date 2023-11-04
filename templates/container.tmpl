@@ -10,7 +10,7 @@ virtualisation.oci-containers.containers."{{$name}}" = {
     {{$k}} = "{{$v}}";
     {{- end}}
   };
-  {{- end -}}
+  {{- end}}
 
   {{- if .EnvFiles}}
   environmentFiles = [
@@ -18,7 +18,7 @@ virtualisation.oci-containers.containers."{{$name}}" = {
     "${./{{.}}}"
     {{- end}}
   ];
-  {{- end -}}
+  {{- end}}
 
   {{- if .Volumes}}
   volumes = [
@@ -26,7 +26,7 @@ virtualisation.oci-containers.containers."{{$name}}" = {
     "{{$v}}"
     {{- end}}
   ];
-  {{- end -}}
+  {{- end}}
 
   {{- if .Ports}}
   ports = [
@@ -34,7 +34,7 @@ virtualisation.oci-containers.containers."{{$name}}" = {
     "{{.}}"
     {{- end}}
   ];
-  {{- end -}}
+  {{- end}}
 
   {{- if .Labels}}
   labels = {
@@ -42,7 +42,7 @@ virtualisation.oci-containers.containers."{{$name}}" = {
     "{{$k}}" = "{{$v}}";
     {{- end}}
   };
-  {{- end -}}
+  {{- end}}
 
   {{- if .DependsOn}}
   dependsOn = [
@@ -50,7 +50,7 @@ virtualisation.oci-containers.containers."{{$name}}" = {
     "{{.}}"
     {{- end}}
   ];
-  {{- end -}}
+  {{- end}}
 
   {{- if .ExtraOptions}}
   extraOptions = [
@@ -58,11 +58,11 @@ virtualisation.oci-containers.containers."{{$name}}" = {
     "{{.}}"
     {{- end}}
   ];
-  {{- end -}}
+  {{- end}}
 
   {{- if .User}}
   user = "{{.User}}";
-  {{- end -}}
+  {{- end}}
 
   {{- if not .AutoStart}}
   autoStart = false;

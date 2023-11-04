@@ -1,4 +1,4 @@
 build:
-	mkdir -p bin/ && go build -o bin/ ./cmd/compose2nixos
+	mkdir -p bin/ && go build -o bin/ ./cmd/nixose
 
 .PHONY: build run

@@ -4,20 +4,20 @@
 systemd.services."create-{{$runtime}}-network-{{$name}}" = {
   serviceConfig.Type = "oneshot";
   path = [ pkgs.{{$runtime}} ];
-  {{if eq $runtime "docker" -}}
+  {{- if eq $runtime "docker"}}
   script = ''
     docker network inspect {{$name}} || docker network create {{$name}}{{ $labels | join " "}}
   '';
-  {{else -}}
+  {{- else}}
   script = ''
     podman network create {{$name}} --opt isolate=true --ignore{{ $labels | join " "}}
   '';
-  {{end -}}
-  {{if .Containers -}}
+  {{- end}}
+  {{- if .Containers}}
   wantedBy = [
-  {{range .Containers}}
-  {{- . | printf "\"%s.service\"" | indent 2}}
-  {{end -}}
+  {{- range .Containers}}
+  {{. | printf "\"%s.service\"" | indent 2}}
+  {{- end}}
   ];
   {{- end}}
 };

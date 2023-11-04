@@ -1,4 +1,4 @@
-package compose2nixos
+package nixose
 
 import (
 	"bufio"
