@@ -1,7 +1,7 @@
-{{/* NOTE(aksiksi): Volume name is _not_ project scoped to match Compose semantics. */}}
-{{- $name := .Name}}
-{{- $runtime := .Runtime | printf "%s"}}
-{{- $driverOptsString := mapToKeyValArray .DriverOpts | join ","}}
+{{- /* NOTE(aksiksi): Volume name is _not_ project scoped to match Compose semantics. */ -}}
+{{- $name := .Name -}}
+{{- $runtime := .Runtime | printf "%s" -}}
+{{- $driverOptsString := mapToKeyValArray .DriverOpts | join "," -}}
 systemd.services."create-{{$runtime}}-volume-{{$name}}" = {
   serviceConfig.Type = "oneshot";
   path = [ pkgs.{{$runtime}} ];

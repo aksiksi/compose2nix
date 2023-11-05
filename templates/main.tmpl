@@ -1,4 +1,4 @@
-{{- $runtime := .Runtime | printf "%s"}}
+{{- $runtime := .Runtime | printf "%s" -}}
 { pkgs, ... }:
 
 {
@@ -16,20 +16,35 @@
   };
   virtualisation.oci-containers.backend = "{{$runtime}}";
 
+  {{- if .Containers}}
+
   # Containers
-  {{- range .Containers}}{{execTemplate "container.tmpl" . | indent 2}}{{end}}
+  {{- range .Containers}}
+{{execTemplate "container.tmpl" . | indent 2}}
+  {{- end}}
+  {{- end}}
+
+  {{- if .Networks}}
 
   # Networks
-  {{- range .Networks}}{{execTemplate "network.tmpl" . | indent 2}}{{end}}
+  {{- range .Networks}}
+{{execTemplate "network.tmpl" . | indent 2}}
+  {{- end}}
+  {{- end}}
+
+  {{- if .Volumes}}
 
   # Volumes
-  {{- range .Volumes}}{{execTemplate "volume.tmpl" . | indent 2}}{{end}}
+  {{- range .Volumes}}
+{{execTemplate "volume.tmpl" . | indent 2}}
+  {{- end}}
+  {{- end}}
 
   # Scripts
-  up = writeShellScript "compose-{{.Project.Name}}-up.sh" ''
+  up = writeShellScript "compose-{{.Project.With "up"}}.sh" ''
     echo "TODO: Create resources."
   '';
-  down = writeShellScript "compose-{{.Project.Name}}-down.sh" ''
+  down = writeShellScript "compose-{{.Project.With "down"}}.sh" ''
     echo "TODO: Remove resources."
   '';
 }

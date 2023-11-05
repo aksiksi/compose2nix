@@ -1,0 +1,176 @@
+version: "3.7"
+services:
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd
+    container_name: sabnzbd
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TIMEZONE}
+      DOCKER_MODS: ghcr.io/gilbn/theme.park:sabnzbd
+      TP_THEME: ${THEMEPARK_THEME}
+      TP_DOMAIN: ${HOME_DOMAIN}\/themepark
+      TP_HOTIO: "false"
+    volumes:
+      - /var/volumes/sabnzbd:/config
+      - storage:/storage
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sabnzbd.rule=Host(`${HOME_DOMAIN}`) && PathPrefix(`/sabnzbd`)"
+      - "traefik.http.routers.sabnzbd.tls.certresolver=htpc"
+      - "traefik.http.routers.sabnzbd.middlewares=chain-authelia@file"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m
+        max-file: "3"
+        compress: "true"
+    restart: unless-stopped
+  transmission:
+    image: docker.io/haugene/transmission-openvpn
+    container_name: transmission
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    sysctls:
+      net.ipv6.conf.all.disable_ipv6: 0
+    ports:
+      - "9091:9091"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/volumes/transmission/config:/config
+      - /var/volumes/transmission/scripts:/scripts
+      - storage:/storage
+    environment:
+      TZ: ${TIMEZONE}
+      PUID: ${PUID}
+      PGID: ${PGID}
+
+      # Do not try to chown the download directories.
+      GLOBAL_APPLY_PERMISSIONS: "false"
+
+      TRANSMISSION_HOME: /config/transmission-home
+
+      LOCAL_NETWORK: 192.168.0.0/16
+
+      # Disable DHT and PEX for private trackers.
+      TRANSMISSION_DHT_ENABLED: "false"
+      TRANSMISSION_PEX_ENABLED: "false"
+
+      # Directories
+      TRANSMISSION_DOWNLOAD_DIR: /storage/Downloads/transmission
+      TRANSMISSION_INCOMPLETE_DIR: /storage/Downloads/transmission/incomplete
+      TRANSMISSION_INCOMPLETE_DIR_ENABLED: "true"
+
+      # Script to automatically unrar downloads in Transmission.
+      # Make sure to set perms to 655.
+      TRANSMISSION_SCRIPT_TORRENT_DONE_ENABLED: "true"
+      TRANSMISSION_SCRIPT_TORRENT_DONE_FILENAME: /config/transmission-unpack.sh
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.transmission.loadbalancer.server.port=9091"
+      - "traefik.http.routers.transmission.rule=Host(`${HOME_DOMAIN}`) && PathPrefix(`/transmission`)"
+      - "traefik.http.routers.transmission.tls.certresolver=htpc"
+      - "traefik.http.routers.transmission.middlewares=chain-authelia@file"
+      - "autoheal=true"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m
+        max-file: "3"
+        compress: "true"
+    # Restart 3 times on failure. This can happen when the VPN sub expires.
+    restart: on-failure:3
+  jellyseerr:
+    image: docker.io/fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TIMEZONE}
+    dns:
+      - 1.1.1.1
+    volumes:
+      - /var/volumes/jellyseerr:/app/config
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.jellyseerr.rule=Host(`requests.${DOMAIN}`)"
+      - "traefik.http.routers.jellyseerr.tls.certresolver=htpc"
+      - "traefik.http.routers.jellyseerr.middlewares=chain-authelia@file"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m
+        max-file: "3"
+        compress: "true"
+    restart: unless-stopped
+  photoprism-mariadb:
+    image: docker.io/library/mariadb:10.9
+    container_name: photoprism-mariadb
+    environment:
+      MARIADB_AUTO_UPGRADE: "1"
+      MARIADB_INITDB_SKIP_TZINFO: "1"
+      MARIADB_DATABASE: "photoprism"
+      MARIADB_USER: "photoprism"
+      MARIADB_PASSWORD: "insecure"
+      MARIADB_ROOT_PASSWORD: "insecure"
+    user: "${PUID}:${PGID}"
+    volumes:
+       - /var/volumes/photoprism-mariadb:/var/lib/mysql
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m
+        max-file: "3"
+        compress: "true"
+    restart: unless-stopped
+  traefik:
+    container_name: traefik
+    image: docker.io/library/traefik
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      CLOUDFLARE_EMAIL: ${CLOUDFLARE_EMAIL}
+      CLOUDFLARE_API_KEY: ${CLOUDFLARE_API_KEY}
+    volumes:
+      - /var/run/podman/podman.sock:/var/run/docker.sock:ro
+      - /var/volumes/traefik:/etc/traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`${HOME_DOMAIN}`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))"
+      - "traefik.http.routers.traefik.entrypoints=https"
+      - "traefik.http.routers.traefik.service=api@internal"
+      - "traefik.http.routers.traefik.tls.certresolver=htpc"
+      - "traefik.http.routers.traefik.middlewares=chain-authelia@file"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m
+        max-file: "3"
+        compress: "true"
+    restart: unless-stopped
+volumes:
+  storage:
+    name: storage
+    driver_opts:
+      type: none
+      device: /mnt/media
+      o: bind
+  books:
+    name: books
+    driver_opts:
+      type: none
+      device: /mnt/media/Books
+      o: bind
+  photos:
+    name: photos
+    driver_opts:
+      type: none
+      device: /mnt/photos
+      o: bind

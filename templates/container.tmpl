@@ -1,6 +1,6 @@
-{{- $name := .Project.With .Name}}
-{{- $runtime := .Runtime | printf "%s"}}
-{{- $labels := labelMapToLabelFlags .Labels}}
+{{- $name := .Project.With .Name -}}
+{{- $runtime := .Runtime | printf "%s" -}}
+{{- $labels := labelMapToLabelFlags .Labels -}}
 virtualisation.oci-containers.containers."{{$name}}" = {
   image = "{{.Image}}";
 

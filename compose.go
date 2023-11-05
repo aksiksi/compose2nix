@@ -92,10 +92,21 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) NixContainer 
 			dependsOn[i] = g.Project.With(dependsOn[i])
 		}
 	}
+
+	var name string
+	if service.ContainerName != "" {
+		name = service.ContainerName
+	} else {
+		// TODO(aksiksi): We should try to use the same convention as Docker Compose
+		// when container_name is not set.
+		// See: https://github.com/docker/compose/issues/6316
+		name = service.Name
+	}
+
 	c := NixContainer{
 		Project:   g.Project,
 		Runtime:   g.Runtime,
-		Name:      service.Name,
+		Name:      name,
 		Image:     service.Image,
 		Labels:    service.Labels,
 		Ports:     portConfigsToPortStrings(service.Ports),
@@ -119,6 +130,13 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) NixContainer 
 		// Allow other containers to use bare container name as an alias even when a project is set.
 		c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--network-alias=%s", service.Name))
 	}
+
+	// TODO(aksiksi): Handle the service's "network_mode"
+	// We can only parse the network mode at this point if it points to host or container.
+	// If it points to a service, we'll need to do a scan when we've finished parsing all
+	// containers.
+	// Compose: https://docs.docker.com/compose/compose-file/compose-file-v3/#network_mode
+	// Podman: https://docs.podman.io/en/latest/markdown/podman-run.1.html#network-mode-net
 
 	for _, v := range service.Volumes {
 		c.Volumes[v.Source] = v.String()
