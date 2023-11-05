@@ -34,6 +34,14 @@ func mapToKeyValArray(m map[string]string) []string {
 	return arr
 }
 
+func mapToRepeatedKeyValFlag(flagName string, m map[string]string) []string {
+	arr := mapToKeyValArray(m)
+	for i, v := range arr {
+		arr[i] = fmt.Sprintf("%s=%s", flagName, v)
+	}
+	return arr
+}
+
 func ReadEnvFiles(envFiles []string, mergeWithEnv bool) (env []string, _ error) {
 	for _, p := range envFiles {
 		if strings.TrimSpace(p) == "" {

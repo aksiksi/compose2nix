@@ -28,6 +28,11 @@
     extraOptions = [
       "--network=default"
       "--network-alias=jellyseerr"
+      "--dns=1.1.1.1"
+      "--log-driver=json-file"
+      "--log-opt=compress=true"
+      "--log-opt=max-file=3"
+      "--log-opt=max-size=10m"
     ];
     autoStart = false;
   };
@@ -52,6 +57,10 @@
     extraOptions = [
       "--network=default"
       "--network-alias=photoprism-mariadb"
+      "--log-driver=json-file"
+      "--log-opt=compress=true"
+      "--log-opt=max-file=3"
+      "--log-opt=max-size=10m"
     ];
     user = "1000:1000";
     autoStart = false;
@@ -85,6 +94,10 @@
     extraOptions = [
       "--network=default"
       "--network-alias=sabnzbd"
+      "--log-driver=json-file"
+      "--log-opt=compress=true"
+      "--log-opt=max-file=3"
+      "--log-opt=max-size=10m"
     ];
     autoStart = false;
   };
@@ -119,6 +132,10 @@
     extraOptions = [
       "--network=default"
       "--network-alias=traefik"
+      "--log-driver=json-file"
+      "--log-opt=compress=true"
+      "--log-opt=max-file=3"
+      "--log-opt=max-size=10m"
     ];
     autoStart = false;
   };
@@ -164,6 +181,15 @@
     extraOptions = [
       "--network=default"
       "--network-alias=transmission"
+      "--dns=8.8.8.8"
+      "--dns=8.8.4.4"
+      "--privileged"
+      "--cap-add=NET_ADMIN"
+      "--device=/dev/net/tun:/dev/net/tun"
+      "--log-driver=json-file"
+      "--log-opt=compress=true"
+      "--log-opt=max-file=3"
+      "--log-opt=max-size=10m"
     ];
     autoStart = false;
   };

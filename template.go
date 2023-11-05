@@ -13,16 +13,6 @@ import (
 var templateFS embed.FS
 var nixTemplates = template.New("nix").Funcs(sprig.FuncMap()).Funcs(funcMap)
 
-func labelMapToLabelFlags(l map[string]string) []string {
-	// https://docs.docker.com/engine/reference/commandline/run/#label
-	// https://docs.podman.io/en/latest/markdown/podman-run.1.html#label-l-key-value
-	labels := mapToKeyValArray(l)
-	for i, label := range labels {
-		labels[i] = fmt.Sprintf("--label=%s", label)
-	}
-	return labels
-}
-
 func execTemplate(t *template.Template) func(string, any) (string, error) {
 	return func(name string, v any) (string, error) {
 		var s strings.Builder
@@ -45,8 +35,8 @@ func toNixValue(v any) any {
 }
 
 var funcMap template.FuncMap = template.FuncMap{
-	"derefInt":             derefInt,
-	"labelMapToLabelFlags": labelMapToLabelFlags,
-	"mapToKeyValArray":     mapToKeyValArray,
-	"toNixValue":           toNixValue,
+	"derefInt":                derefInt,
+	"mapToKeyValArray":        mapToKeyValArray,
+	"mapToRepeatedKeyValFlag": mapToRepeatedKeyValFlag,
+	"toNixValue":              toNixValue,
 }

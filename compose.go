@@ -55,44 +55,6 @@ func portConfigsToPortStrings(portConfigs []types.ServicePortConfig) []string {
 	return ports
 }
 
-type Generator struct {
-	Project      *Project
-	Runtime      ContainerRuntime
-	Paths        []string
-	EnvFiles     []string
-	AutoStart    bool
-	EnvFilesOnly bool
-
-	composeProject *types.Project
-}
-
-func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
-	env, err := ReadEnvFiles(g.EnvFiles, !g.EnvFilesOnly)
-	if err != nil {
-		return nil, err
-	}
-	composeProject, err := loader.LoadWithContext(ctx, types.ConfigDetails{
-		ConfigFiles: types.ToConfigFiles(g.Paths),
-		Environment: types.NewMapping(env),
-	})
-	if err != nil {
-		return nil, err
-	}
-	g.composeProject = composeProject
-
-	containers := g.buildNixContainers()
-	networks := g.buildNixNetworks(containers)
-	volumes := g.buildNixVolumes(containers)
-
-	return &NixContainerConfig{
-		Project:    g.Project,
-		Runtime:    g.Runtime,
-		Containers: containers,
-		Networks:   networks,
-		Volumes:    volumes,
-	}, nil
-}
-
 func parseRestartPolicyAndSystemdLabels(service *types.ServiceConfig) (*NixContainerSystemdConfig, error) {
 	p := &NixContainerSystemdConfig{
 		Service: make(map[string]any),
@@ -178,6 +140,61 @@ func parseRestartPolicyAndSystemdLabels(service *types.ServiceConfig) (*NixConta
 	return p, nil
 }
 
+type Generator struct {
+	Project      *Project
+	Runtime      ContainerRuntime
+	Paths        []string
+	EnvFiles     []string
+	AutoStart    bool
+	EnvFilesOnly bool
+
+	composeProject *types.Project
+}
+
+func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
+	env, err := ReadEnvFiles(g.EnvFiles, !g.EnvFilesOnly)
+	if err != nil {
+		return nil, err
+	}
+	composeProject, err := loader.LoadWithContext(ctx, types.ConfigDetails{
+		ConfigFiles: types.ToConfigFiles(g.Paths),
+		Environment: types.NewMapping(env),
+	})
+	if err != nil {
+		return nil, err
+	}
+	g.composeProject = composeProject
+
+	containers := g.buildNixContainers()
+	networks := g.buildNixNetworks(containers)
+	volumes := g.buildNixVolumes(containers)
+
+	// Post-process any Compose settings that require full state.
+	g.postProcessContainers(containers)
+
+	return &NixContainerConfig{
+		Project:    g.Project,
+		Runtime:    g.Runtime,
+		Containers: containers,
+		Networks:   networks,
+		Volumes:    volumes,
+	}, nil
+}
+
+func (g *Generator) postProcessContainers(containers []NixContainer) {
+	serviceToContainer := make(map[string]*NixContainer)
+	for _, c := range containers {
+		serviceToContainer[c.service.Name] = &c
+	}
+	for _, c := range containers {
+		if networkMode := c.service.NetworkMode; strings.HasPrefix(networkMode, "service:") {
+			targetService := strings.Split(networkMode, ":")[1]
+			targetContainerName := serviceToContainer[targetService].Name
+			c.ExtraOptions = append(c.ExtraOptions, "--network=container:"+targetContainerName)
+		}
+	}
+}
+
 func (g *Generator) buildNixContainer(service types.ServiceConfig) NixContainer {
 	dependsOn := service.GetDependencies()
 	if g.Project != nil {
@@ -215,6 +232,7 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) NixContainer 
 		SystemdConfig: systemdConfig,
 		DependsOn:     dependsOn,
 		AutoStart:     g.AutoStart,
+		service:       &service,
 	}
 	slices.Sort(c.Networks)
 
@@ -231,15 +249,50 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) NixContainer 
 		c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--network-alias=%s", service.Name))
 	}
 
-	// TODO(aksiksi): Handle the service's "network_mode"
-	// We can only parse the network mode at this point if it points to host or container.
-	// If it points to a service, we'll need to do a scan when we've finished parsing all
-	// containers.
-	// Compose: https://docs.docker.com/compose/compose-file/compose-file-v3/#network_mode
-	// Podman: https://docs.podman.io/en/latest/markdown/podman-run.1.html#network-mode-net
-
 	for _, v := range service.Volumes {
 		c.Volumes[v.Source] = v.String()
+	}
+
+	// https://docs.docker.com/compose/compose-file/compose-file-v3/#network_mode
+	// https://docs.podman.io/en/latest/markdown/podman-run.1.html#network-mode-net
+	switch networkMode := strings.TrimSpace(service.NetworkMode); {
+	case networkMode == "host":
+		c.ExtraOptions = append(c.ExtraOptions, "--network=host")
+	case strings.HasPrefix(networkMode, "container:"):
+		// container:[name] mode is supported by both Docker and Podman.
+		c.ExtraOptions = append(c.ExtraOptions, networkMode)
+	}
+
+	for _, ip := range service.DNS {
+		c.ExtraOptions = append(c.ExtraOptions, "--dns="+ip)
+	}
+
+	// https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities
+	if service.Privileged {
+		c.ExtraOptions = append(c.ExtraOptions, "--privileged")
+	}
+	for _, cap := range service.CapAdd {
+		c.ExtraOptions = append(c.ExtraOptions, "--cap-add="+cap)
+	}
+	for _, cap := range service.CapDrop {
+		c.ExtraOptions = append(c.ExtraOptions, "--cap-drop="+cap)
+	}
+	for _, device := range service.Devices {
+		c.ExtraOptions = append(c.ExtraOptions, "--device="+device)
+	}
+
+	// https://docs.docker.com/config/containers/logging/configure/
+	// https://docs.podman.io/en/latest/markdown/podman-run.1.html#log-driver-driver
+	if service.LogDriver != "" {
+		c.ExtraOptions = append(c.ExtraOptions, "--log-driver="+service.LogDriver)
+		c.ExtraOptions = append(c.ExtraOptions, mapToRepeatedKeyValFlag("--log-opt", service.LogOpt)...)
+	}
+	if logging := service.Logging; logging != nil {
+		// https://docs.docker.com/compose/compose-file/compose-file-v3/#logging
+		if logging.Driver != "" {
+			c.ExtraOptions = append(c.ExtraOptions, "--log-driver="+logging.Driver)
+			c.ExtraOptions = append(c.ExtraOptions, mapToRepeatedKeyValFlag("--log-opt", logging.Options)...)
+		}
 	}
 
 	return c

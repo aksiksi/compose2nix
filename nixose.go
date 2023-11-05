@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 	"text/template"
+
+	"github.com/compose-spec/compose-go/types"
 )
 
 const DefaultProjectSeparator = "-"
@@ -101,6 +103,9 @@ type NixContainer struct {
 	SystemdConfig *NixContainerSystemdConfig
 	User          string
 	AutoStart     bool
+
+	// Original Docker Compose service.
+	service *types.ServiceConfig
 }
 
 type NixContainerConfig struct {

@@ -2,6 +2,7 @@ package nixose
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"os"
 	"path"
@@ -9,6 +10,8 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 )
+
+var update = flag.Bool("update", false, "update golden files")
 
 func getPaths(t *testing.T) (string, string, string) {
 	outFileName := fmt.Sprintf("%s_out.nix", t.Name())
@@ -35,7 +38,11 @@ func TestDocker(t *testing.T) {
 		t.Fatal(err)
 	}
 	got, want := c.String(), string(wantOutput)
-	if diff := cmp.Diff(want, got); diff != "" {
+	if *update {
+		if err := os.WriteFile(outFilePath, []byte(got), 0644); err != nil {
+			t.Fatal(err)
+		}
+	} else if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("output diff: %s\n", diff)
 	}
 }
@@ -57,7 +64,11 @@ func TestPodman(t *testing.T) {
 		t.Fatal(err)
 	}
 	got, want := c.String(), string(wantOutput)
-	if diff := cmp.Diff(want, got); diff != "" {
+	if *update {
+		if err := os.WriteFile(outFilePath, []byte(got), 0644); err != nil {
+			t.Fatal(err)
+		}
+	} else if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("output diff: %s\n", diff)
 	}
 }

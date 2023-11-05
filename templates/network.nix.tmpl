@@ -1,6 +1,6 @@
 {{- $name := .Project.With .Name -}}
 {{- $runtime := .Runtime | printf "%s" -}}
-{{- $labels := labelMapToLabelFlags .Labels -}}
+{{- $labels := mapToRepeatedKeyValFlag "--label" .Labels -}}
 systemd.services."create-{{$runtime}}-network-{{$name}}" = {
   serviceConfig.Type = "oneshot";
   path = [ pkgs.{{$runtime}} ];
