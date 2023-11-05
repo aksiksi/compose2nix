@@ -130,7 +130,7 @@ func (c NixContainerConfig) String() string {
 		"execTemplate": execTemplate(nixTemplates),
 	}
 	nixTemplates := template.Must(nixTemplates.Funcs(execTemplateFuncMap).ParseFS(templateFS, "templates/*.tmpl"))
-	if err := nixTemplates.ExecuteTemplate(&s, "main.tmpl", c); err != nil {
+	if err := nixTemplates.ExecuteTemplate(&s, "main.nix.tmpl", c); err != nil {
 		panic(err)
 	}
 	return s.String()

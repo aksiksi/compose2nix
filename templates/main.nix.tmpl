@@ -20,7 +20,7 @@
 
   # Containers
   {{- range .Containers}}
-{{execTemplate "container.tmpl" . | indent 2}}
+{{execTemplate "container.nix.tmpl" . | indent 2}}
   {{- end}}
   {{- end}}
 
@@ -28,7 +28,7 @@
 
   # Networks
   {{- range .Networks}}
-{{execTemplate "network.tmpl" . | indent 2}}
+{{execTemplate "network.nix.tmpl" . | indent 2}}
   {{- end}}
   {{- end}}
 
@@ -36,7 +36,7 @@
 
   # Volumes
   {{- range .Volumes}}
-{{execTemplate "volume.tmpl" . | indent 2}}
+{{execTemplate "volume.nix.tmpl" . | indent 2}}
   {{- end}}
   {{- end}}
 
