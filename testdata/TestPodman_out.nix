@@ -33,16 +33,16 @@
     dependsOn = [
       "sabnzbd"
     ];
+    logDriver = "journald";
+    autoStart = false;
     extraOptions = [
       "--network=default"
       "--network-alias=jellyseerr"
       "--dns=1.1.1.1"
-      "--log-driver=json-file"
       "--log-opt=compress=true"
       "--log-opt=max-file=3"
       "--log-opt=max-size=10m"
     ];
-    autoStart = false;
   };
   systemd.services."podman-jellyseerr" = {
     serviceConfig = {
@@ -62,16 +62,16 @@
     volumes = [
       "/var/volumes/photoprism-mariadb:/var/lib/mysql:rw"
     ];
+    user = "1000:1000";
+    logDriver = "journald";
+    autoStart = false;
     extraOptions = [
       "--network=default"
       "--network-alias=photoprism-mariadb"
-      "--log-driver=json-file"
       "--log-opt=compress=true"
       "--log-opt=max-file=3"
       "--log-opt=max-size=10m"
     ];
-    user = "1000:1000";
-    autoStart = false;
   };
   systemd.services."podman-photoprism-mariadb" = {
     serviceConfig = {
@@ -99,15 +99,15 @@
       "traefik.http.routers.sabnzbd.rule" = "Host(`hey.hello.us`) && PathPrefix(`/sabnzbd`)";
       "traefik.http.routers.sabnzbd.tls.certresolver" = "htpc";
     };
+    logDriver = "journald";
+    autoStart = false;
     extraOptions = [
       "--network=default"
       "--network-alias=sabnzbd"
-      "--log-driver=json-file"
       "--log-opt=compress=true"
       "--log-opt=max-file=3"
       "--log-opt=max-size=10m"
     ];
-    autoStart = false;
   };
   systemd.services."podman-sabnzbd" = {
     serviceConfig = {
@@ -149,6 +149,8 @@
       "traefik.http.routers.transmission.tls.certresolver" = "htpc";
       "traefik.http.services.transmission.loadbalancer.server.port" = "9091";
     };
+    logDriver = "journald";
+    autoStart = false;
     extraOptions = [
       "--network=default"
       "--network-alias=transmission"
@@ -157,12 +159,7 @@
       "--privileged"
       "--cap-add=NET_ADMIN"
       "--device=/dev/net/tun:/dev/net/tun"
-      "--log-driver=json-file"
-      "--log-opt=compress=true"
-      "--log-opt=max-file=3"
-      "--log-opt=max-size=10m"
     ];
-    autoStart = false;
   };
   systemd.services."podman-torrent-client" = {
     serviceConfig = {
@@ -192,15 +189,15 @@
       "traefik.http.routers.traefik.service" = "api@internal";
       "traefik.http.routers.traefik.tls.certresolver" = "htpc";
     };
+    logDriver = "journald";
+    autoStart = false;
     extraOptions = [
       "--network=default"
       "--network-alias=traefik"
-      "--log-driver=json-file"
       "--log-opt=compress=true"
       "--log-opt=max-file=3"
       "--log-opt=max-size=10m"
     ];
-    autoStart = false;
   };
   systemd.services."podman-traefik" = {
     serviceConfig = {

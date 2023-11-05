@@ -110,13 +110,15 @@ type NixContainer struct {
 	Labels        map[string]string
 	Networks      []string
 	DependsOn     []string
+	LogDriver     string
 	ExtraOptions  []string
 	SystemdConfig *NixContainerSystemdConfig
 	User          string
 	AutoStart     bool
 
-	// Original Docker Compose service.
-	// Used for post-processing containers and reset to nil right afterwards.
+	// Original Docker Compose service that generated this container.
+	// This is only used for post-processing the container and is reset to nil once processing
+	// is complete.
 	service *types.ServiceConfig
 }
 

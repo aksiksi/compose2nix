@@ -141,12 +141,13 @@ func parseRestartPolicyAndSystemdLabels(service *types.ServiceConfig) (*NixConta
 }
 
 type Generator struct {
-	Project      *Project
-	Runtime      ContainerRuntime
-	Paths        []string
-	EnvFiles     []string
-	AutoStart    bool
-	EnvFilesOnly bool
+	Project             *Project
+	Runtime             ContainerRuntime
+	Paths               []string
+	EnvFiles            []string
+	AutoStart           bool
+	EnvFilesOnly        bool
+	UseComposeLogDriver bool
 }
 
 func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
@@ -228,6 +229,7 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) *NixContainer
 		Networks:      maps.Keys(service.Networks),
 		SystemdConfig: systemdConfig,
 		AutoStart:     g.AutoStart,
+		LogDriver:     "journald", // This is the NixOS default
 		service:       &service,
 	}
 	slices.Sort(c.Networks)
@@ -277,18 +279,26 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) *NixContainer
 		c.ExtraOptions = append(c.ExtraOptions, "--device="+device)
 	}
 
+	// Compose defaults to "json-file", so we'll treat _any_ "json-file" setting as a default.
+	// Users can override this behavior via CLI.
+	//
 	// https://docs.docker.com/config/containers/logging/configure/
 	// https://docs.podman.io/en/latest/markdown/podman-run.1.html#log-driver-driver
 	if service.LogDriver != "" {
-		c.ExtraOptions = append(c.ExtraOptions, "--log-driver="+service.LogDriver)
+		if service.LogDriver != "json-file" || g.UseComposeLogDriver {
+			c.LogDriver = service.LogDriver
+		}
+		// Log options are always passed through.
 		c.ExtraOptions = append(c.ExtraOptions, mapToRepeatedKeyValFlag("--log-opt", service.LogOpt)...)
 	}
+	// New logging setting always overrides the legacy setting.
+	// https://docs.docker.com/compose/compose-file/compose-file-v3/#logging
 	if logging := service.Logging; logging != nil {
-		// https://docs.docker.com/compose/compose-file/compose-file-v3/#logging
-		if logging.Driver != "" {
-			c.ExtraOptions = append(c.ExtraOptions, "--log-driver="+logging.Driver)
-			c.ExtraOptions = append(c.ExtraOptions, mapToRepeatedKeyValFlag("--log-opt", logging.Options)...)
+		if logging.Driver != "json-file" || g.UseComposeLogDriver {
+			c.LogDriver = logging.Driver
 		}
+		// Log options are always passed through.
+		c.ExtraOptions = append(c.ExtraOptions, mapToRepeatedKeyValFlag("--log-opt", logging.Options)...)
 	}
 
 	return c

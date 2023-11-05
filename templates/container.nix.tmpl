@@ -50,20 +50,24 @@ virtualisation.oci-containers.containers."{{.Name}}" = {
   ];
   {{- end}}
 
+  {{- if .User}}
+  user = "{{.User}}";
+  {{- end}}
+
+  {{- if .LogDriver}}
+  logDriver = "{{.LogDriver}}";
+  {{- end}}
+
+  {{- if not .AutoStart}}
+  autoStart = false;
+  {{- end}}
+
   {{- if .ExtraOptions}}
   extraOptions = [
     {{- range .ExtraOptions}}
     "{{.}}"
     {{- end}}
   ];
-  {{- end}}
-
-  {{- if .User}}
-  user = "{{.User}}";
-  {{- end}}
-
-  {{- if not .AutoStart}}
-  autoStart = false;
   {{- end}}
 };
 {{- if .SystemdConfig}}

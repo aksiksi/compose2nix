@@ -20,6 +20,7 @@ var project = flag.String("project", "", "project name used as a prefix for gene
 var projectSeparator = flag.String("project_separator", nixose.DefaultProjectSeparator, "seperator for project prefix")
 var autoStart = flag.Bool("auto_start", true, "control auto-start setting for containers")
 var runtime = flag.String("runtime", "podman", `"podman" or "docker"`)
+var useComposeLogDriver = flag.Bool("use_compose_log_driver", false, "if set, always use the Compose log driver.")
 
 func main() {
 	flag.Parse()
@@ -44,12 +45,13 @@ func main() {
 
 	start := time.Now()
 	g := nixose.Generator{
-		Project:      nixose.NewProjectWithSeparator(*project, *projectSeparator),
-		Runtime:      containerRuntime,
-		Paths:        paths,
-		EnvFiles:     envFiles,
-		EnvFilesOnly: *envFilesOnly,
-		AutoStart:    *autoStart,
+		Project:             nixose.NewProjectWithSeparator(*project, *projectSeparator),
+		Runtime:             containerRuntime,
+		Paths:               paths,
+		EnvFiles:            envFiles,
+		EnvFilesOnly:        *envFilesOnly,
+		AutoStart:           *autoStart,
+		UseComposeLogDriver: *useComposeLogDriver,
 	}
 	containerConfig, err := g.Run(ctx)
 	if err != nil {
