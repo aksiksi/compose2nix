@@ -8,7 +8,7 @@ import (
 	"github.com/compose-spec/compose-go/types"
 )
 
-const DefaultProjectSeparator = "-"
+const DefaultProjectSeparator = "_"
 
 type ContainerRuntime int
 
@@ -36,7 +36,14 @@ type Project struct {
 	separator string
 }
 
-func NewProject(name, separator string) *Project {
+func NewProject(name string) *Project {
+	if name == "" {
+		return nil
+	}
+	return &Project{Name: name, separator: DefaultProjectSeparator}
+}
+
+func NewProjectWithSeparator(name, separator string) *Project {
 	if name == "" {
 		return nil
 	}
@@ -53,8 +60,14 @@ func (p *Project) With(name string) string {
 	return fmt.Sprintf("%s%s%s", p.Name, p.separator, name)
 }
 
+func (p *Project) WithSeparator(name, separator string) string {
+	if p == nil {
+		return name
+	}
+	return fmt.Sprintf("%s%s%s", p.Name, separator, name)
+}
+
 type NixNetwork struct {
-	Project    *Project
 	Runtime    ContainerRuntime
 	Name       string
 	Labels     map[string]string
@@ -62,7 +75,6 @@ type NixNetwork struct {
 }
 
 type NixVolume struct {
-	Project    *Project
 	Runtime    ContainerRuntime
 	Name       string
 	Driver     string
@@ -88,7 +100,6 @@ type NixContainerSystemdConfig struct {
 
 // https://search.nixos.org/options?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=oci-container
 type NixContainer struct {
-	Project       *Project
 	Runtime       ContainerRuntime
 	Name          string
 	Image         string
@@ -105,15 +116,16 @@ type NixContainer struct {
 	AutoStart     bool
 
 	// Original Docker Compose service.
+	// Used for post-processing containers and reset to nil right afterwards.
 	service *types.ServiceConfig
 }
 
 type NixContainerConfig struct {
 	Project    *Project
 	Runtime    ContainerRuntime
-	Containers []NixContainer
-	Networks   []NixNetwork
-	Volumes    []NixVolume
+	Containers []*NixContainer
+	Networks   []*NixNetwork
+	Volumes    []*NixVolume
 }
 
 func (c NixContainerConfig) String() string {

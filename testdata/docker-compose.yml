@@ -2,7 +2,6 @@ version: "3.7"
 services:
   sabnzbd:
     image: lscr.io/linuxserver/sabnzbd
-    container_name: sabnzbd
     environment:
       PUID: ${PUID}
       PGID: ${PGID}
@@ -29,7 +28,7 @@ services:
     restart: unless-stopped
   transmission:
     image: docker.io/haugene/transmission-openvpn
-    container_name: transmission
+    container_name: torrent-client
     privileged: true
     cap_add:
       - NET_ADMIN
@@ -103,6 +102,8 @@ services:
       - "traefik.http.routers.jellyseerr.rule=Host(`requests.${DOMAIN}`)"
       - "traefik.http.routers.jellyseerr.tls.certresolver=htpc"
       - "traefik.http.routers.jellyseerr.middlewares=chain-authelia@file"
+    depends_on:
+      - sabnzbd
     logging:
       driver: "json-file"
       options:

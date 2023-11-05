@@ -25,6 +25,9 @@
       "traefik.http.routers.jellyseerr.rule" = "Host(`requests.hello.us`)";
       "traefik.http.routers.jellyseerr.tls.certresolver" = "htpc";
     };
+    dependsOn = [
+      "sabnzbd"
+    ];
     extraOptions = [
       "--network=default"
       "--network-alias=jellyseerr"
@@ -107,44 +110,7 @@
       RuntimeMaxSec = 10;
     };
   };
-  virtualisation.oci-containers.containers."traefik" = {
-    image = "docker.io/library/traefik";
-    environment = {
-      CLOUDFLARE_API_KEY = "yomama";
-      CLOUDFLARE_EMAIL = "aaa@aaa.com";
-    };
-    volumes = [
-      "/var/run/podman/podman.sock:/var/run/docker.sock:ro"
-      "/var/volumes/traefik:/etc/traefik:rw"
-    ];
-    ports = [
-      "80:80/tcp"
-      "443:443/tcp"
-    ];
-    labels = {
-      "traefik.enable" = "true";
-      "traefik.http.routers.traefik.entrypoints" = "https";
-      "traefik.http.routers.traefik.middlewares" = "chain-authelia@file";
-      "traefik.http.routers.traefik.rule" = "Host(`hey.hello.us`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))";
-      "traefik.http.routers.traefik.service" = "api@internal";
-      "traefik.http.routers.traefik.tls.certresolver" = "htpc";
-    };
-    extraOptions = [
-      "--network=default"
-      "--network-alias=traefik"
-      "--log-driver=json-file"
-      "--log-opt=compress=true"
-      "--log-opt=max-file=3"
-      "--log-opt=max-size=10m"
-    ];
-    autoStart = false;
-  };
-  systemd.services."docker-traefik" = {
-    serviceConfig = {
-      Restart = "always";
-    };
-  };
-  virtualisation.oci-containers.containers."transmission" = {
+  virtualisation.oci-containers.containers."torrent-client" = {
     image = "docker.io/haugene/transmission-openvpn";
     environment = {
       GLOBAL_APPLY_PERMISSIONS = "false";
@@ -193,11 +159,48 @@
     ];
     autoStart = false;
   };
-  systemd.services."docker-transmission" = {
+  systemd.services."docker-torrent-client" = {
     serviceConfig = {
       Restart = "on-failure";
     };
     startLimitBurst = 3;
+  };
+  virtualisation.oci-containers.containers."traefik" = {
+    image = "docker.io/library/traefik";
+    environment = {
+      CLOUDFLARE_API_KEY = "yomama";
+      CLOUDFLARE_EMAIL = "aaa@aaa.com";
+    };
+    volumes = [
+      "/var/run/podman/podman.sock:/var/run/docker.sock:ro"
+      "/var/volumes/traefik:/etc/traefik:rw"
+    ];
+    ports = [
+      "80:80/tcp"
+      "443:443/tcp"
+    ];
+    labels = {
+      "traefik.enable" = "true";
+      "traefik.http.routers.traefik.entrypoints" = "https";
+      "traefik.http.routers.traefik.middlewares" = "chain-authelia@file";
+      "traefik.http.routers.traefik.rule" = "Host(`hey.hello.us`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))";
+      "traefik.http.routers.traefik.service" = "api@internal";
+      "traefik.http.routers.traefik.tls.certresolver" = "htpc";
+    };
+    extraOptions = [
+      "--network=default"
+      "--network-alias=traefik"
+      "--log-driver=json-file"
+      "--log-opt=compress=true"
+      "--log-opt=max-file=3"
+      "--log-opt=max-size=10m"
+    ];
+    autoStart = false;
+  };
+  systemd.services."docker-traefik" = {
+    serviceConfig = {
+      Restart = "always";
+    };
   };
 
   # Networks
@@ -211,8 +214,8 @@
       "docker-jellyseerr.service"
       "docker-photoprism-mariadb.service"
       "docker-sabnzbd.service"
+      "docker-torrent-client.service"
       "docker-traefik.service"
-      "docker-transmission.service"
     ];
   };
 
@@ -239,7 +242,7 @@
     '';
     wantedBy = [
       "docker-sabnzbd.service"
-      "docker-transmission.service"
+      "docker-torrent-client.service"
     ];
   };
 

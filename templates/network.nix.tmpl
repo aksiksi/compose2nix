@@ -1,16 +1,15 @@
-{{- $name := .Project.With .Name -}}
 {{- $runtime := .Runtime | printf "%s" -}}
 {{- $labels := mapToRepeatedKeyValFlag "--label" .Labels -}}
-systemd.services."create-{{$runtime}}-network-{{$name}}" = {
+systemd.services."create-{{$runtime}}-network-{{.Name}}" = {
   serviceConfig.Type = "oneshot";
   path = [ pkgs.{{$runtime}} ];
   {{- if eq $runtime "docker"}}
   script = ''
-    docker network inspect {{$name}} || docker network create {{$name}}{{ $labels | join " "}}
+    docker network inspect {{.Name}} || docker network create {{.Name}}{{ $labels | join " "}}
   '';
   {{- else}}
   script = ''
-    podman network create {{$name}} --opt isolate=true --ignore{{ $labels | join " "}}
+    podman network create {{.Name}} --opt isolate=true --ignore{{ $labels | join " "}}
   '';
   {{- end}}
   {{- if .Containers}}

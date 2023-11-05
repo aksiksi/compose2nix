@@ -44,7 +44,7 @@ func main() {
 
 	start := time.Now()
 	g := nixose.Generator{
-		Project:      nixose.NewProject(*project, *projectSeparator),
+		Project:      nixose.NewProjectWithSeparator(*project, *projectSeparator),
 		Runtime:      containerRuntime,
 		Paths:        paths,
 		EnvFiles:     envFiles,

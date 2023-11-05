@@ -1,6 +1,5 @@
-{{- $name := .Project.With .Name -}}
 {{- $runtime := .Runtime | printf "%s" -}}
-virtualisation.oci-containers.containers."{{$name}}" = {
+virtualisation.oci-containers.containers."{{.Name}}" = {
   image = "{{.Image}}";
 
   {{- if .Environment}}
@@ -68,7 +67,7 @@ virtualisation.oci-containers.containers."{{$name}}" = {
   {{- end}}
 };
 {{- if .SystemdConfig}}
-systemd.services."{{$runtime}}-{{$name}}" = {
+systemd.services."{{$runtime}}-{{.Name}}" = {
   {{- if .SystemdConfig.Service}}
   serviceConfig = {
   {{- range $k, $v := .SystemdConfig.Service}}

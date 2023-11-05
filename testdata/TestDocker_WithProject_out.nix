@@ -2,16 +2,11 @@
 
 {
   # Runtime
-  virtualisation.podman = {
+  virtualisation.docker = {
     enable = true;
     autoPrune.enable = true;
-    dockerCompat = true;
-    defaultNetwork.settings = {
-      # Required for container networking to be able to use names.
-      dns_enabled = true;
-    };
   };
-  virtualisation.oci-containers.backend = "podman";
+  virtualisation.oci-containers.backend = "docker";
 
   # Containers
   virtualisation.oci-containers.containers."jellyseerr" = {
@@ -31,10 +26,10 @@
       "traefik.http.routers.jellyseerr.tls.certresolver" = "htpc";
     };
     dependsOn = [
-      "sabnzbd"
+      "myproject_sabnzbd"
     ];
     extraOptions = [
-      "--network=default"
+      "--network=myproject_default"
       "--network-alias=jellyseerr"
       "--dns=1.1.1.1"
       "--log-driver=json-file"
@@ -44,9 +39,46 @@
     ];
     autoStart = false;
   };
-  systemd.services."podman-jellyseerr" = {
+  systemd.services."docker-jellyseerr" = {
     serviceConfig = {
       Restart = "always";
+    };
+  };
+  virtualisation.oci-containers.containers."myproject_sabnzbd" = {
+    image = "lscr.io/linuxserver/sabnzbd";
+    environment = {
+      DOCKER_MODS = "ghcr.io/gilbn/theme.park:sabnzbd";
+      PGID = "1000";
+      PUID = "1000";
+      TP_DOMAIN = "hey.hello.us\/themepark";
+      TP_HOTIO = "false";
+      TP_THEME = "potato";
+      TZ = "America/New_York";
+    };
+    volumes = [
+      "/var/volumes/sabnzbd:/config:rw"
+      "storage:/storage:rw"
+    ];
+    labels = {
+      "traefik.enable" = "true";
+      "traefik.http.routers.sabnzbd.middlewares" = "chain-authelia@file";
+      "traefik.http.routers.sabnzbd.rule" = "Host(`hey.hello.us`) && PathPrefix(`/sabnzbd`)";
+      "traefik.http.routers.sabnzbd.tls.certresolver" = "htpc";
+    };
+    extraOptions = [
+      "--network=myproject_default"
+      "--network-alias=sabnzbd"
+      "--log-driver=json-file"
+      "--log-opt=compress=true"
+      "--log-opt=max-file=3"
+      "--log-opt=max-size=10m"
+    ];
+    autoStart = false;
+  };
+  systemd.services."docker-myproject_sabnzbd" = {
+    serviceConfig = {
+      Restart = "always";
+      RuntimeMaxSec = 10;
     };
   };
   virtualisation.oci-containers.containers."photoprism-mariadb" = {
@@ -63,7 +95,7 @@
       "/var/volumes/photoprism-mariadb:/var/lib/mysql:rw"
     ];
     extraOptions = [
-      "--network=default"
+      "--network=myproject_default"
       "--network-alias=photoprism-mariadb"
       "--log-driver=json-file"
       "--log-opt=compress=true"
@@ -73,46 +105,9 @@
     user = "1000:1000";
     autoStart = false;
   };
-  systemd.services."podman-photoprism-mariadb" = {
+  systemd.services."docker-photoprism-mariadb" = {
     serviceConfig = {
       Restart = "always";
-    };
-  };
-  virtualisation.oci-containers.containers."sabnzbd" = {
-    image = "lscr.io/linuxserver/sabnzbd";
-    environment = {
-      DOCKER_MODS = "ghcr.io/gilbn/theme.park:sabnzbd";
-      PGID = "1000";
-      PUID = "1000";
-      TP_DOMAIN = "hey.hello.us\/themepark";
-      TP_HOTIO = "false";
-      TP_THEME = "potato";
-      TZ = "America/New_York";
-    };
-    volumes = [
-      "/var/volumes/sabnzbd:/config:rw"
-      "/mnt/media:/storage:rw"
-    ];
-    labels = {
-      "traefik.enable" = "true";
-      "traefik.http.routers.sabnzbd.middlewares" = "chain-authelia@file";
-      "traefik.http.routers.sabnzbd.rule" = "Host(`hey.hello.us`) && PathPrefix(`/sabnzbd`)";
-      "traefik.http.routers.sabnzbd.tls.certresolver" = "htpc";
-    };
-    extraOptions = [
-      "--network=default"
-      "--network-alias=sabnzbd"
-      "--log-driver=json-file"
-      "--log-opt=compress=true"
-      "--log-opt=max-file=3"
-      "--log-opt=max-size=10m"
-    ];
-    autoStart = false;
-  };
-  systemd.services."podman-sabnzbd" = {
-    serviceConfig = {
-      Restart = "always";
-      RuntimeMaxSec = 10;
     };
   };
   virtualisation.oci-containers.containers."torrent-client" = {
@@ -136,7 +131,7 @@
       "/etc/localtime:/etc/localtime:ro"
       "/var/volumes/transmission/config:/config:rw"
       "/var/volumes/transmission/scripts:/scripts:rw"
-      "/mnt/media:/storage:rw"
+      "storage:/storage:rw"
     ];
     ports = [
       "9091:9091/tcp"
@@ -150,7 +145,7 @@
       "traefik.http.services.transmission.loadbalancer.server.port" = "9091";
     };
     extraOptions = [
-      "--network=default"
+      "--network=myproject_default"
       "--network-alias=transmission"
       "--dns=8.8.8.8"
       "--dns=8.8.4.4"
@@ -164,7 +159,7 @@
     ];
     autoStart = false;
   };
-  systemd.services."podman-torrent-client" = {
+  systemd.services."docker-torrent-client" = {
     serviceConfig = {
       Restart = "on-failure";
     };
@@ -193,7 +188,7 @@
       "traefik.http.routers.traefik.tls.certresolver" = "htpc";
     };
     extraOptions = [
-      "--network=default"
+      "--network=myproject_default"
       "--network-alias=traefik"
       "--log-driver=json-file"
       "--log-opt=compress=true"
@@ -202,33 +197,60 @@
     ];
     autoStart = false;
   };
-  systemd.services."podman-traefik" = {
+  systemd.services."docker-traefik" = {
     serviceConfig = {
       Restart = "always";
     };
   };
 
   # Networks
-  systemd.services."create-podman-network-default" = {
+  systemd.services."create-docker-network-myproject_default" = {
     serviceConfig.Type = "oneshot";
-    path = [ pkgs.podman ];
+    path = [ pkgs.docker ];
     script = ''
-      podman network create default --opt isolate=true --ignore
+      docker network inspect myproject_default || docker network create myproject_default
     '';
     wantedBy = [
-      "podman-jellyseerr.service"
-      "podman-photoprism-mariadb.service"
-      "podman-sabnzbd.service"
-      "podman-torrent-client.service"
-      "podman-traefik.service"
+      "docker-jellyseerr.service"
+      "docker-myproject_sabnzbd.service"
+      "docker-photoprism-mariadb.service"
+      "docker-torrent-client.service"
+      "docker-traefik.service"
+    ];
+  };
+
+  # Volumes
+  systemd.services."create-docker-volume-books" = {
+    serviceConfig.Type = "oneshot";
+    path = [ pkgs.docker ];
+    script = ''
+      docker volume inspect books || docker volume create books --opt device=/mnt/media/Books,o=bind,type=none
+    '';
+  };
+  systemd.services."create-docker-volume-photos" = {
+    serviceConfig.Type = "oneshot";
+    path = [ pkgs.docker ];
+    script = ''
+      docker volume inspect photos || docker volume create photos --opt device=/mnt/photos,o=bind,type=none
+    '';
+  };
+  systemd.services."create-docker-volume-storage" = {
+    serviceConfig.Type = "oneshot";
+    path = [ pkgs.docker ];
+    script = ''
+      docker volume inspect storage || docker volume create storage --opt device=/mnt/media,o=bind,type=none
+    '';
+    wantedBy = [
+      "docker-myproject_sabnzbd.service"
+      "docker-torrent-client.service"
     ];
   };
 
   # Scripts
-  up = writeShellScript "compose-up.sh" ''
+  up = writeShellScript "compose-myproject_up.sh" ''
     echo "TODO: Create resources."
   '';
-  down = writeShellScript "compose-down.sh" ''
+  down = writeShellScript "compose-myproject_down.sh" ''
     echo "TODO: Remove resources."
   '';
 }

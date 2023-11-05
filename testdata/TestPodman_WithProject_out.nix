@@ -31,10 +31,10 @@
       "traefik.http.routers.jellyseerr.tls.certresolver" = "htpc";
     };
     dependsOn = [
-      "sabnzbd"
+      "myproject_sabnzbd"
     ];
     extraOptions = [
-      "--network=default"
+      "--network=myproject_default"
       "--network-alias=jellyseerr"
       "--dns=1.1.1.1"
       "--log-driver=json-file"
@@ -49,36 +49,7 @@
       Restart = "always";
     };
   };
-  virtualisation.oci-containers.containers."photoprism-mariadb" = {
-    image = "docker.io/library/mariadb:10.9";
-    environment = {
-      MARIADB_AUTO_UPGRADE = "1";
-      MARIADB_DATABASE = "photoprism";
-      MARIADB_INITDB_SKIP_TZINFO = "1";
-      MARIADB_PASSWORD = "insecure";
-      MARIADB_ROOT_PASSWORD = "insecure";
-      MARIADB_USER = "photoprism";
-    };
-    volumes = [
-      "/var/volumes/photoprism-mariadb:/var/lib/mysql:rw"
-    ];
-    extraOptions = [
-      "--network=default"
-      "--network-alias=photoprism-mariadb"
-      "--log-driver=json-file"
-      "--log-opt=compress=true"
-      "--log-opt=max-file=3"
-      "--log-opt=max-size=10m"
-    ];
-    user = "1000:1000";
-    autoStart = false;
-  };
-  systemd.services."podman-photoprism-mariadb" = {
-    serviceConfig = {
-      Restart = "always";
-    };
-  };
-  virtualisation.oci-containers.containers."sabnzbd" = {
+  virtualisation.oci-containers.containers."myproject_sabnzbd" = {
     image = "lscr.io/linuxserver/sabnzbd";
     environment = {
       DOCKER_MODS = "ghcr.io/gilbn/theme.park:sabnzbd";
@@ -100,7 +71,7 @@
       "traefik.http.routers.sabnzbd.tls.certresolver" = "htpc";
     };
     extraOptions = [
-      "--network=default"
+      "--network=myproject_default"
       "--network-alias=sabnzbd"
       "--log-driver=json-file"
       "--log-opt=compress=true"
@@ -109,10 +80,39 @@
     ];
     autoStart = false;
   };
-  systemd.services."podman-sabnzbd" = {
+  systemd.services."podman-myproject_sabnzbd" = {
     serviceConfig = {
       Restart = "always";
       RuntimeMaxSec = 10;
+    };
+  };
+  virtualisation.oci-containers.containers."photoprism-mariadb" = {
+    image = "docker.io/library/mariadb:10.9";
+    environment = {
+      MARIADB_AUTO_UPGRADE = "1";
+      MARIADB_DATABASE = "photoprism";
+      MARIADB_INITDB_SKIP_TZINFO = "1";
+      MARIADB_PASSWORD = "insecure";
+      MARIADB_ROOT_PASSWORD = "insecure";
+      MARIADB_USER = "photoprism";
+    };
+    volumes = [
+      "/var/volumes/photoprism-mariadb:/var/lib/mysql:rw"
+    ];
+    extraOptions = [
+      "--network=myproject_default"
+      "--network-alias=photoprism-mariadb"
+      "--log-driver=json-file"
+      "--log-opt=compress=true"
+      "--log-opt=max-file=3"
+      "--log-opt=max-size=10m"
+    ];
+    user = "1000:1000";
+    autoStart = false;
+  };
+  systemd.services."podman-photoprism-mariadb" = {
+    serviceConfig = {
+      Restart = "always";
     };
   };
   virtualisation.oci-containers.containers."torrent-client" = {
@@ -150,7 +150,7 @@
       "traefik.http.services.transmission.loadbalancer.server.port" = "9091";
     };
     extraOptions = [
-      "--network=default"
+      "--network=myproject_default"
       "--network-alias=transmission"
       "--dns=8.8.8.8"
       "--dns=8.8.4.4"
@@ -193,7 +193,7 @@
       "traefik.http.routers.traefik.tls.certresolver" = "htpc";
     };
     extraOptions = [
-      "--network=default"
+      "--network=myproject_default"
       "--network-alias=traefik"
       "--log-driver=json-file"
       "--log-opt=compress=true"
@@ -209,26 +209,26 @@
   };
 
   # Networks
-  systemd.services."create-podman-network-default" = {
+  systemd.services."create-podman-network-myproject_default" = {
     serviceConfig.Type = "oneshot";
     path = [ pkgs.podman ];
     script = ''
-      podman network create default --opt isolate=true --ignore
+      podman network create myproject_default --opt isolate=true --ignore
     '';
     wantedBy = [
       "podman-jellyseerr.service"
+      "podman-myproject_sabnzbd.service"
       "podman-photoprism-mariadb.service"
-      "podman-sabnzbd.service"
       "podman-torrent-client.service"
       "podman-traefik.service"
     ];
   };
 
   # Scripts
-  up = writeShellScript "compose-up.sh" ''
+  up = writeShellScript "compose-myproject_up.sh" ''
     echo "TODO: Create resources."
   '';
-  down = writeShellScript "compose-down.sh" ''
+  down = writeShellScript "compose-myproject_down.sh" ''
     echo "TODO: Remove resources."
   '';
 }
