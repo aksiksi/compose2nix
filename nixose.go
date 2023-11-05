@@ -137,6 +137,7 @@ func (c NixContainerConfig) String() string {
 	}
 	nixTemplates := template.Must(nixTemplates.Funcs(execTemplateFuncMap).ParseFS(templateFS, "templates/*.tmpl"))
 	if err := nixTemplates.ExecuteTemplate(&s, "main.nix.tmpl", c); err != nil {
+		// This should never be hit under normal operation.
 		panic(err)
 	}
 	return s.String()

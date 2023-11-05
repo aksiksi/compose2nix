@@ -163,7 +163,10 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 		return nil, err
 	}
 
-	containers := g.buildNixContainers(composeProject)
+	containers, err := g.buildNixContainers(composeProject)
+	if err != nil {
+		return nil, err
+	}
 	networks := g.buildNixNetworks(composeProject, containers)
 	volumes := g.buildNixVolumes(composeProject, containers)
 
@@ -204,7 +207,7 @@ func (g *Generator) postProcessContainers(containers []*NixContainer) {
 	}
 }
 
-func (g *Generator) buildNixContainer(service types.ServiceConfig) *NixContainer {
+func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContainer, error) {
 	var name string
 	if service.ContainerName != "" {
 		name = service.ContainerName
@@ -214,8 +217,7 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) *NixContainer
 
 	systemdConfig, err := parseRestartPolicyAndSystemdLabels(&service)
 	if err != nil {
-		// TODO(aksiksi): Return error here instead of panicing.
-		panic(err)
+		return nil, err
 	}
 
 	c := &NixContainer{
@@ -301,18 +303,22 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) *NixContainer
 		c.ExtraOptions = append(c.ExtraOptions, mapToRepeatedKeyValFlag("--log-opt", logging.Options)...)
 	}
 
-	return c
+	return c, nil
 }
 
-func (g *Generator) buildNixContainers(composeProject *types.Project) []*NixContainer {
+func (g *Generator) buildNixContainers(composeProject *types.Project) ([]*NixContainer, error) {
 	var containers []*NixContainer
 	for _, s := range composeProject.Services {
-		containers = append(containers, g.buildNixContainer(s))
+		c, err := g.buildNixContainer(s)
+		if err != nil {
+			return nil, fmt.Errorf("failed to build container for service %q: %w", s.Name, err)
+		}
+		containers = append(containers, c)
 	}
 	slices.SortFunc(containers, func(c1, c2 *NixContainer) int {
 		return cmp.Compare(c1.Name, c2.Name)
 	})
-	return containers
+	return containers, nil
 }
 
 func (g *Generator) buildNixNetworks(composeProject *types.Project, containers []*NixContainer) []*NixNetwork {
