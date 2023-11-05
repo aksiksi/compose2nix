@@ -68,3 +68,27 @@ virtualisation.oci-containers.containers."{{$name}}" = {
   autoStart = false;
   {{- end}}
 };
+{{- if .SystemdConfig}}
+systemd.services."{{$runtime}}-{{$name}}" = {
+  {{- if .SystemdConfig.Service}}
+  serviceConfig = {
+  {{- range $k, $v := .SystemdConfig.Service}}
+    {{$k}} = {{toNixValue $v}};
+  {{- end}}
+  };
+  {{- end}}
+  {{- if .SystemdConfig.Unit}}
+  unitConfig = {
+  {{- range $k, $v := .SystemdConfig.Unit}}
+    {{$k}} = {{toNixValue $v}};
+  {{- end}}
+  };
+  {{- end}}
+  {{- if .SystemdConfig.StartLimitBurst}}
+  startLimitBurst = {{derefInt .SystemdConfig.StartLimitBurst}};
+  {{- end}}
+  {{- if .SystemdConfig.StartLimitIntervalSec}}
+  startLimitIntervalSec = {{derefInt .SystemdConfig.StartLimitIntervalSec}};
+  {{- end}}
+};
+{{- end}}

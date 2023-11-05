@@ -36,6 +36,11 @@
     ];
     autoStart = false;
   };
+  systemd.services."podman-jellyseerr" = {
+    serviceConfig = {
+      Restart = "always";
+    };
+  };
   virtualisation.oci-containers.containers."photoprism-mariadb" = {
     image = "docker.io/library/mariadb:10.9";
     environment = {
@@ -55,6 +60,11 @@
     ];
     user = "1000:1000";
     autoStart = false;
+  };
+  systemd.services."podman-photoprism-mariadb" = {
+    serviceConfig = {
+      Restart = "always";
+    };
   };
   virtualisation.oci-containers.containers."sabnzbd" = {
     image = "lscr.io/linuxserver/sabnzbd";
@@ -83,6 +93,12 @@
     ];
     autoStart = false;
   };
+  systemd.services."podman-sabnzbd" = {
+    serviceConfig = {
+      Restart = "always";
+      RuntimeMaxSec = 10;
+    };
+  };
   virtualisation.oci-containers.containers."traefik" = {
     image = "docker.io/library/traefik";
     environment = {
@@ -110,6 +126,11 @@
       "--network-alias=traefik"
     ];
     autoStart = false;
+  };
+  systemd.services."podman-traefik" = {
+    serviceConfig = {
+      Restart = "always";
+    };
   };
   virtualisation.oci-containers.containers."transmission" = {
     image = "docker.io/haugene/transmission-openvpn";
@@ -150,6 +171,12 @@
       "--network-alias=transmission"
     ];
     autoStart = false;
+  };
+  systemd.services."podman-transmission" = {
+    serviceConfig = {
+      Restart = "on-failure";
+    };
+    startLimitBurst = 3;
   };
 
   # Networks

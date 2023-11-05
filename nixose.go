@@ -1,40 +1,10 @@
 package nixose
 
 import (
-	"embed"
 	"fmt"
 	"strings"
 	"text/template"
-
-	"github.com/Masterminds/sprig"
 )
-
-//go:embed templates/*.tmpl
-var templateFS embed.FS
-var nixTemplates = template.New("nix").Funcs(sprig.FuncMap()).Funcs(funcMap)
-
-func labelMapToLabelFlags(l map[string]string) []string {
-	// https://docs.docker.com/engine/reference/commandline/run/#label
-	// https://docs.podman.io/en/latest/markdown/podman-run.1.html#label-l-key-value
-	labels := mapToKeyValArray(l)
-	for i, label := range labels {
-		labels[i] = fmt.Sprintf("--label=%s", label)
-	}
-	return labels
-}
-
-func execTemplate(t *template.Template) func(string, any) (string, error) {
-	return func(name string, v any) (string, error) {
-		var s strings.Builder
-		err := t.ExecuteTemplate(&s, name, v)
-		return s.String(), err
-	}
-}
-
-var funcMap template.FuncMap = template.FuncMap{
-	"labelMapToLabelFlags": labelMapToLabelFlags,
-	"mapToKeyValArray":     mapToKeyValArray,
-}
 
 const DefaultProjectSeparator = "-"
 
@@ -98,22 +68,39 @@ type NixVolume struct {
 	Containers []string
 }
 
+// NixContainerSystemdConfig configures the container's systemd config.
+// In particular, this allows control of the container restart policy through systemd
+// service and unit configs.
+//
+// Each key-value pair in a map represents a systemd key and its value (e.g., Restart=always).
+// Users can provide custom config keys by setting the nixose.systemd.* label on the service.
+type NixContainerSystemdConfig struct {
+	Service map[string]any
+	Unit    map[string]any
+	// NixOS treats these differently, probably to fix the rename issue in
+	// earlier systemd versions.
+	// See: https://unix.stackexchange.com/a/464098
+	StartLimitBurst       *int
+	StartLimitIntervalSec *int
+}
+
 // https://search.nixos.org/options?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=oci-container
 type NixContainer struct {
-	Project      *Project
-	Runtime      ContainerRuntime
-	Name         string
-	Image        string
-	Environment  map[string]string
-	EnvFiles     []string
-	Volumes      map[string]string
-	Ports        []string
-	Labels       map[string]string
-	Networks     []string
-	DependsOn    []string
-	ExtraOptions []string
-	User         string
-	AutoStart    bool
+	Project       *Project
+	Runtime       ContainerRuntime
+	Name          string
+	Image         string
+	Environment   map[string]string
+	EnvFiles      []string
+	Volumes       map[string]string
+	Ports         []string
+	Labels        map[string]string
+	Networks      []string
+	DependsOn     []string
+	ExtraOptions  []string
+	SystemdConfig *NixContainerSystemdConfig
+	User          string
+	AutoStart     bool
 }
 
 type NixContainerConfig struct {

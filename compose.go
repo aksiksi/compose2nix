@@ -5,13 +5,21 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"regexp"
 	"slices"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/compose-spec/compose-go/loader"
 	"github.com/compose-spec/compose-go/types"
 	"golang.org/x/exp/maps"
 )
+
+// Examples:
+// nixose.systemd.service.RuntimeMaxSec=100
+// nixose.systemd.unit.StartLimitBurst=10
+var systemdLabelRegexp regexp.Regexp = *regexp.MustCompile(`nixose\.systemd\.(service|unit)\.(\w+)`)
 
 func composeEnvironmentToMap(env types.MappingWithEquals) map[string]string {
 	m := make(map[string]string)
@@ -85,6 +93,91 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 	}, nil
 }
 
+func parseRestartPolicyAndSystemdLabels(service *types.ServiceConfig) (*NixContainerSystemdConfig, error) {
+	p := &NixContainerSystemdConfig{
+		Service: make(map[string]any),
+		Unit:    make(map[string]any),
+	}
+
+	// https://docs.docker.com/compose/compose-file/compose-file-v2/#restart
+	switch restart := service.Restart; restart {
+	case "":
+		p.Service["Restart"] = "no"
+	case "no", "always", "on-failure":
+		p.Service["Restart"] = restart
+	case "unless-stopped":
+		p.Service["Restart"] = "always"
+	default:
+		if strings.HasPrefix(restart, "on-failure") && strings.Contains(restart, ":") {
+			p.Service["Restart"] = "on-failure"
+			maxAttemptsString := strings.TrimSpace(strings.Split(restart, ":")[1])
+			if maxAttempts, err := strconv.ParseInt(maxAttemptsString, 10, 64); err != nil {
+				return nil, fmt.Errorf("failed to parse on-failure attempts: %q: %w", maxAttemptsString, err)
+			} else {
+				v := int(maxAttempts)
+				p.StartLimitBurst = &v
+			}
+		} else {
+			return nil, fmt.Errorf("unsupported restart: %q", restart)
+		}
+	}
+
+	if service.Deploy != nil {
+		// The newer "deploy" config will always override the legacy "restart" config.
+		// https://docs.docker.com/compose/compose-file/compose-file-v3/#restart_policy
+		if restartPolicy := service.Deploy.RestartPolicy; restartPolicy != nil {
+			switch condition := restartPolicy.Condition; condition {
+			case "none":
+				p.Service["Restart"] = "no"
+			case "any":
+				p.Service["Restart"] = "always"
+			case "on-failure":
+				p.Service["Restart"] = "on-failure"
+			default:
+				return nil, fmt.Errorf("unsupported condition: %q", condition)
+			}
+			if delay := restartPolicy.Delay; delay != nil {
+				p.Service["RestartSec"] = delay.String()
+			}
+			if maxAttempts := restartPolicy.MaxAttempts; maxAttempts != nil {
+				v := int(*maxAttempts)
+				p.StartLimitBurst = &v
+			}
+			if window := restartPolicy.Window; window != nil {
+				windowSecs := int(time.Duration(*window).Seconds())
+				p.StartLimitIntervalSec = &windowSecs
+			}
+		}
+	}
+
+	// Custom values provided via labels will override any explicit restart settings.
+	var labelsToDrop []string
+	for label, value := range service.Labels {
+		if !strings.HasPrefix(label, "nixose.") {
+			continue
+		}
+		m := systemdLabelRegexp.FindStringSubmatch(label)
+		if len(m) == 0 {
+			return nil, fmt.Errorf("invalid nixose label specified for service %q: %q", service.Name, label)
+		}
+		typ, key := m[1], m[2]
+		switch typ {
+		case "service":
+			p.Service[key] = parseSystemdValue(value)
+		case "unit":
+			p.Unit[key] = parseSystemdValue(value)
+		default:
+			return nil, fmt.Errorf(`invalid systemd type %q - must be "service" or "unit"`, typ)
+		}
+		labelsToDrop = append(labelsToDrop, label)
+	}
+	for _, label := range labelsToDrop {
+		delete(service.Labels, label)
+	}
+
+	return p, nil
+}
+
 func (g *Generator) buildNixContainer(service types.ServiceConfig) NixContainer {
 	dependsOn := service.GetDependencies()
 	if g.Project != nil {
@@ -103,18 +196,25 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) NixContainer 
 		name = service.Name
 	}
 
+	systemdConfig, err := parseRestartPolicyAndSystemdLabels(&service)
+	if err != nil {
+		// TODO(aksiksi): Return error here instead of panicing.
+		panic(err)
+	}
+
 	c := NixContainer{
-		Project:   g.Project,
-		Runtime:   g.Runtime,
-		Name:      name,
-		Image:     service.Image,
-		Labels:    service.Labels,
-		Ports:     portConfigsToPortStrings(service.Ports),
-		User:      service.User,
-		Volumes:   make(map[string]string),
-		Networks:  maps.Keys(service.Networks),
-		DependsOn: dependsOn,
-		AutoStart: g.AutoStart,
+		Project:       g.Project,
+		Runtime:       g.Runtime,
+		Name:          name,
+		Image:         service.Image,
+		Labels:        service.Labels,
+		Ports:         portConfigsToPortStrings(service.Ports),
+		User:          service.User,
+		Volumes:       make(map[string]string),
+		Networks:      maps.Keys(service.Networks),
+		SystemdConfig: systemdConfig,
+		DependsOn:     dependsOn,
+		AutoStart:     g.AutoStart,
 	}
 	slices.Sort(c.Networks)
 

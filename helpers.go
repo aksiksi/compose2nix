@@ -6,8 +6,23 @@ import (
 	"log"
 	"os"
 	"slices"
+	"strconv"
 	"strings"
 )
+
+// https://www.freedesktop.org/software/systemd/man/latest/systemd.syntax.html
+func parseSystemdValue(v string) any {
+	if i, err := strconv.ParseInt(v, 10, 64); err == nil {
+		return int(i)
+	}
+	switch v {
+	case "true", "yes", "on", "1":
+		return true
+	case "false", "no", "off", "0":
+		return false
+	}
+	return v
+}
 
 // mapToKeyValArray converts a map into a _sorted_ list of KEY=VAL entries.
 func mapToKeyValArray(m map[string]string) []string {
