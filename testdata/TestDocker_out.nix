@@ -31,11 +31,11 @@
     logDriver = "journald";
     autoStart = false;
     extraOptions = [
-      "--network-alias=jellyseerr"
       "--dns=1.1.1.1"
       "--log-opt=compress=true"
       "--log-opt=max-file=3"
       "--log-opt=max-size=10m"
+      "--network-alias=jellyseerr"
       "--network=container:sabnzbd"
     ];
   };
@@ -61,11 +61,11 @@
     logDriver = "journald";
     autoStart = false;
     extraOptions = [
-      "--network=default"
-      "--network-alias=photoprism-mariadb"
       "--log-opt=compress=true"
       "--log-opt=max-file=3"
       "--log-opt=max-size=10m"
+      "--network-alias=photoprism-mariadb"
+      "--network=default"
     ];
   };
   systemd.services."docker-photoprism-mariadb" = {
@@ -97,11 +97,11 @@
     logDriver = "journald";
     autoStart = false;
     extraOptions = [
-      "--network=default"
-      "--network-alias=sabnzbd"
       "--log-opt=compress=true"
       "--log-opt=max-file=3"
       "--log-opt=max-size=10m"
+      "--network-alias=sabnzbd"
+      "--network=default"
     ];
   };
   systemd.services."docker-sabnzbd" = {
@@ -150,13 +150,13 @@
     logDriver = "journald";
     autoStart = false;
     extraOptions = [
-      "--network=default"
-      "--network-alias=transmission"
-      "--dns=8.8.8.8"
-      "--dns=8.8.4.4"
-      "--privileged"
       "--cap-add=NET_ADMIN"
       "--device=/dev/net/tun:/dev/net/tun"
+      "--dns=8.8.4.4"
+      "--dns=8.8.8.8"
+      "--network-alias=transmission"
+      "--network=default"
+      "--privileged"
     ];
   };
   systemd.services."docker-torrent-client" = {
@@ -191,11 +191,11 @@
     logDriver = "journald";
     autoStart = false;
     extraOptions = [
-      "--network=default"
-      "--network-alias=traefik"
       "--log-opt=compress=true"
       "--log-opt=max-file=3"
       "--log-opt=max-size=10m"
+      "--network-alias=traefik"
+      "--network=default"
     ];
   };
   systemd.services."docker-traefik" = {

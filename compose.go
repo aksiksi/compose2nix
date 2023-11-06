@@ -214,6 +214,10 @@ func (g *Generator) postProcessContainers(containers []*NixContainer) {
 		// Drop the reference to the service at the end of post-processing. This allows GC to
 		// kick in and free the service allocation.
 		c.service = nil
+
+		// Sort slices now that we're done with the container.
+		slices.Sort(c.DependsOn)
+		slices.Sort(c.ExtraOptions)
 	}
 }
 

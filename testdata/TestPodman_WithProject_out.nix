@@ -36,11 +36,11 @@
     logDriver = "journald";
     autoStart = false;
     extraOptions = [
-      "--network-alias=jellyseerr"
       "--dns=1.1.1.1"
       "--log-opt=compress=true"
       "--log-opt=max-file=3"
       "--log-opt=max-size=10m"
+      "--network-alias=jellyseerr"
       "--network=container:myproject_sabnzbd"
     ];
   };
@@ -73,11 +73,11 @@
     logDriver = "journald";
     autoStart = false;
     extraOptions = [
-      "--network=myproject_default"
-      "--network-alias=sabnzbd"
       "--log-opt=compress=true"
       "--log-opt=max-file=3"
       "--log-opt=max-size=10m"
+      "--network-alias=sabnzbd"
+      "--network=myproject_default"
     ];
   };
   systemd.services."podman-myproject_sabnzbd" = {
@@ -103,11 +103,11 @@
     logDriver = "journald";
     autoStart = false;
     extraOptions = [
-      "--network=myproject_default"
-      "--network-alias=photoprism-mariadb"
       "--log-opt=compress=true"
       "--log-opt=max-file=3"
       "--log-opt=max-size=10m"
+      "--network-alias=photoprism-mariadb"
+      "--network=myproject_default"
     ];
   };
   systemd.services."podman-photoprism-mariadb" = {
@@ -155,13 +155,13 @@
     logDriver = "journald";
     autoStart = false;
     extraOptions = [
-      "--network=myproject_default"
-      "--network-alias=transmission"
-      "--dns=8.8.8.8"
-      "--dns=8.8.4.4"
-      "--privileged"
       "--cap-add=NET_ADMIN"
       "--device=/dev/net/tun:/dev/net/tun"
+      "--dns=8.8.4.4"
+      "--dns=8.8.8.8"
+      "--network-alias=transmission"
+      "--network=myproject_default"
+      "--privileged"
     ];
   };
   systemd.services."podman-torrent-client" = {
@@ -196,11 +196,11 @@
     logDriver = "journald";
     autoStart = false;
     extraOptions = [
-      "--network=myproject_default"
-      "--network-alias=traefik"
       "--log-opt=compress=true"
       "--log-opt=max-file=3"
       "--log-opt=max-size=10m"
+      "--network-alias=traefik"
+      "--network=myproject_default"
     ];
   };
   systemd.services."podman-traefik" = {
