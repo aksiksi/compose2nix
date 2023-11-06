@@ -31,12 +31,12 @@
     logDriver = "journald";
     autoStart = false;
     extraOptions = [
-      "--network=default"
       "--network-alias=jellyseerr"
       "--dns=1.1.1.1"
       "--log-opt=compress=true"
       "--log-opt=max-file=3"
       "--log-opt=max-size=10m"
+      "--network=container:sabnzbd"
     ];
   };
   systemd.services."docker-jellyseerr" = {
@@ -144,6 +144,9 @@
       "traefik.http.routers.transmission.tls.certresolver" = "htpc";
       "traefik.http.services.transmission.loadbalancer.server.port" = "9091";
     };
+    dependsOn = [
+      "sabnzbd"
+    ];
     logDriver = "journald";
     autoStart = false;
     extraOptions = [
@@ -208,7 +211,6 @@
       docker network inspect default || docker network create default
     '';
     wantedBy = [
-      "docker-jellyseerr.service"
       "docker-photoprism-mariadb.service"
       "docker-sabnzbd.service"
       "docker-torrent-client.service"

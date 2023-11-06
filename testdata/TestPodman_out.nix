@@ -36,12 +36,12 @@
     logDriver = "journald";
     autoStart = false;
     extraOptions = [
-      "--network=default"
       "--network-alias=jellyseerr"
       "--dns=1.1.1.1"
       "--log-opt=compress=true"
       "--log-opt=max-file=3"
       "--log-opt=max-size=10m"
+      "--network=container:sabnzbd"
     ];
   };
   systemd.services."podman-jellyseerr" = {
@@ -149,6 +149,9 @@
       "traefik.http.routers.transmission.tls.certresolver" = "htpc";
       "traefik.http.services.transmission.loadbalancer.server.port" = "9091";
     };
+    dependsOn = [
+      "sabnzbd"
+    ];
     logDriver = "journald";
     autoStart = false;
     extraOptions = [
@@ -213,7 +216,6 @@
       podman network create default --opt isolate=true --ignore
     '';
     wantedBy = [
-      "podman-jellyseerr.service"
       "podman-photoprism-mariadb.service"
       "podman-sabnzbd.service"
       "podman-torrent-client.service"

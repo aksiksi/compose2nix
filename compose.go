@@ -193,6 +193,7 @@ func (g *Generator) postProcessContainers(containers []*NixContainer) {
 			targetService := strings.Split(networkMode, ":")[1]
 			targetContainerName := serviceToContainer[targetService].Name
 			c.ExtraOptions = append(c.ExtraOptions, "--network=container:"+targetContainerName)
+			c.DependsOn = append(c.DependsOn, targetContainerName)
 		}
 
 		dependsOn := c.service.GetDependencies()
@@ -242,15 +243,13 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 		c.EnvFiles = g.EnvFiles
 	}
 
+	for _, v := range service.Volumes {
+		c.Volumes[v.Source] = v.String()
+	}
+
 	for _, name := range c.Networks {
 		networkName := g.Project.With(name)
 		c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--network=%s", networkName))
-		// Allow other containers to use service name as an alias when a project is set.
-		c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--network-alias=%s", service.Name))
-	}
-
-	for _, v := range service.Volumes {
-		c.Volumes[v.Source] = v.String()
 	}
 
 	// https://docs.docker.com/compose/compose-file/compose-file-v3/#network_mode
@@ -261,7 +260,12 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 	case strings.HasPrefix(networkMode, "container:"):
 		// container:[name] mode is supported by both Docker and Podman.
 		c.ExtraOptions = append(c.ExtraOptions, networkMode)
+		containerName := strings.TrimSpace(strings.Split(networkMode, ":")[1])
+		c.DependsOn = append(c.DependsOn, containerName)
 	}
+
+	// Allow other containers to use service name as an alias.
+	c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--network-alias=%s", service.Name))
 
 	for _, ip := range service.DNS {
 		c.ExtraOptions = append(c.ExtraOptions, "--dns="+ip)

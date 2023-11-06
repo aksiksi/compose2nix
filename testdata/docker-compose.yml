@@ -46,6 +46,8 @@ services:
       - /var/volumes/transmission/config:/config
       - /var/volumes/transmission/scripts:/scripts
       - storage:/storage
+    depends_on:
+      - sabnzbd
     environment:
       TZ: ${TIMEZONE}
       PUID: ${PUID}
@@ -96,8 +98,7 @@ services:
       - "traefik.http.routers.jellyseerr.rule=Host(`requests.${DOMAIN}`)"
       - "traefik.http.routers.jellyseerr.tls.certresolver=htpc"
       - "traefik.http.routers.jellyseerr.middlewares=chain-authelia@file"
-    depends_on:
-      - sabnzbd
+    network_mode: "service:sabnzbd"
     logging:
       driver: "json-file"
       options:
