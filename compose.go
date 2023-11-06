@@ -16,6 +16,10 @@ import (
 	"golang.org/x/exp/maps"
 )
 
+var (
+	defaultStartLimitIntervalSec = int((24 * time.Hour).Seconds())
+)
+
 // Examples:
 // nixose.systemd.service.RuntimeMaxSec=100
 // nixose.systemd.unit.StartLimitBurst=10
@@ -76,8 +80,10 @@ func parseRestartPolicyAndSystemdLabels(service *types.ServiceConfig) (*NixConta
 			if maxAttempts, err := strconv.ParseInt(maxAttemptsString, 10, 64); err != nil {
 				return nil, fmt.Errorf("failed to parse on-failure attempts: %q: %w", maxAttemptsString, err)
 			} else {
-				v := int(maxAttempts)
-				p.StartLimitBurst = &v
+				burst := int(maxAttempts)
+				p.StartLimitBurst = &burst
+				// Retry limit resets once per day.
+				p.StartLimitIntervalSec = &defaultStartLimitIntervalSec
 			}
 		} else {
 			return nil, fmt.Errorf("unsupported restart: %q", restart)
@@ -108,6 +114,9 @@ func parseRestartPolicyAndSystemdLabels(service *types.ServiceConfig) (*NixConta
 			if window := restartPolicy.Window; window != nil {
 				windowSecs := int(time.Duration(*window).Seconds())
 				p.StartLimitIntervalSec = &windowSecs
+			} else if p.StartLimitBurst != nil {
+				// Retry limit resets once per day by default.
+				p.StartLimitIntervalSec = &defaultStartLimitIntervalSec
 			}
 		}
 	}

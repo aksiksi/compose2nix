@@ -169,6 +169,7 @@
       Restart = "on-failure";
     };
     startLimitBurst = 3;
+    startLimitIntervalSec = 86400;
   };
   virtualisation.oci-containers.containers."traefik" = {
     image = "docker.io/library/traefik";
