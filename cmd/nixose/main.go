@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -18,6 +19,7 @@ var envFilesOnly = flag.Bool("env_files_only", false, "only use env files in the
 var output = flag.String("output", "", "path to output Nix file")
 var project = flag.String("project", "", "project name used as a prefix for generated resources")
 var projectSeparator = flag.String("project_separator", nixose.DefaultProjectSeparator, "seperator for project prefix")
+var serviceInclude = flag.String("service_include", "", "regex pattern for services to include")
 var autoStart = flag.Bool("auto_start", true, "control auto-start setting for containers")
 var runtime = flag.String("runtime", "podman", `"podman" or "docker"`)
 var useComposeLogDriver = flag.Bool("use_compose_log_driver", false, "if set, always use the Compose log driver.")
@@ -43,6 +45,15 @@ func main() {
 		log.Fatalf("Invalid --runtime: %q", *runtime)
 	}
 
+	var serviceIncludeRegexp *regexp.Regexp
+	if *serviceInclude != "" {
+		pat, err := regexp.Compile(*serviceInclude)
+		if err != nil {
+			log.Fatalf("Failed to parse -service_include pattern %q: %v", *serviceInclude, err)
+		}
+		serviceIncludeRegexp = pat
+	}
+
 	start := time.Now()
 	g := nixose.Generator{
 		Project:             nixose.NewProjectWithSeparator(*project, *projectSeparator),
@@ -50,6 +61,7 @@ func main() {
 		Paths:               paths,
 		EnvFiles:            envFiles,
 		EnvFilesOnly:        *envFilesOnly,
+		ServiceInclude:      serviceIncludeRegexp,
 		AutoStart:           *autoStart,
 		UseComposeLogDriver: *useComposeLogDriver,
 	}

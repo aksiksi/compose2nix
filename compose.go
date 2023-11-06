@@ -154,6 +154,7 @@ type Generator struct {
 	Runtime             ContainerRuntime
 	Paths               []string
 	EnvFiles            []string
+	ServiceInclude      *regexp.Regexp
 	AutoStart           bool
 	EnvFilesOnly        bool
 	UseComposeLogDriver bool
@@ -326,6 +327,10 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 func (g *Generator) buildNixContainers(composeProject *types.Project) ([]*NixContainer, error) {
 	var containers []*NixContainer
 	for _, s := range composeProject.Services {
+		if g.ServiceInclude != nil && !g.ServiceInclude.MatchString(s.Name) {
+			log.Printf("Skipping service %q due to include regex %q", s.Name, g.ServiceInclude.String())
+			continue
+		}
 		c, err := g.buildNixContainer(s)
 		if err != nil {
 			return nil, fmt.Errorf("failed to build container for service %q: %w", s.Name, err)
