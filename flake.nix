@@ -4,7 +4,7 @@
 # https://ryantm.github.io/nixpkgs/builders/trivial-builders/#trivial-builder-runCommand
 # https://nixpkgs-manual-sphinx-markedown-example.netlify.app/development/writing-modules.xml.html#structure-of-nixos-modules
 {
-  description = "minimal configuration for nix-compose";
+  description = "minimal configuration for compose2nix";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -13,11 +13,12 @@
   outputs = { self, nixpkgs, ... }: let
     supportedSystems = [ "x86_64-linux" "x86_64-darwin" "aarch64-linux" "aarch64-darwin" ];
     forAllSystems = function: nixpkgs.lib.genAttrs supportedSystems (system: function nixpkgs.legacyPackages.${system});
-    pname = "nix-compose";
-    version = "v0.0.1";
+    pname = "compose2nix";
+    version = "0.0.1";
   in {
     # Nix package
     packages = forAllSystems (pkgs: {
+      # TODO(aksiksi): Pull from GitHub.
       default = pkgs.buildGoModule {
         inherit pname;
         inherit version;
@@ -37,11 +38,11 @@
     nixosModules = forAllSystems (pkgs: {
       default = { config, lib, pkgs, ... }:
       with lib; let
-        cfg = config.nix-compose;
+        cfg = config.compose2nix;
       in {
-        options.nix-compose = {
+        options.compose2nix = {
           # https://nixos.org/manual/nixos/stable/#sec-option-declarations
-          enable = mkEnableOption "nix-compose";
+          enable = mkEnableOption "compose2nix";
           paths = mkOption {
             type = types.listOf types.pathInStore;
             description = lib.mdDoc "One or more paths to Docker Compose files.";
@@ -88,12 +89,12 @@
           };
         };
         configs = mkIf cfg.enable {
-          nix-compose = {
-            output = pkgs.runCommand "run-nix-compose" {
-              buildInputs = [ pkgs.nix-compose ];
+          compose2nix = {
+            output = pkgs.runCommand "run-compose2nix" {
+              buildInputs = [ pkgs.compose2nix ];
               env = cfg.env;
             } ''
-              ${pkgs.nix-compose}/bin/nix-compose \
+              ${pkgs.compose2nix}/bin/compose2nix \
                 -paths='${concatStringsSep "," cfg.paths}' \
                 -runtime=${cfg.runtime} \
                 -project=${cfg.project} \
@@ -102,7 +103,7 @@
                 -env_files_only=${cfg.envFilesOnly} \
                 -auto_start=${cfg.autoStart} \
                 -service_include='${cfg.serviceInclude}' \
-                -output=$out/output.nix
+                -output=$out
             '';
           };
         };

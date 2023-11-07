@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	nixcompose "github.com/aksiksi/nix-compose"
+	"github.com/aksiksi/compose2nix"
 )
 
 var paths = flag.String("paths", "", "paths to Compose files")
@@ -19,7 +19,7 @@ var envFiles = flag.String("env_files", "", "paths to .env files")
 var envFilesOnly = flag.Bool("env_files_only", false, "only use env files in the NixOS container definitions")
 var output = flag.String("output", "", "path to output Nix file")
 var project = flag.String("project", "", "project name used as a prefix for generated resources")
-var projectSeparator = flag.String("project_separator", nixcompose.DefaultProjectSeparator, "seperator for project prefix")
+var projectSeparator = flag.String("project_separator", compose2nix.DefaultProjectSeparator, "seperator for project prefix")
 var serviceInclude = flag.String("service_include", "", "regex pattern for services to include")
 var autoStart = flag.Bool("auto_start", true, "control auto-start setting for containers")
 var runtime = flag.String("runtime", "podman", `"podman" or "docker"`)
@@ -37,11 +37,11 @@ func main() {
 	paths := strings.Split(*paths, ",")
 	envFiles := strings.Split(*envFiles, ",")
 
-	var containerRuntime nixcompose.ContainerRuntime
+	var containerRuntime compose2nix.ContainerRuntime
 	if *runtime == "podman" {
-		containerRuntime = nixcompose.ContainerRuntimePodman
+		containerRuntime = compose2nix.ContainerRuntimePodman
 	} else if *runtime == "docker" {
-		containerRuntime = nixcompose.ContainerRuntimeDocker
+		containerRuntime = compose2nix.ContainerRuntimeDocker
 	} else {
 		log.Fatalf("Invalid --runtime: %q", *runtime)
 	}
@@ -56,8 +56,8 @@ func main() {
 	}
 
 	start := time.Now()
-	g := nixcompose.Generator{
-		Project:             nixcompose.NewProjectWithSeparator(*project, *projectSeparator),
+	g := compose2nix.Generator{
+		Project:             compose2nix.NewProjectWithSeparator(*project, *projectSeparator),
 		Runtime:             containerRuntime,
 		Paths:               paths,
 		EnvFiles:            envFiles,
@@ -73,12 +73,9 @@ func main() {
 	fmt.Printf("Generated NixOS config in %v\n", time.Since(start))
 
 	if *output != "" {
-		// Create the output directory if it does not exist.
 		dir := path.Dir(*output)
 		if _, err := os.Stat(dir); err != nil {
-			if err := os.MkdirAll(dir, 0755); err != nil {
-				log.Fatal(err)
-			}
+			log.Fatalf("Directory %q does not exist", dir)
 		}
 		if err := os.WriteFile(*output, []byte(containerConfig.String()), 0644); err != nil {
 			log.Fatal(err)

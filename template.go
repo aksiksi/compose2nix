@@ -1,4 +1,4 @@
-package nixcompose
+package compose2nix
 
 import (
 	"embed"
