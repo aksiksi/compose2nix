@@ -42,7 +42,6 @@
       in {
         options.compose2nix = {
           # https://nixos.org/manual/nixos/stable/#sec-option-declarations
-          enable = mkEnableOption "compose2nix";
           paths = mkOption {
             type = types.listOf types.pathInStore;
             description = lib.mdDoc "One or more paths to Docker Compose files.";
@@ -88,7 +87,7 @@
             description = lib.mdDoc "Regex pattern for Docker Compose services to include.";
           };
         };
-        configs = mkIf cfg.enable {
+        configs = mkIf (cfg.paths != []) {
           compose2nix = {
             output = pkgs.runCommand "run-compose2nix" {
               buildInputs = [ pkgs.compose2nix ];
