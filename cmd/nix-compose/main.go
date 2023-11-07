@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 	"regexp"
 	"strings"
 	"time"
@@ -72,7 +73,14 @@ func main() {
 	fmt.Printf("Generated NixOS config in %v\n", time.Since(start))
 
 	if *output != "" {
-		if err := os.WriteFile(*output, []byte(containerConfig.String()), os.FileMode(0644)); err != nil {
+		// Create the output directory if it does not exist.
+		dir := path.Dir(*output)
+		if _, err := os.Stat(dir); err != nil {
+			if err := os.MkdirAll(dir, 0755); err != nil {
+				log.Fatal(err)
+			}
+		}
+		if err := os.WriteFile(*output, []byte(containerConfig.String()), 0644); err != nil {
 			log.Fatal(err)
 		}
 		fmt.Printf("Wrote NixOS config to %s\n", *output)
