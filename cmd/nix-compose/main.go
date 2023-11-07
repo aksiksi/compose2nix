@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aksiksi/nixose"
+	nixcompose "github.com/aksiksi/nix-compose"
 )
 
 var paths = flag.String("paths", "", "paths to Compose files")
@@ -18,7 +18,7 @@ var envFiles = flag.String("env_files", "", "paths to .env files")
 var envFilesOnly = flag.Bool("env_files_only", false, "only use env files in the NixOS container definitions")
 var output = flag.String("output", "", "path to output Nix file")
 var project = flag.String("project", "", "project name used as a prefix for generated resources")
-var projectSeparator = flag.String("project_separator", nixose.DefaultProjectSeparator, "seperator for project prefix")
+var projectSeparator = flag.String("project_separator", nixcompose.DefaultProjectSeparator, "seperator for project prefix")
 var serviceInclude = flag.String("service_include", "", "regex pattern for services to include")
 var autoStart = flag.Bool("auto_start", true, "control auto-start setting for containers")
 var runtime = flag.String("runtime", "podman", `"podman" or "docker"`)
@@ -36,11 +36,11 @@ func main() {
 	paths := strings.Split(*paths, ",")
 	envFiles := strings.Split(*envFiles, ",")
 
-	var containerRuntime nixose.ContainerRuntime
+	var containerRuntime nixcompose.ContainerRuntime
 	if *runtime == "podman" {
-		containerRuntime = nixose.ContainerRuntimePodman
+		containerRuntime = nixcompose.ContainerRuntimePodman
 	} else if *runtime == "docker" {
-		containerRuntime = nixose.ContainerRuntimeDocker
+		containerRuntime = nixcompose.ContainerRuntimeDocker
 	} else {
 		log.Fatalf("Invalid --runtime: %q", *runtime)
 	}
@@ -55,8 +55,8 @@ func main() {
 	}
 
 	start := time.Now()
-	g := nixose.Generator{
-		Project:             nixose.NewProjectWithSeparator(*project, *projectSeparator),
+	g := nixcompose.Generator{
+		Project:             nixcompose.NewProjectWithSeparator(*project, *projectSeparator),
 		Runtime:             containerRuntime,
 		Paths:               paths,
 		EnvFiles:            envFiles,

@@ -1,7 +1,7 @@
 build:
-	mkdir -p bin/ && go build -o bin/ ./cmd/nixose
+	mkdir -p bin/ && go build -o bin/ ./cmd/nix-compose
 
 test:
-	go test
+	go test -v
 
 .PHONY: build test

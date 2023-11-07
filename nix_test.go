@@ -1,4 +1,4 @@
-package nixose
+package nixcompose
 
 import (
 	"context"
