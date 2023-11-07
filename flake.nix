@@ -1,8 +1,8 @@
 # References:
 # https://blog.lenny.ninja/part-1-quickly-packaging-services-using-nix-flakes.html
 # https://ayats.org/blog/no-flake-utils/
-# https://ryantm.github.io/nixpkgs/builders/trivial-builders/#trivial-builder-runCommand
-# https://nixpkgs-manual-sphinx-markedown-example.netlify.app/development/writing-modules.xml.html#structure-of-nixos-modules
+# https://nixos.org/manual/nixos/stable/#sec-writing-modules
+# https://nixos.org/manual/nixpkgs/stable/#ssec-language-go
 {
   description = "minimal configuration for compose2nix";
 
@@ -44,6 +44,7 @@
           # https://nixos.org/manual/nixos/stable/#sec-option-declarations
           paths = mkOption {
             type = types.listOf types.path;
+            default = [];
             description = lib.mdDoc "One or more paths to Docker Compose files.";
           };
           runtime = mkOption {
@@ -87,24 +88,26 @@
             description = lib.mdDoc "Auto-start all containers.";
           };
         };
-        configs = mkIf (cfg.paths != []) {
-          compose2nix = {
-            output = pkgs.runCommand "run-compose2nix" {
-              buildInputs = [ pkgs.compose2nix ];
-              env = cfg.env;
-            } ''
-              ${pkgs.compose2nix}/bin/compose2nix \
-                -paths='${concatStringsSep "," cfg.paths}' \
-                -runtime=${cfg.runtime} \
-                -project=${cfg.project} \
-                -project_separator='${cfg.projectSeparator}' \
-                -env_files='${concatStringsSep "," cfg.envFiles}' \
-                -env_files_only=${cfg.envFilesOnly} \
-                -service_include='${cfg.serviceInclude}' \
-                -auto_start=${cfg.autoStart} \
-                -output=$out
-            '';
-          };
+        config.compose2nix = mkIf (cfg.paths != []) {
+          # runCommandLocal ensures that we always build this derivation on the local machine.
+          # This allows us to circumvent the Nix binary cache and minimize the time spent outside
+          # of building the derivation.
+          # https://nixos.org/manual/nixpkgs/stable/#trivial-builder-runCommandLocal
+          output = pkgs.runCommandLocal "run-compose2nix" {
+            env = cfg.env;
+            buildInputs = [ pkgs.compose2nix ];
+          } ''
+            ${pkgs.compose2nix}/bin/compose2nix \
+              -paths='${concatStringsSep "," cfg.paths}' \
+              -runtime=${cfg.runtime} \
+              -project=${cfg.project} \
+              -project_separator='${cfg.projectSeparator}' \
+              -env_files='${concatStringsSep "," cfg.envFiles}' \
+              -env_files_only=${cfg.envFilesOnly} \
+              -service_include='${cfg.serviceInclude}' \
+              -auto_start=${cfg.autoStart} \
+              -output=$out
+          '';
         };
       };
     });
