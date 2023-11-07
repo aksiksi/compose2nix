@@ -13,7 +13,7 @@ virtualisation.oci-containers.containers."{{.Name}}" = {
   {{- if .EnvFiles}}
   environmentFiles = [
     {{- range .EnvFiles}}
-    "${./{{.}}}"
+    "{{.}}"
     {{- end}}
   ];
   {{- end}}

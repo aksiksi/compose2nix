@@ -43,7 +43,7 @@
         options.compose2nix = {
           # https://nixos.org/manual/nixos/stable/#sec-option-declarations
           paths = mkOption {
-            type = types.listOf types.pathInStore;
+            type = types.listOf types.path;
             description = lib.mdDoc "One or more paths to Docker Compose files.";
           };
           runtime = mkOption {
@@ -64,7 +64,7 @@
           env = mkOption {
             type = types.attrsOf types.str;
             default = {};
-            description = lib.mdDoc "Environment variables. These will be merged with environment files, if any.";
+            description = lib.mdDoc "Environment to use. Note that these will be merged with environment files, if any.";
           };
           envFiles = mkOption {
             type = types.listOf types.path;
@@ -74,17 +74,17 @@
           envFilesOnly = mkOption {
             type = types.bool;
             default = false;
-            description = lib.mdDoc "Only include env files in the output Nix file.";
+            description = lib.mdDoc "Only include env files in the output Nix file. Useful in cases where env variables contain secrets.";
+          };
+          serviceInclude = mkOption {
+            type = types.str;
+            default = "";
+            description = lib.mdDoc "Regex pattern for Docker Compose services to include.";
           };
           autoStart = mkOption {
             type = types.bool;
             default = true;
             description = lib.mdDoc "Auto-start all containers.";
-          };
-          serviceInclude = mkOption {
-            type = types.bool;
-            default = "";
-            description = lib.mdDoc "Regex pattern for Docker Compose services to include.";
           };
         };
         configs = mkIf (cfg.paths != []) {
@@ -100,8 +100,8 @@
                 -project_separator='${cfg.projectSeparator}' \
                 -env_files='${concatStringsSep "," cfg.envFiles}' \
                 -env_files_only=${cfg.envFilesOnly} \
-                -auto_start=${cfg.autoStart} \
                 -service_include='${cfg.serviceInclude}' \
+                -auto_start=${cfg.autoStart} \
                 -output=$out
             '';
           };
