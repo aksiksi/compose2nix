@@ -14,27 +14,27 @@ import (
 	"github.com/aksiksi/compose2nix"
 )
 
-var paths = flag.String("paths", "", "paths to Compose files")
-var envFiles = flag.String("env_files", "", "paths to .env files")
-var envFilesOnly = flag.Bool("env_files_only", false, "only use env files in the NixOS container definitions")
-var output = flag.String("output", "", "path to output Nix file")
+var inputs = flag.String("inputs", "docker-compose.yml", "one or more comma-separated path(s) to Compose file(s)")
+var envFiles = flag.String("env_files", "", "zero or more comma-separated paths to .env file(s)")
+var envFilesOnly = flag.Bool("env_files_only", false, "only use env file(s) in the NixOS container definitions")
+var output = flag.String("output", "docker-compose.nix", "path to output Nix file")
 var project = flag.String("project", "", "project name used as a prefix for generated resources")
 var projectSeparator = flag.String("project_separator", compose2nix.DefaultProjectSeparator, "seperator for project prefix")
 var serviceInclude = flag.String("service_include", "", "regex pattern for services to include")
-var autoStart = flag.Bool("auto_start", true, "control auto-start setting for containers")
+var autoStart = flag.Bool("auto_start", true, "auto-start setting for generated container(s)")
 var runtime = flag.String("runtime", "podman", `"podman" or "docker"`)
-var useComposeLogDriver = flag.Bool("use_compose_log_driver", false, "if set, always use the Compose log driver.")
+var useComposeLogDriver = flag.Bool("use_compose_log_driver", false, "if set, always use the Docker Compose log driver")
 
 func main() {
 	flag.Parse()
 
 	ctx := context.Background()
 
-	if *paths == "" {
+	if strings.TrimSpace(*inputs) == "" {
 		log.Fatalf("One or more paths must be specified")
 	}
 
-	paths := strings.Split(*paths, ",")
+	inputs := strings.Split(*inputs, ",")
 	envFiles := strings.Split(*envFiles, ",")
 
 	var containerRuntime compose2nix.ContainerRuntime
@@ -59,7 +59,7 @@ func main() {
 	g := compose2nix.Generator{
 		Project:             compose2nix.NewProjectWithSeparator(*project, *projectSeparator),
 		Runtime:             containerRuntime,
-		Paths:               paths,
+		Inputs:              inputs,
 		EnvFiles:            envFiles,
 		EnvFilesOnly:        *envFilesOnly,
 		ServiceInclude:      serviceIncludeRegexp,

@@ -152,7 +152,7 @@ func parseRestartPolicyAndSystemdLabels(service *types.ServiceConfig) (*NixConta
 type Generator struct {
 	Project             *Project
 	Runtime             ContainerRuntime
-	Paths               []string
+	Inputs              []string
 	EnvFiles            []string
 	ServiceInclude      *regexp.Regexp
 	AutoStart           bool
@@ -166,7 +166,7 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 		return nil, err
 	}
 	composeProject, err := loader.LoadWithContext(ctx, types.ConfigDetails{
-		ConfigFiles: types.ToConfigFiles(g.Paths),
+		ConfigFiles: types.ToConfigFiles(g.Inputs),
 		Environment: types.NewMapping(env),
 	})
 	if err != nil {

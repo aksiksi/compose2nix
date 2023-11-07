@@ -26,7 +26,7 @@ func TestDocker(t *testing.T) {
 	composePath, envFilePath, outFilePath := getPaths(t)
 	g := Generator{
 		Runtime:  ContainerRuntimeDocker,
-		Paths:    []string{composePath},
+		Inputs:   []string{composePath},
 		EnvFiles: []string{envFilePath},
 	}
 	c, err := g.Run(ctx)
@@ -53,7 +53,7 @@ func TestDocker_WithProject(t *testing.T) {
 	g := Generator{
 		Project:  NewProject("myproject"),
 		Runtime:  ContainerRuntimeDocker,
-		Paths:    []string{composePath},
+		Inputs:   []string{composePath},
 		EnvFiles: []string{envFilePath},
 	}
 	c, err := g.Run(ctx)
@@ -79,7 +79,7 @@ func TestPodman(t *testing.T) {
 	composePath, envFilePath, outFilePath := getPaths(t)
 	g := Generator{
 		Runtime:  ContainerRuntimePodman,
-		Paths:    []string{composePath},
+		Inputs:   []string{composePath},
 		EnvFiles: []string{envFilePath},
 	}
 	c, err := g.Run(ctx)
@@ -106,7 +106,7 @@ func TestPodman_WithProject(t *testing.T) {
 	g := Generator{
 		Project:  NewProject("myproject"),
 		Runtime:  ContainerRuntimePodman,
-		Paths:    []string{composePath},
+		Inputs:   []string{composePath},
 		EnvFiles: []string{envFilePath},
 	}
 	c, err := g.Run(ctx)
