@@ -28,7 +28,7 @@
     dependsOn = [
       "sabnzbd"
     ];
-    logDriver = "journald";
+    log-driver = "journald";
     autoStart = false;
     extraOptions = [
       "--dns=1.1.1.1"
@@ -58,7 +58,7 @@
       "/var/volumes/photoprism-mariadb:/var/lib/mysql:rw"
     ];
     user = "1000:1000";
-    logDriver = "journald";
+    log-driver = "journald";
     autoStart = false;
     extraOptions = [
       "--log-opt=compress=true"
@@ -94,7 +94,7 @@
       "traefik.http.routers.sabnzbd.rule" = "Host(`hey.hello.us`) && PathPrefix(`/sabnzbd`)";
       "traefik.http.routers.sabnzbd.tls.certresolver" = "htpc";
     };
-    logDriver = "journald";
+    log-driver = "journald";
     autoStart = false;
     extraOptions = [
       "--log-opt=compress=true"
@@ -147,7 +147,7 @@
     dependsOn = [
       "sabnzbd"
     ];
-    logDriver = "journald";
+    log-driver = "journald";
     autoStart = false;
     extraOptions = [
       "--cap-add=NET_ADMIN"
@@ -188,7 +188,7 @@
       "traefik.http.routers.traefik.service" = "api@internal";
       "traefik.http.routers.traefik.tls.certresolver" = "htpc";
     };
-    logDriver = "journald";
+    log-driver = "journald";
     autoStart = false;
     extraOptions = [
       "--log-opt=compress=true"
@@ -245,12 +245,4 @@
       "docker-torrent-client.service"
     ];
   };
-
-  # Scripts
-  up = writeShellScript "compose-up.sh" ''
-    echo "TODO: Create resources."
-  '';
-  down = writeShellScript "compose-down.sh" ''
-    echo "TODO: Remove resources."
-  '';
 }

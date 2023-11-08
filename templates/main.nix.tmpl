@@ -39,12 +39,4 @@
 {{execTemplate "volume.nix.tmpl" . | indent 2}}
   {{- end}}
   {{- end}}
-
-  # Scripts
-  up = writeShellScript "compose-{{.Project.With "up"}}.sh" ''
-    echo "TODO: Create resources."
-  '';
-  down = writeShellScript "compose-{{.Project.With "down"}}.sh" ''
-    echo "TODO: Remove resources."
-  '';
 }
