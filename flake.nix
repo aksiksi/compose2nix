@@ -42,9 +42,13 @@
       in {
         options.compose2nix = {
           # https://nixos.org/manual/nixos/stable/#sec-option-declarations
+          enable = mkOption {
+            type = types.bool;
+            default = false;
+            description = lib.mdDoc "Enable compose2nixos.";
+          };
           paths = mkOption {
             type = types.listOf types.path;
-            default = [];
             description = lib.mdDoc "One or more paths to Docker Compose files.";
           };
           runtime = mkOption {
@@ -87,13 +91,17 @@
             default = true;
             description = lib.mdDoc "Auto-start all containers.";
           };
+          output = mkOption {
+            type = types.anything;
+            description = lib.mdDoc "Output config.";
+          };
         };
-        config.compose2nix = mkIf (cfg.paths != []) {
+        config = {
           # runCommandLocal ensures that we always build this derivation on the local machine.
           # This allows us to circumvent the Nix binary cache and minimize the time spent outside
           # of building the derivation.
           # https://nixos.org/manual/nixpkgs/stable/#trivial-builder-runCommandLocal
-          output = pkgs.runCommandLocal "run-compose2nix" {
+          compose2nix.output = mkIf (cfg.enable) (import pkgs.runCommandLocal "compose2nix" {
             env = cfg.env;
             buildInputs = [ pkgs.compose2nix ];
           } ''
@@ -107,7 +115,7 @@
               -service_include='${cfg.serviceInclude}' \
               -auto_start=${cfg.autoStart} \
               -output=$out
-          '';
+          '');
         };
       };
     });
