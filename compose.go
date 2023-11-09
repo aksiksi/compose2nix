@@ -150,14 +150,15 @@ func parseRestartPolicyAndSystemdLabels(service *types.ServiceConfig) (*NixConta
 }
 
 type Generator struct {
-	Project             *Project
-	Runtime             ContainerRuntime
-	Inputs              []string
-	EnvFiles            []string
-	ServiceInclude      *regexp.Regexp
-	AutoStart           bool
-	EnvFilesOnly        bool
-	UseComposeLogDriver bool
+	Project                *Project
+	Runtime                ContainerRuntime
+	Inputs                 []string
+	EnvFiles               []string
+	ServiceInclude         *regexp.Regexp
+	AutoStart              bool
+	EnvFilesOnly           bool
+	UseComposeLogDriver    bool
+	GenerateUnusedResoures bool
 }
 
 func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
@@ -356,10 +357,16 @@ func (g *Generator) buildNixNetworks(composeProject *types.Project, containers [
 			Labels:  network.Labels,
 		}
 		// Keep track of all container services that are in this network.
+		used := false
 		for _, c := range containers {
 			if slices.Contains(c.Networks, name) {
+				used = true
 				n.Containers = append(n.Containers, g.containerNameToService(c.Name))
 			}
+		}
+		// If a network is unused, we don't need to generate it.
+		if !used && !g.GenerateUnusedResoures {
+			continue
 		}
 		networks = append(networks, n)
 	}
@@ -386,7 +393,8 @@ func (g *Generator) buildNixVolumes(composeProject *types.Project, containers []
 		if g.Runtime == ContainerRuntimePodman && v.Driver == "" {
 			bindPath := v.DriverOpts["device"]
 			if bindPath == "" {
-				log.Fatalf("Volume %q has no device set", name)
+				log.Printf("Volume %q has no device set; skipping", name)
+				continue
 			}
 			for _, c := range containers {
 				if volumeString, ok := c.Volumes[name]; ok {
@@ -398,10 +406,16 @@ func (g *Generator) buildNixVolumes(composeProject *types.Project, containers []
 		}
 
 		// Keep track of all container services that use this named volume.
+		used := false
 		for _, c := range containers {
 			if _, ok := c.Volumes[name]; ok {
+				used = true
 				v.Containers = append(v.Containers, g.containerNameToService(c.Name))
 			}
+		}
+		// If a volume is unused, we don't need to generate it.
+		if !used && !g.GenerateUnusedResoures {
+			continue
 		}
 		volumes = append(volumes, v)
 	}

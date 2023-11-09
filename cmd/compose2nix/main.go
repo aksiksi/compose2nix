@@ -24,6 +24,7 @@ var serviceInclude = flag.String("service_include", "", "regex pattern for servi
 var autoStart = flag.Bool("auto_start", true, "auto-start setting for generated container(s)")
 var runtime = flag.String("runtime", "podman", `"podman" or "docker"`)
 var useComposeLogDriver = flag.Bool("use_compose_log_driver", false, "if set, always use the Docker Compose log driver")
+var generateUnusedResources = flag.Bool("generate_unused_resources", false, "if set, unused resources (e.g., networks) will be generated even if no containers use them.")
 
 func main() {
 	flag.Parse()
@@ -57,14 +58,15 @@ func main() {
 
 	start := time.Now()
 	g := compose2nix.Generator{
-		Project:             compose2nix.NewProjectWithSeparator(*project, *projectSeparator),
-		Runtime:             containerRuntime,
-		Inputs:              inputs,
-		EnvFiles:            envFiles,
-		EnvFilesOnly:        *envFilesOnly,
-		ServiceInclude:      serviceIncludeRegexp,
-		AutoStart:           *autoStart,
-		UseComposeLogDriver: *useComposeLogDriver,
+		Project:                compose2nix.NewProjectWithSeparator(*project, *projectSeparator),
+		Runtime:                containerRuntime,
+		Inputs:                 inputs,
+		EnvFiles:               envFiles,
+		EnvFilesOnly:           *envFilesOnly,
+		ServiceInclude:         serviceIncludeRegexp,
+		AutoStart:              *autoStart,
+		UseComposeLogDriver:    *useComposeLogDriver,
+		GenerateUnusedResoures: *generateUnusedResources,
 	}
 	containerConfig, err := g.Run(ctx)
 	if err != nil {
