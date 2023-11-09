@@ -217,6 +217,12 @@
       "docker-torrent-client.service"
       "docker-traefik.service"
     ];
+    before = [
+      "docker-photoprism-mariadb.service"
+      "docker-sabnzbd.service"
+      "docker-torrent-client.service"
+      "docker-traefik.service"
+    ];
   };
 
   # Volumes
@@ -241,6 +247,10 @@
       docker volume inspect storage || docker volume create storage --opt device=/mnt/media,o=bind,type=none
     '';
     wantedBy = [
+      "docker-sabnzbd.service"
+      "docker-torrent-client.service"
+    ];
+    before = [
       "docker-sabnzbd.service"
       "docker-torrent-client.service"
     ];

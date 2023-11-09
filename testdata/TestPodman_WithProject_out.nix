@@ -222,5 +222,11 @@
       "podman-torrent-client.service"
       "podman-traefik.service"
     ];
+    before = [
+      "podman-myproject_sabnzbd.service"
+      "podman-photoprism-mariadb.service"
+      "podman-torrent-client.service"
+      "podman-traefik.service"
+    ];
   };
 }

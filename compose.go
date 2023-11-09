@@ -343,6 +343,10 @@ func (g *Generator) buildNixContainers(composeProject *types.Project) ([]*NixCon
 	return containers, nil
 }
 
+func (g *Generator) containerNameToService(name string) string {
+	return fmt.Sprintf("%s-%s.service", g.Runtime, name)
+}
+
 func (g *Generator) buildNixNetworks(composeProject *types.Project, containers []*NixContainer) []*NixNetwork {
 	var networks []*NixNetwork
 	for name, network := range composeProject.Networks {
@@ -351,10 +355,10 @@ func (g *Generator) buildNixNetworks(composeProject *types.Project, containers [
 			Name:    g.Project.With(name),
 			Labels:  network.Labels,
 		}
-		// Keep track of all containers that are in this network.
+		// Keep track of all container services that are in this network.
 		for _, c := range containers {
 			if slices.Contains(c.Networks, name) {
-				n.Containers = append(n.Containers, fmt.Sprintf("%s-%s", g.Runtime, c.Name))
+				n.Containers = append(n.Containers, g.containerNameToService(c.Name))
 			}
 		}
 		networks = append(networks, n)
@@ -393,10 +397,10 @@ func (g *Generator) buildNixVolumes(composeProject *types.Project, containers []
 			continue
 		}
 
-		// Keep track of all containers that use this named volume.
+		// Keep track of all container services that use this named volume.
 		for _, c := range containers {
 			if _, ok := c.Volumes[name]; ok {
-				v.Containers = append(v.Containers, fmt.Sprintf("%s-%s", g.Runtime, c.Name))
+				v.Containers = append(v.Containers, g.containerNameToService(c.Name))
 			}
 		}
 		volumes = append(volumes, v)
