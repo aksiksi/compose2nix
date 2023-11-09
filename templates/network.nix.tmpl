@@ -5,11 +5,11 @@ systemd.services."create-{{$runtime}}-network-{{.Name}}" = {
   path = [ pkgs.{{$runtime}} ];
   {{- if eq $runtime "docker"}}
   script = ''
-    docker network inspect {{.Name}} || docker network create {{.Name}}{{ $labels | join " "}}
+    {{.Runtime}} network inspect {{.Name}} || {{.Runtime}} network create {{.Name}}{{ $labels | join " "}}
   '';
   {{- else}}
   script = ''
-    podman network create {{.Name}} --opt isolate=true --ignore{{ $labels | join " "}}
+    {{.Runtime}} network inspect {{.Name}} || {{.Runtime}} network create {{.Name}} --opt isolate=true{{ $labels | join " "}}
   '';
   {{- end}}
   {{- if .Containers}}

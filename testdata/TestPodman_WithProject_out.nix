@@ -214,7 +214,7 @@
     serviceConfig.Type = "oneshot";
     path = [ pkgs.podman ];
     script = ''
-      podman network create myproject_default --opt isolate=true --ignore
+      podman network inspect myproject_default || podman network create myproject_default --opt isolate=true
     '';
     wantedBy = [
       "podman-myproject_sabnzbd.service"

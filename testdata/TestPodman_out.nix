@@ -214,7 +214,7 @@
     serviceConfig.Type = "oneshot";
     path = [ pkgs.podman ];
     script = ''
-      podman network create default --opt isolate=true --ignore
+      podman network inspect default || podman network create default --opt isolate=true
     '';
     wantedBy = [
       "podman-photoprism-mariadb.service"
