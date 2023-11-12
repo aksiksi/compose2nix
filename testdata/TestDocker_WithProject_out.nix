@@ -291,17 +291,6 @@
       Type = "oneshot";
       RemainAfterExit = true;
     };
-    before = [
-      "docker-jellyseerr.service"
-      "docker-myproject_sabnzbd.service"
-      "docker-photoprism-mariadb.service"
-      "docker-torrent-client.service"
-      "docker-traefik.service"
-      "docker-network-myproject_default.service"
-      "docker-volume-books.service"
-      "docker-volume-photos.service"
-      "docker-volume-storage.service"
-    ];
     requiredBy = [
       "docker-jellyseerr.service"
       "docker-myproject_sabnzbd.service"

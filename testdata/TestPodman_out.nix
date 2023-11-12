@@ -244,14 +244,6 @@
       Type = "oneshot";
       RemainAfterExit = true;
     };
-    before = [
-      "podman-jellyseerr.service"
-      "podman-photoprism-mariadb.service"
-      "podman-sabnzbd.service"
-      "podman-torrent-client.service"
-      "podman-traefik.service"
-      "podman-network-default.service"
-    ];
     requiredBy = [
       "podman-jellyseerr.service"
       "podman-photoprism-mariadb.service"

@@ -67,6 +67,10 @@ type NixNetwork struct {
 	Containers []string
 }
 
+func (n *NixNetwork) Unit() string {
+	return fmt.Sprintf("%s-network-%s.service", n.Runtime, n.Name)
+}
+
 type NixVolume struct {
 	Runtime      ContainerRuntime
 	Name         string
@@ -78,6 +82,10 @@ type NixVolume struct {
 
 func (v *NixVolume) Path() string {
 	return v.DriverOpts["device"]
+}
+
+func (v *NixVolume) Unit() string {
+	return fmt.Sprintf("%s-volume-%s.service", v.Runtime, v.Name)
 }
 
 // NixContainerSystemdConfig configures the container's systemd config.
@@ -127,6 +135,10 @@ type NixContainer struct {
 	service *types.ServiceConfig
 }
 
+func (c *NixContainer) Unit() string {
+	return fmt.Sprintf("%s-%s.service", c.Runtime, c.Name)
+}
+
 type NixContainerConfig struct {
 	Project           *Project
 	Runtime           ContainerRuntime
@@ -152,13 +164,13 @@ func (c NixContainerConfig) String() string {
 func (c NixContainerConfig) Units() []string {
 	var units []string
 	for _, container := range c.Containers {
-		units = append(units, fmt.Sprintf("%s-%s.service", c.Runtime, container.Name))
+		units = append(units, container.Unit())
 	}
 	for _, network := range c.Networks {
-		units = append(units, fmt.Sprintf("%s-network-%s.service", c.Runtime, network.Name))
+		units = append(units, network.Unit())
 	}
 	for _, volume := range c.Volumes {
-		units = append(units, fmt.Sprintf("%s-volume-%s.service", c.Runtime, volume.Name))
+		units = append(units, volume.Unit())
 	}
 	return units
 }

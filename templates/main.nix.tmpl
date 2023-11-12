@@ -50,11 +50,6 @@
       Type = "oneshot";
       RemainAfterExit = true;
     };
-    before = [
-      {{- range $units}}
-      "{{.}}"
-      {{- end}}
-    ];
     requiredBy = [
       {{- range $units}}
       "{{.}}"
