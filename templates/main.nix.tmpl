@@ -1,3 +1,4 @@
+{{- $units := .Units -}}
 { pkgs, ... }:
 
 {
@@ -37,5 +38,28 @@
   {{- range .Volumes}}
 {{execTemplate "volume.nix.tmpl" . | indent 2}}
   {{- end}}
+  {{- end}}
+
+  {{- if and .CreateRootService $units}}
+
+  # Root service
+  # When stopped, this will teardown all resources.
+  systemd.services."{{.Runtime}}-compose-{{.Project.With "root"}}" = {
+    path = [ pkgs.{{.Runtime}} ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    before = [
+      {{- range $units}}
+      "{{.}}"
+      {{- end}}
+    ];
+    requiredBy = [
+      {{- range $units}}
+      "{{.}}"
+      {{- end}}
+    ];
+  };
   {{- end}}
 }

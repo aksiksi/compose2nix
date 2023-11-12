@@ -22,8 +22,8 @@
       TZ = "America/New_York";
     };
     volumes = [
-      "/var/volumes/jellyseerr:/app/config:rw"
       "/mnt/media/Books:/books:rw"
+      "/var/volumes/jellyseerr:/app/config:rw"
     ];
     labels = {
       "traefik.enable" = "true";
@@ -62,8 +62,8 @@
       TZ = "America/New_York";
     };
     volumes = [
-      "/var/volumes/sabnzbd:/config:rw"
       "/mnt/media:/storage:rw"
+      "/var/volumes/sabnzbd:/config:rw"
     ];
     labels = {
       "traefik.enable" = "true";
@@ -98,8 +98,8 @@
       MARIADB_USER = "photoprism";
     };
     volumes = [
-      "/var/volumes/photoprism-mariadb:/var/lib/mysql:rw"
       "/mnt/photos:/photos:rw"
+      "/var/volumes/photoprism-mariadb:/var/lib/mysql:rw"
     ];
     user = "1000:1000";
     log-driver = "journald";
@@ -136,9 +136,9 @@
     };
     volumes = [
       "/etc/localtime:/etc/localtime:ro"
+      "/mnt/media:/storage:rw"
       "/var/volumes/transmission/config:/config:rw"
       "/var/volumes/transmission/scripts:/scripts:rw"
-      "/mnt/media:/storage:rw"
     ];
     ports = [
       "9091:9091/tcp"
@@ -233,6 +233,32 @@
       "podman-photoprism-mariadb.service"
       "podman-torrent-client.service"
       "podman-traefik.service"
+    ];
+  };
+
+  # Root service
+  # When stopped, this will teardown all resources.
+  systemd.services."podman-compose-myproject_root" = {
+    path = [ pkgs.podman ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    before = [
+      "podman-jellyseerr.service"
+      "podman-myproject_sabnzbd.service"
+      "podman-photoprism-mariadb.service"
+      "podman-torrent-client.service"
+      "podman-traefik.service"
+      "podman-network-myproject_default.service"
+    ];
+    requiredBy = [
+      "podman-jellyseerr.service"
+      "podman-myproject_sabnzbd.service"
+      "podman-photoprism-mariadb.service"
+      "podman-torrent-client.service"
+      "podman-traefik.service"
+      "podman-network-myproject_default.service"
     ];
   };
 }

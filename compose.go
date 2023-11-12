@@ -8,15 +8,10 @@ import (
 	"regexp"
 	"slices"
 	"strings"
-	"time"
 
 	"github.com/compose-spec/compose-go/loader"
 	"github.com/compose-spec/compose-go/types"
 	"golang.org/x/exp/maps"
-)
-
-var (
-	defaultStartLimitIntervalSec = int((24 * time.Hour).Seconds())
 )
 
 // Examples:
@@ -71,6 +66,7 @@ type Generator struct {
 	SystemdProvider        SystemdProvider
 	CheckSystemdMounts     bool
 	RemoveVolumes          bool
+	NoCreateRootService    bool
 }
 
 func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
@@ -97,11 +93,12 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 	g.postProcessContainers(containers, volumes)
 
 	return &NixContainerConfig{
-		Project:    g.Project,
-		Runtime:    g.Runtime,
-		Containers: containers,
-		Networks:   networks,
-		Volumes:    volumes,
+		Project:           g.Project,
+		Runtime:           g.Runtime,
+		Containers:        containers,
+		Networks:          networks,
+		Volumes:           volumes,
+		CreateRootService: !g.NoCreateRootService,
 	}, nil
 }
 
@@ -353,7 +350,8 @@ func (g *Generator) buildNixVolumes(composeProject *types.Project, containers []
 			for _, c := range containers {
 				if volumeString, ok := c.Volumes[name]; ok {
 					volumeString = strings.TrimPrefix(volumeString, name)
-					c.Volumes[name] = bindPath + volumeString
+					c.Volumes[bindPath] = bindPath + volumeString
+					delete(c.Volumes, name)
 				}
 			}
 			continue

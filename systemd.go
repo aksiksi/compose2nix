@@ -14,6 +14,8 @@ import (
 )
 
 var (
+	defaultStartLimitIntervalSec = int((24 * time.Hour).Seconds())
+
 	systemdTrue  = []string{"true", "yes", "on", "1"}
 	systemdFalse = []string{"false", "no", "off", "0"}
 )

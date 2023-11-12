@@ -306,4 +306,36 @@
       "docker-torrent-client.service"
     ];
   };
+
+  # Root service
+  # When stopped, this will teardown all resources.
+  systemd.services."docker-compose-root" = {
+    path = [ pkgs.docker ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    before = [
+      "docker-jellyseerr.service"
+      "docker-photoprism-mariadb.service"
+      "docker-sabnzbd.service"
+      "docker-torrent-client.service"
+      "docker-traefik.service"
+      "docker-network-default.service"
+      "docker-volume-books.service"
+      "docker-volume-photos.service"
+      "docker-volume-storage.service"
+    ];
+    requiredBy = [
+      "docker-jellyseerr.service"
+      "docker-photoprism-mariadb.service"
+      "docker-sabnzbd.service"
+      "docker-torrent-client.service"
+      "docker-traefik.service"
+      "docker-network-default.service"
+      "docker-volume-books.service"
+      "docker-volume-photos.service"
+      "docker-volume-storage.service"
+    ];
+  };
 }

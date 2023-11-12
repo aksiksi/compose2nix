@@ -128,11 +128,12 @@ type NixContainer struct {
 }
 
 type NixContainerConfig struct {
-	Project    *Project
-	Runtime    ContainerRuntime
-	Containers []*NixContainer
-	Networks   []*NixNetwork
-	Volumes    []*NixVolume
+	Project           *Project
+	Runtime           ContainerRuntime
+	Containers        []*NixContainer
+	Networks          []*NixNetwork
+	Volumes           []*NixVolume
+	CreateRootService bool
 }
 
 func (c NixContainerConfig) String() string {
@@ -146,4 +147,18 @@ func (c NixContainerConfig) String() string {
 		panic(err)
 	}
 	return s.String()
+}
+
+func (c NixContainerConfig) Units() []string {
+	var units []string
+	for _, container := range c.Containers {
+		units = append(units, fmt.Sprintf("%s-%s.service", c.Runtime, container.Name))
+	}
+	for _, network := range c.Networks {
+		units = append(units, fmt.Sprintf("%s-network-%s.service", c.Runtime, network.Name))
+	}
+	for _, volume := range c.Volumes {
+		units = append(units, fmt.Sprintf("%s-volume-%s.service", c.Runtime, volume.Name))
+	}
+	return units
 }
