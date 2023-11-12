@@ -1,4 +1,4 @@
-package compose2nix
+package main
 
 import (
 	"cmp"
