@@ -13,6 +13,11 @@ import (
 	"github.com/compose-spec/compose-go/types"
 )
 
+var (
+	systemdTrue  = []string{"true", "yes", "on", "1"}
+	systemdFalse = []string{"false", "no", "off", "0"}
+)
+
 // https://www.freedesktop.org/software/systemd/man/latest/systemd.syntax.html
 func parseSystemdValue(v string) any {
 	v = strings.TrimSpace(v)

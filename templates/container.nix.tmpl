@@ -81,7 +81,7 @@ systemd.services."{{$runtime}}-{{.Name}}" = {
   {{- end}}
   {{- if .SystemdConfig.Unit}}
   unitConfig = {
-    {{- range $k, $v := .SystemdConfig.UnitConfig}}
+    {{- range $k, $v := .SystemdConfig.Unit}}
     {{$k}} = {{toNixValue $v}};
     {{- end}}
   };

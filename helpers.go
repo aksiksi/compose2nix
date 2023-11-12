@@ -10,11 +10,6 @@ import (
 	"strings"
 )
 
-var (
-	systemdTrue  = []string{"true", "yes", "on", "1"}
-	systemdFalse = []string{"false", "no", "off", "0"}
-)
-
 // mapToKeyValArray converts a map into a _sorted_ list of KEY=VAL entries.
 func mapToKeyValArray(m map[string]string) []string {
 	var arr []string
