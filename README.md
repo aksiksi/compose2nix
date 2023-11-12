@@ -39,6 +39,8 @@ Usage of compose2nix:
         auto-start setting for generated container(s). (default true)
   -check_systemd_mounts
         if set, volume paths will be checked against systemd mount paths on the current machine and marked as container dependencies.
+  -create_root_service
+        if set, a root systemd service will be created, which when stopped tears down all resources. (default true)
   -env_files string
         one or more comma-separated paths to .env file(s).
   -env_files_only
@@ -53,6 +55,8 @@ Usage of compose2nix:
         project name used as a prefix for generated resources.
   -project_separator string
         seperator for project prefix. (default "_")
+  -remove_volumes
+        if set, volumes will be removed on systemd service stop.
   -runtime string
         one of: ["podman", "docker"]. (default "podman")
   -service_include string
