@@ -156,6 +156,7 @@ services:
       - "traefik.http.routers.traefik.service=api@internal"
       - "traefik.http.routers.traefik.tls.certresolver=htpc"
       - "traefik.http.routers.traefik.middlewares=chain-authelia@file"
+    network_mode: "container:sabnzbd"
     logging:
       driver: "json-file"
       options:

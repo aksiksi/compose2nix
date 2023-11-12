@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strings"
 	"text/template"
-
-	"github.com/compose-spec/compose-go/types"
 )
 
 const DefaultProjectSeparator = "_"
@@ -128,11 +126,6 @@ type NixContainer struct {
 	SystemdConfig *NixContainerSystemdConfig
 	User          string
 	AutoStart     bool
-
-	// Original Docker Compose service that generated this container.
-	// This is only used for post-processing the container and is reset to nil once processing
-	// is complete.
-	service *types.ServiceConfig
 }
 
 func (c *NixContainer) Unit() string {

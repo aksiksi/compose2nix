@@ -62,6 +62,8 @@ type Generator struct {
 	CheckSystemdMounts     bool
 	RemoveVolumes          bool
 	NoCreateRootService    bool
+
+	serviceToContainerName map[string]string
 }
 
 func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
@@ -75,6 +77,18 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	// Construct a map of service to container name.
+	g.serviceToContainerName = map[string]string{}
+	for _, service := range composeProject.Services {
+		var name string
+		if service.ContainerName != "" {
+			name = service.ContainerName
+		} else {
+			name = g.Project.With(service.Name)
+		}
+		g.serviceToContainerName[service.Name] = name
 	}
 
 	containers, err := g.buildNixContainers(composeProject)
@@ -98,26 +112,14 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 }
 
 func (g *Generator) postProcessContainers(containers []*NixContainer, volumes []*NixVolume) error {
-	serviceToContainer := map[string]*NixContainer{}
 	for _, c := range containers {
-		serviceToContainer[c.service.Name] = c
-	}
-
-	for _, c := range containers {
-		// Convert the Compose "service" network mode to a container.
-		if networkMode := c.service.NetworkMode; strings.HasPrefix(networkMode, "service:") {
-			targetService := strings.Split(networkMode, ":")[1]
-			targetContainerName := serviceToContainer[targetService].Name
-			c.ExtraOptions = append(c.ExtraOptions, "--network=container:"+targetContainerName)
-			c.DependsOn = append(c.DependsOn, targetContainerName)
+		var serviceName string
+		for s, containerName := range g.serviceToContainerName {
+			if containerName == c.Name {
+				serviceName = s
+				break
+			}
 		}
-
-		// Figure out the dependencies for this container.
-		dependsOn := c.service.GetDependencies()
-		for i, service := range dependsOn {
-			dependsOn[i] = serviceToContainer[service].Name
-		}
-		c.DependsOn = dependsOn
 
 		// Add dependencies on systemd mounts for volumes used by this container, if any.
 		if g.CheckSystemdMounts {
@@ -138,7 +140,7 @@ func (g *Generator) postProcessContainers(containers []*NixContainer, volumes []
 					path = name
 				}
 				if !strings.HasPrefix(path, "/") {
-					log.Printf("Volume path %q is not absolute; skipping systemd mount dependency for service %q", path, c.service.Name)
+					log.Printf("Volume path %q is not absolute; skipping systemd mount dependency for service %q", path, serviceName)
 					continue
 				}
 				unit, err := g.SystemdProvider.FindMountForPath(path)
@@ -154,26 +156,13 @@ func (g *Generator) postProcessContainers(containers []*NixContainer, volumes []
 				}
 			}
 		}
-
-		// Drop the reference to the service at the end of post-processing. This allows GC to
-		// kick in and free the service allocation.
-		c.service = nil
-
-		// Sort slices now that we're done processing the container.
-		slices.Sort(c.DependsOn)
-		slices.Sort(c.ExtraOptions)
 	}
 
 	return nil
 }
 
 func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContainer, error) {
-	var name string
-	if service.ContainerName != "" {
-		name = service.ContainerName
-	} else {
-		name = g.Project.With(service.Name)
-	}
+	name := g.serviceToContainerName[service.Name]
 
 	systemdConfig := NewNixContainerSystemdConfig()
 	if err := systemdConfig.ParseRestartPolicy(&service); err != nil {
@@ -196,7 +185,6 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 		SystemdConfig: systemdConfig,
 		AutoStart:     g.AutoStart,
 		LogDriver:     "journald", // This is the NixOS default
-		service:       &service,
 	}
 	slices.Sort(c.Networks)
 
@@ -215,6 +203,14 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 		c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--network=%s", networkName))
 	}
 
+	// Figure out explicit dependencies for this container.
+	for _, s := range service.GetDependencies() {
+		if _, ok := g.serviceToContainerName[s]; !ok {
+			return nil, fmt.Errorf("service %q depends on non-existent service %q", service.Name, s)
+		}
+		c.DependsOn = append(c.DependsOn, g.serviceToContainerName[s])
+	}
+
 	// https://docs.docker.com/compose/compose-file/compose-file-v3/#network_mode
 	// https://docs.podman.io/en/latest/markdown/podman-run.1.html#network-mode-net
 	switch networkMode := strings.TrimSpace(service.NetworkMode); {
@@ -222,9 +218,25 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 		c.ExtraOptions = append(c.ExtraOptions, "--network=host")
 	case strings.HasPrefix(networkMode, "container:"):
 		// container:[name] mode is supported by both Docker and Podman.
-		c.ExtraOptions = append(c.ExtraOptions, networkMode)
-		containerName := strings.TrimSpace(strings.Split(networkMode, ":")[1])
-		c.DependsOn = append(c.DependsOn, containerName)
+		// This container could be external, so we can't fail if it doesn't exist in this Compose
+		// project.
+		targetContainerName := strings.TrimSpace(strings.Split(networkMode, ":")[1])
+		c.ExtraOptions = append(c.ExtraOptions, "--network=container:"+targetContainerName)
+		c.DependsOn = append(c.DependsOn, targetContainerName)
+		if !slices.Contains(c.DependsOn, targetContainerName) {
+			c.DependsOn = append(c.DependsOn, targetContainerName)
+		}
+	case strings.HasPrefix(networkMode, "service:"):
+		// Convert the Compose "service" network mode to a "container" network mode.
+		targetService := strings.Split(networkMode, ":")[1]
+		targetContainerName, ok := g.serviceToContainerName[targetService]
+		if !ok {
+			return nil, fmt.Errorf("network_mode for service %q refers to a non-existent service %q", service.Name, targetService)
+		}
+		c.ExtraOptions = append(c.ExtraOptions, "--network=container:"+targetContainerName)
+		if !slices.Contains(c.DependsOn, targetContainerName) {
+			c.DependsOn = append(c.DependsOn, targetContainerName)
+		}
 	}
 
 	// Allow other containers to use service name as an alias.
@@ -269,6 +281,10 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 		// Log options are always passed through.
 		c.ExtraOptions = append(c.ExtraOptions, mapToRepeatedKeyValFlag("--log-opt", logging.Options)...)
 	}
+
+	// Sort slices now that we're done processing the container.
+	slices.Sort(c.DependsOn)
+	slices.Sort(c.ExtraOptions)
 
 	return c, nil
 }

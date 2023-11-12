@@ -217,6 +217,9 @@
       "traefik.http.routers.traefik.service" = "api@internal";
       "traefik.http.routers.traefik.tls.certresolver" = "htpc";
     };
+    dependsOn = [
+      "sabnzbd"
+    ];
     log-driver = "journald";
     autoStart = false;
     extraOptions = [
@@ -224,7 +227,7 @@
       "--log-opt=max-file=3"
       "--log-opt=max-size=10m"
       "--network-alias=traefik"
-      "--network=default"
+      "--network=container:sabnzbd"
     ];
   };
   systemd.services."docker-traefik" = {
@@ -247,12 +250,10 @@
     before = [
       "docker-sabnzbd.service"
       "docker-torrent-client.service"
-      "docker-traefik.service"
     ];
     requiredBy = [
       "docker-sabnzbd.service"
       "docker-torrent-client.service"
-      "docker-traefik.service"
     ];
   };
 

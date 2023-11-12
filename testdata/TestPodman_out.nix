@@ -198,6 +198,9 @@
       "traefik.http.routers.traefik.service" = "api@internal";
       "traefik.http.routers.traefik.tls.certresolver" = "htpc";
     };
+    dependsOn = [
+      "sabnzbd"
+    ];
     log-driver = "journald";
     autoStart = false;
     extraOptions = [
@@ -205,7 +208,7 @@
       "--log-opt=max-file=3"
       "--log-opt=max-size=10m"
       "--network-alias=traefik"
-      "--network=default"
+      "--network=container:sabnzbd"
     ];
   };
   systemd.services."podman-traefik" = {
@@ -228,12 +231,10 @@
     before = [
       "podman-sabnzbd.service"
       "podman-torrent-client.service"
-      "podman-traefik.service"
     ];
     requiredBy = [
       "podman-sabnzbd.service"
       "podman-torrent-client.service"
-      "podman-traefik.service"
     ];
   };
 
