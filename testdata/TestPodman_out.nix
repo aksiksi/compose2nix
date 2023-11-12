@@ -212,7 +212,7 @@
   };
 
   # Networks
-  systemd.services."create-podman-network-default" = {
+  systemd.services."podman-network-default" = {
     path = [ pkgs.podman ];
     serviceConfig = {
       Type = "oneshot";

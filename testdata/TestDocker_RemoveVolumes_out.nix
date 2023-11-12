@@ -207,7 +207,7 @@
   };
 
   # Networks
-  systemd.services."create-docker-network-default" = {
+  systemd.services."docker-network-default" = {
     path = [ pkgs.docker ];
     serviceConfig = {
       Type = "oneshot";
@@ -232,7 +232,7 @@
   };
 
   # Volumes
-  systemd.services."create-docker-volume-books" = {
+  systemd.services."docker-volume-books" = {
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
@@ -249,7 +249,7 @@
       "docker-jellyseerr.service"
     ];
   };
-  systemd.services."create-docker-volume-photos" = {
+  systemd.services."docker-volume-photos" = {
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
@@ -266,7 +266,7 @@
       "docker-photoprism-mariadb.service"
     ];
   };
-  systemd.services."create-docker-volume-storage" = {
+  systemd.services."docker-volume-storage" = {
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;

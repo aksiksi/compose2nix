@@ -1,5 +1,5 @@
 {{- $driverOptsString := mapToKeyValArray .DriverOpts | join "," -}}
-systemd.services."create-{{.Runtime}}-volume-{{.Name}}" = {
+systemd.services."{{.Runtime}}-volume-{{.Name}}" = {
   serviceConfig = {
     Type = "oneshot";
     RemainAfterExit = true;
@@ -18,12 +18,12 @@ systemd.services."create-{{.Runtime}}-volume-{{.Name}}" = {
   {{- if .Containers}}
   before = [
     {{- range .Containers}}
-    {{. | printf "%q"}}
+    "{{.}}"
     {{- end}}
   ];
   requiredBy = [
     {{- range .Containers}}
-    {{. | printf "%q"}}
+    "{{.}}"
     {{- end}}
   ];
   {{- end}}

@@ -1,5 +1,5 @@
 {{- $labels := mapToRepeatedKeyValFlag "--label" .Labels -}}
-systemd.services."create-{{.Runtime}}-network-{{.Name}}" = {
+systemd.services."{{.Runtime}}-network-{{.Name}}" = {
   path = [ pkgs.{{.Runtime}} ];
   serviceConfig = {
     Type = "oneshot";
