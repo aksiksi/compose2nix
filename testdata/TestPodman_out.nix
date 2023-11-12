@@ -80,8 +80,11 @@
   };
   systemd.services."podman-photoprism-mariadb" = {
     serviceConfig = {
-      Restart = "none";
+      Restart = "always";
+      RestartSec = "3m0s";
     };
+    startLimitBurst = 10;
+    startLimitIntervalSec = 86400;
   };
   virtualisation.oci-containers.containers."sabnzbd" = {
     image = "lscr.io/linuxserver/sabnzbd";
@@ -118,6 +121,9 @@
     serviceConfig = {
       Restart = "always";
       RuntimeMaxSec = 10;
+    };
+    unitConfig = {
+      Description = "This is the sabnzbd container!";
     };
   };
   virtualisation.oci-containers.containers."torrent-client" = {
@@ -213,7 +219,7 @@
   };
   systemd.services."podman-traefik" = {
     serviceConfig = {
-      Restart = "always";
+      Restart = "none";
     };
   };
 

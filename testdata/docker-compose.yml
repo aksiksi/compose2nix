@@ -19,6 +19,7 @@ services:
       - "traefik.http.routers.sabnzbd.tls.certresolver=htpc"
       - "traefik.http.routers.sabnzbd.middlewares=chain-authelia@file"
       - "compose2nix.systemd.service.RuntimeMaxSec=10"
+      - "compose2nix.systemd.unit.Description=This is the sabnzbd container!"
     logging:
       driver: "json-file"
       options:
@@ -128,8 +129,11 @@ services:
     volumes:
        - /var/volumes/photoprism-mariadb:/var/lib/mysql
        - photos:/photos
-    labels:
-      - "compose2nix.systemd.service.Restart=none"
+    deploy:
+      restart_policy:
+        condition: any
+        delay: 3m
+        max_attempts: 10
     logging:
       driver: "json-file"
       options:
@@ -156,6 +160,7 @@ services:
       - "traefik.http.routers.traefik.service=api@internal"
       - "traefik.http.routers.traefik.tls.certresolver=htpc"
       - "traefik.http.routers.traefik.middlewares=chain-authelia@file"
+      - "compose2nix.systemd.service.Restart=none"
     network_mode: "container:sabnzbd"
     logging:
       driver: "json-file"

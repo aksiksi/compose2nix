@@ -129,6 +129,7 @@ func (c *NixContainerSystemdConfig) ParseRestartPolicy(service *types.ServiceCon
 	case "":
 		c.Service.Set("Restart", "no")
 	case "no", "always", "on-failure":
+		// All of these match the systemd restart options.
 		c.Service.Set("Restart", restart)
 	case "unless-stopped":
 		c.Service.Set("Restart", "always")
@@ -159,10 +160,11 @@ func (c *NixContainerSystemdConfig) ParseRestartPolicy(service *types.ServiceCon
 		switch condition := restartPolicy.Condition; condition {
 		case "none":
 			c.Service.Set("Restart", "no")
-		case "any":
+		case "", "any":
+			// If unset, defaults to "any".
 			c.Service.Set("Restart", "always")
 		case "on-failure":
-			c.Service.Set("Restart", condition)
+			c.Service.Set("Restart", "on-failure")
 		default:
 			return fmt.Errorf("unsupported condition: %q", condition)
 		}

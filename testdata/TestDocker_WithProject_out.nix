@@ -84,6 +84,9 @@
       Restart = "always";
       RuntimeMaxSec = 10;
     };
+    unitConfig = {
+      Description = "This is the sabnzbd container!";
+    };
   };
   virtualisation.oci-containers.containers."photoprism-mariadb" = {
     image = "docker.io/library/mariadb:10.9";
@@ -112,8 +115,11 @@
   };
   systemd.services."docker-photoprism-mariadb" = {
     serviceConfig = {
-      Restart = "none";
+      Restart = "always";
+      RestartSec = "3m0s";
     };
+    startLimitBurst = 10;
+    startLimitIntervalSec = 86400;
   };
   virtualisation.oci-containers.containers."torrent-client" = {
     image = "docker.io/haugene/transmission-openvpn";
@@ -208,7 +214,7 @@
   };
   systemd.services."docker-traefik" = {
     serviceConfig = {
-      Restart = "always";
+      Restart = "none";
     };
   };
 
