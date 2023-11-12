@@ -47,8 +47,11 @@
   };
   systemd.services."podman-jellyseerr" = {
     serviceConfig = {
-      Restart = "always";
+      Restart = "on-failure";
+      RestartSec = "5s";
     };
+    startLimitBurst = 3;
+    startLimitIntervalSec = 120;
   };
   virtualisation.oci-containers.containers."myproject_sabnzbd" = {
     image = "lscr.io/linuxserver/sabnzbd";
@@ -109,12 +112,12 @@
       "--log-opt=max-file=3"
       "--log-opt=max-size=10m"
       "--network-alias=photoprism-mariadb"
-      "--network=myproject_default"
+      "--network=host"
     ];
   };
   systemd.services."podman-photoprism-mariadb" = {
     serviceConfig = {
-      Restart = "always";
+      Restart = "none";
     };
   };
   virtualisation.oci-containers.containers."torrent-client" = {
@@ -224,13 +227,11 @@
     '';
     before = [
       "podman-myproject_sabnzbd.service"
-      "podman-photoprism-mariadb.service"
       "podman-torrent-client.service"
       "podman-traefik.service"
     ];
     requiredBy = [
       "podman-myproject_sabnzbd.service"
-      "podman-photoprism-mariadb.service"
       "podman-torrent-client.service"
       "podman-traefik.service"
     ];

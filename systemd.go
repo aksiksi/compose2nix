@@ -149,34 +149,37 @@ func (c *NixContainerSystemdConfig) ParseRestartPolicy(service *types.ServiceCon
 		}
 	}
 
-	if service.Deploy != nil {
-		// The newer "deploy" config will always override the legacy "restart" config.
-		// https://docs.docker.com/compose/compose-file/compose-file-v3/#restart_policy
-		if restartPolicy := service.Deploy.RestartPolicy; restartPolicy != nil {
-			switch condition := restartPolicy.Condition; condition {
-			case "none":
-				c.Service.Set("Restart", "no")
-			case "any":
-				c.Service.Set("Restart", "always")
-			case "on-failure":
-				c.Service.Set("Restart", condition)
-			default:
-				return fmt.Errorf("unsupported condition: %q", condition)
-			}
-			if delay := restartPolicy.Delay; delay != nil {
-				c.Service.Set("RestartSec", delay.String())
-			}
-			if maxAttempts := restartPolicy.MaxAttempts; maxAttempts != nil {
-				v := int(*maxAttempts)
-				c.StartLimitBurst = &v
-			}
-			if window := restartPolicy.Window; window != nil {
-				windowSecs := int(time.Duration(*window).Seconds())
-				c.StartLimitIntervalSec = &windowSecs
-			} else if c.StartLimitBurst != nil {
-				// Retry limit resets once per day by default.
-				c.StartLimitIntervalSec = &defaultStartLimitIntervalSec
-			}
+	if service.Deploy == nil {
+		return nil
+	}
+
+	// The newer "deploy" config will always override the legacy "restart" config.
+	// https://docs.docker.com/compose/compose-file/compose-file-v3/#restart_policy
+	if restartPolicy := service.Deploy.RestartPolicy; restartPolicy != nil {
+		switch condition := restartPolicy.Condition; condition {
+		case "none":
+			c.Service.Set("Restart", "no")
+		case "any":
+			c.Service.Set("Restart", "always")
+		case "on-failure":
+			c.Service.Set("Restart", condition)
+		default:
+			return fmt.Errorf("unsupported condition: %q", condition)
+		}
+		if delay := restartPolicy.Delay; delay != nil {
+			c.Service.Set("RestartSec", delay.String())
+		}
+		if maxAttempts := restartPolicy.MaxAttempts; maxAttempts != nil {
+			v := int(*maxAttempts)
+			c.StartLimitBurst = &v
+		}
+		if window := restartPolicy.Window; window != nil {
+			// TODO(aksiksi): Investigate if StartLimitIntervalSec lines up with Compose's "window".
+			windowSecs := int(time.Duration(*window).Seconds())
+			c.StartLimitIntervalSec = &windowSecs
+		} else if c.StartLimitBurst != nil {
+			// Retry limit resets once per day by default.
+			c.StartLimitIntervalSec = &defaultStartLimitIntervalSec
 		}
 	}
 

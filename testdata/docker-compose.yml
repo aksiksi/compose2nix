@@ -100,6 +100,12 @@ services:
       - "traefik.http.routers.jellyseerr.tls.certresolver=htpc"
       - "traefik.http.routers.jellyseerr.middlewares=chain-authelia@file"
     network_mode: "service:sabnzbd"
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
     logging:
       driver: "json-file"
       options:
@@ -117,10 +123,13 @@ services:
       MARIADB_USER: "photoprism"
       MARIADB_PASSWORD: "insecure"
       MARIADB_ROOT_PASSWORD: "insecure"
+    network_mode: "host"
     user: "${PUID}:${PGID}"
     volumes:
        - /var/volumes/photoprism-mariadb:/var/lib/mysql
        - photos:/photos
+    labels:
+      - "compose2nix.systemd.service.Restart=none"
     logging:
       driver: "json-file"
       options:

@@ -42,8 +42,11 @@
   };
   systemd.services."docker-jellyseerr" = {
     serviceConfig = {
-      Restart = "always";
+      Restart = "on-failure";
+      RestartSec = "5s";
     };
+    startLimitBurst = 3;
+    startLimitIntervalSec = 120;
   };
   virtualisation.oci-containers.containers."photoprism-mariadb" = {
     image = "docker.io/library/mariadb:10.9";
@@ -67,12 +70,12 @@
       "--log-opt=max-file=3"
       "--log-opt=max-size=10m"
       "--network-alias=photoprism-mariadb"
-      "--network=default"
+      "--network=host"
     ];
   };
   systemd.services."docker-photoprism-mariadb" = {
     serviceConfig = {
-      Restart = "always";
+      Restart = "none";
     };
   };
   virtualisation.oci-containers.containers."sabnzbd" = {
@@ -218,13 +221,11 @@
       docker network inspect default || docker network create default
     '';
     before = [
-      "docker-photoprism-mariadb.service"
       "docker-sabnzbd.service"
       "docker-torrent-client.service"
       "docker-traefik.service"
     ];
     requiredBy = [
-      "docker-photoprism-mariadb.service"
       "docker-sabnzbd.service"
       "docker-torrent-client.service"
       "docker-traefik.service"

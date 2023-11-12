@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"os"
 	"slices"
 	"strings"
@@ -34,11 +33,7 @@ func ReadEnvFiles(envFiles []string, mergeWithEnv bool) (env []string, _ error) 
 		}
 		f, err := os.Open(p)
 		if err != nil {
-			if os.IsNotExist(err) {
-				log.Printf("path %s does not exist", p)
-				continue
-			}
-			return nil, fmt.Errorf("failed to stat file: %w", err)
+			return nil, fmt.Errorf("failed to open file %s: %w", p, err)
 		}
 		defer f.Close()
 		s := bufio.NewScanner(f)

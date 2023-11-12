@@ -47,8 +47,11 @@
   };
   systemd.services."podman-jellyseerr" = {
     serviceConfig = {
-      Restart = "always";
+      Restart = "on-failure";
+      RestartSec = "5s";
     };
+    startLimitBurst = 3;
+    startLimitIntervalSec = 120;
   };
   virtualisation.oci-containers.containers."photoprism-mariadb" = {
     image = "docker.io/library/mariadb:10.9";
@@ -72,12 +75,12 @@
       "--log-opt=max-file=3"
       "--log-opt=max-size=10m"
       "--network-alias=photoprism-mariadb"
-      "--network=default"
+      "--network=host"
     ];
   };
   systemd.services."podman-photoprism-mariadb" = {
     serviceConfig = {
-      Restart = "always";
+      Restart = "none";
     };
   };
   virtualisation.oci-containers.containers."sabnzbd" = {
@@ -223,13 +226,11 @@
       podman network inspect default || podman network create default --opt isolate=true
     '';
     before = [
-      "podman-photoprism-mariadb.service"
       "podman-sabnzbd.service"
       "podman-torrent-client.service"
       "podman-traefik.service"
     ];
     requiredBy = [
-      "podman-photoprism-mariadb.service"
       "podman-sabnzbd.service"
       "podman-torrent-client.service"
       "podman-traefik.service"
