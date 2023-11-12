@@ -2,6 +2,7 @@
 
 [![codecov](https://codecov.io/gh/aksiksi/compose2nix/graph/badge.svg)](https://codecov.io/gh/aksiksi/compose2nix)
 [![test](https://github.com/aksiksi/compose2nix/actions/workflows/test.yml/badge.svg)](https://github.com/aksiksi/compose2nix/actions/workflows/test.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/aksiksi/compose2nix.svg)](https://pkg.go.dev/github.com/aksiksi/compose2nix)
 
 A tool to automatically generate a NixOS config from a Docker Compose project.
 
@@ -9,8 +10,12 @@ A tool to automatically generate a NixOS config from a Docker Compose project.
 
 Install the `compose2nix` CLI via one of the following methods:
 
-1. Cloning this repo and running `make build`
-2. Installing the Flake and adding the following to your Nix config:
+1. Install the command using `go`:
+    ```
+    go install github.com/aksiksi/compose2nix/cmd/compose2nix@latest
+    ```
+2. Clone this repo and run `make build`.
+3. Install the Flake and add the following to your NixOS config:
     ```nix
     environment.systemPackages = with pkgs; [
       compose2nix.packages.x86_64-linux.default
