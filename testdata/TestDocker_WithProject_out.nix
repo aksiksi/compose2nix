@@ -208,8 +208,11 @@
 
   # Networks
   systemd.services."create-docker-network-myproject_default" = {
-    serviceConfig.Type = "oneshot";
     path = [ pkgs.docker ];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStop = "${pkgs.docker}/bin/docker network rm -f myproject_default";
+    };
     script = ''
       docker network inspect myproject_default || docker network create myproject_default
     '';

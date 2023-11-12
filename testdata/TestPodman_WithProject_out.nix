@@ -213,8 +213,11 @@
 
   # Networks
   systemd.services."create-podman-network-myproject_default" = {
-    serviceConfig.Type = "oneshot";
     path = [ pkgs.podman ];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStop = "${pkgs.podman}/bin/podman network rm -f myproject_default";
+    };
     script = ''
       podman network inspect myproject_default || podman network create myproject_default --opt isolate=true
     '';

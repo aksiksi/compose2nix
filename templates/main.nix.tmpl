@@ -1,12 +1,11 @@
-{{- $runtime := .Runtime | printf "%s" -}}
 { pkgs, ... }:
 
 {
   # Runtime
-  virtualisation.{{$runtime}} = {
+  virtualisation.{{.Runtime}} = {
     enable = true;
     autoPrune.enable = true;
-    {{- if eq $runtime "podman"}}
+    {{- if eq (.Runtime | printf "%s") "podman"}}
     dockerCompat = true;
     defaultNetwork.settings = {
       # Required for container networking to be able to use names.
@@ -14,7 +13,7 @@
     };
     {{- end}}
   };
-  virtualisation.oci-containers.backend = "{{$runtime}}";
+  virtualisation.oci-containers.backend = "{{.Runtime}}";
 
   {{- if .Containers}}
 

@@ -1,9 +1,11 @@
-{{- $runtime := .Runtime | printf "%s" -}}
 {{- $labels := mapToRepeatedKeyValFlag "--label" .Labels -}}
-systemd.services."create-{{$runtime}}-network-{{.Name}}" = {
-  serviceConfig.Type = "oneshot";
-  path = [ pkgs.{{$runtime}} ];
-  {{- if eq $runtime "docker"}}
+systemd.services."create-{{.Runtime}}-network-{{.Name}}" = {
+  path = [ pkgs.{{.Runtime}} ];
+  serviceConfig = {
+    Type = "oneshot";
+    ExecStop = "${pkgs.{{.Runtime}}}/bin/{{.Runtime}} network rm -f {{.Name}}";
+  };
+  {{- if eq (.Runtime | printf "%s") "docker"}}
   script = ''
     {{.Runtime}} network inspect {{.Name}} || {{.Runtime}} network create {{.Name}}{{ $labels | join " "}}
   '';
