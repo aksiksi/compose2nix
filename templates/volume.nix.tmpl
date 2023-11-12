@@ -1,17 +1,18 @@
-{{- /* NOTE(aksiksi): Volume name is _not_ project scoped to match Compose semantics. */ -}}
-{{- $name := .Name -}}
 {{- $driverOptsString := mapToKeyValArray .DriverOpts | join "," -}}
-systemd.services."create-{{.Runtime}}-volume-{{$name}}" = {
+systemd.services."create-{{.Runtime}}-volume-{{.Name}}" = {
   serviceConfig = {
     Type = "oneshot";
     RemainAfterExit = true;
+    {{- if .RemoveOnStop}}
+    ExecStop = "${pkgs.{{.Runtime}}}/bin/{{.Runtime}} volume rm -f {{.Name}}";
+    {{- end}}
   };
   path = [ pkgs.{{.Runtime}} ];
   script = ''
     {{- if eq .Driver ""}}
-    {{.Runtime}} volume inspect {{$name}} || {{.Runtime}} volume create {{$name}} --opt {{$driverOptsString}}
+    {{.Runtime}} volume inspect {{.Name}} || {{.Runtime}} volume create {{.Name}} --opt {{$driverOptsString}}
     {{- else}}
-    {{.Runtime}} volume inspect {{$name}} || {{.Runtime}} volume create {{$name}} --driver {{.Driver}} --opt {{$driverOptsString}}
+    {{.Runtime}} volume inspect {{.Name}} || {{.Runtime}} volume create {{.Name}} --driver {{.Driver}} --opt {{$driverOptsString}}
     {{- end}}
   '';
   {{- if .Containers}}

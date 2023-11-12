@@ -70,6 +70,7 @@ type Generator struct {
 	GenerateUnusedResoures bool
 	SystemdProvider        SystemdProvider
 	CheckSystemdMounts     bool
+	RemoveVolumes          bool
 }
 
 func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
@@ -331,10 +332,12 @@ func (g *Generator) buildNixVolumes(composeProject *types.Project, containers []
 	var volumes []*NixVolume
 	for name, volume := range composeProject.Volumes {
 		v := &NixVolume{
-			Runtime:    g.Runtime,
-			Name:       name,
-			Driver:     volume.Driver,
-			DriverOpts: volume.DriverOpts,
+			Runtime: g.Runtime,
+			// Volume name is not project-scoped to match Compose semantics.
+			Name:         name,
+			Driver:       volume.Driver,
+			DriverOpts:   volume.DriverOpts,
+			RemoveOnStop: g.RemoveVolumes,
 		}
 
 		// FIXME(aksiksi): Podman does not properly handle NFS if the volume

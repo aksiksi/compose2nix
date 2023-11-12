@@ -68,11 +68,12 @@ type NixNetwork struct {
 }
 
 type NixVolume struct {
-	Runtime    ContainerRuntime
-	Name       string
-	Driver     string
-	DriverOpts map[string]string
-	Containers []string
+	Runtime      ContainerRuntime
+	Name         string
+	Driver       string
+	DriverOpts   map[string]string
+	Containers   []string
+	RemoveOnStop bool
 }
 
 func (v *NixVolume) Path() string {
