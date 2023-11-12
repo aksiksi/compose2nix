@@ -14,14 +14,14 @@ systemd.services."create-{{$runtime}}-network-{{.Name}}" = {
   {{- end}}
   {{- if .Containers}}
   wantedBy = [
-  {{- range .Containers}}
-  {{. | printf "%q" | indent 2}}
-  {{- end}}
+    {{- range .Containers}}
+    {{. | printf "%q"}}
+    {{- end}}
   ];
   before = [
-  {{- range .Containers}}
-  {{. | printf "%q" | indent 2}}
-  {{- end}}
+    {{- range .Containers}}
+    {{. | printf "%q"}}
+    {{- end}}
   ];
   {{- end}}
 };

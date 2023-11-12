@@ -74,9 +74,9 @@ virtualisation.oci-containers.containers."{{.Name}}" = {
 systemd.services."{{$runtime}}-{{.Name}}" = {
   {{- if .SystemdConfig.Service}}
   serviceConfig = {
-  {{- range $k, $v := .SystemdConfig.Service}}
+    {{- range $k, $v := .SystemdConfig.Service}}
     {{$k}} = {{toNixValue $v}};
-  {{- end}}
+    {{- end}}
   };
   {{- end}}
   {{- if .SystemdConfig.Unit}}
