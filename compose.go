@@ -14,11 +14,6 @@ import (
 	"golang.org/x/exp/maps"
 )
 
-// Examples:
-// nixose.systemd.service.RuntimeMaxSec=100
-// nixose.systemd.unit.StartLimitBurst=10
-var systemdLabelRegexp regexp.Regexp = *regexp.MustCompile(`nixose\.systemd\.(service|unit)\.(\w+)`)
-
 func composeEnvironmentToMap(env types.MappingWithEquals) map[string]string {
 	m := map[string]string{}
 	for k, v := range env {

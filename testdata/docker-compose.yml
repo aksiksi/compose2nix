@@ -18,7 +18,7 @@ services:
       - "traefik.http.routers.sabnzbd.rule=Host(`${HOME_DOMAIN}`) && PathPrefix(`/sabnzbd`)"
       - "traefik.http.routers.sabnzbd.tls.certresolver=htpc"
       - "traefik.http.routers.sabnzbd.middlewares=chain-authelia@file"
-      - "nixose.systemd.service.RuntimeMaxSec=10"
+      - "compose2nix.systemd.service.RuntimeMaxSec=10"
     logging:
       driver: "json-file"
       options:

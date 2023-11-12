@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os/exec"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -13,35 +14,41 @@ import (
 	"github.com/compose-spec/compose-go/types"
 )
 
+const (
+	composeLabelPrefix = "compose2nix"
+)
+
 var (
 	defaultStartLimitIntervalSec = int((24 * time.Hour).Seconds())
 
-	systemdTrue  = []string{"true", "yes", "on", "1"}
-	systemdFalse = []string{"false", "no", "off", "0"}
+	// We purposefully do not support 0/1 for false/true.
+	systemdTrue  = []string{"true", "yes", "on"}
+	systemdFalse = []string{"false", "no", "off"}
+
+	// Examples:
+	// compose2nix.systemd.service.RuntimeMaxSec=100
+	// compose2nix.systemd.unit.StartLimitBurst=10
+	systemdLabelRegexp = regexp.MustCompile(fmt.Sprintf(`%s\.systemd\.(service|unit)\.(\w+)`, composeLabelPrefix))
 )
 
 // https://www.freedesktop.org/software/systemd/man/latest/systemd.syntax.html
 func parseSystemdValue(v string) any {
 	v = strings.TrimSpace(v)
 
+	// Number
+	if i, err := strconv.ParseInt(v, 10, 64); err == nil {
+		return int(i)
+	}
+
+	// Boolean
 	switch {
 	case slices.Contains(systemdTrue, v):
 		return true
 	case slices.Contains(systemdFalse, v):
 		return false
-	case strings.Contains(v, ","):
-		// Is this how lists are defined?
-		s := strings.Split(v, ",")
-		for i := range s {
-			s[i] = strings.TrimSpace(s[i])
-		}
-		return s
 	}
 
-	if i, err := strconv.ParseInt(v, 10, 64); err == nil {
-		return int(i)
-	}
-
+	// String
 	return v
 }
 
@@ -178,7 +185,7 @@ func parseRestartPolicyAndSystemdLabels(service *types.ServiceConfig) (*NixConta
 	// Custom values provided via labels will override any explicit restart settings.
 	var labelsToDrop []string
 	for label, value := range service.Labels {
-		if !strings.HasPrefix(label, "nixose.") {
+		if !strings.HasPrefix(label, composeLabelPrefix) {
 			continue
 		}
 		m := systemdLabelRegexp.FindStringSubmatch(label)
