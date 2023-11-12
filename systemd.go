@@ -123,9 +123,7 @@ func (s *SystemdCLI) FindMountForPath(path string) (string, error) {
 	return "", nil
 }
 
-func parseRestartPolicyAndSystemdLabels(service *types.ServiceConfig) (*NixContainerSystemdConfig, error) {
-	c := NewNixContainerSystemdConfig()
-
+func (c *NixContainerSystemdConfig) ParseRestartPolicy(service *types.ServiceConfig) error {
 	// https://docs.docker.com/compose/compose-file/compose-file-v2/#restart
 	switch restart := service.Restart; restart {
 	case "":
@@ -139,7 +137,7 @@ func parseRestartPolicyAndSystemdLabels(service *types.ServiceConfig) (*NixConta
 			c.Service.Set("Restart", "on-failure")
 			maxAttemptsString := strings.TrimSpace(strings.Split(restart, ":")[1])
 			if maxAttempts, err := strconv.ParseInt(maxAttemptsString, 10, 64); err != nil {
-				return nil, fmt.Errorf("failed to parse on-failure attempts: %q: %w", maxAttemptsString, err)
+				return fmt.Errorf("failed to parse on-failure attempts: %q: %w", maxAttemptsString, err)
 			} else {
 				burst := int(maxAttempts)
 				c.StartLimitBurst = &burst
@@ -147,7 +145,7 @@ func parseRestartPolicyAndSystemdLabels(service *types.ServiceConfig) (*NixConta
 				c.StartLimitIntervalSec = &defaultStartLimitIntervalSec
 			}
 		} else {
-			return nil, fmt.Errorf("unsupported restart: %q", restart)
+			return fmt.Errorf("unsupported restart: %q", restart)
 		}
 	}
 
@@ -163,7 +161,7 @@ func parseRestartPolicyAndSystemdLabels(service *types.ServiceConfig) (*NixConta
 			case "on-failure":
 				c.Service.Set("Restart", condition)
 			default:
-				return nil, fmt.Errorf("unsupported condition: %q", condition)
+				return fmt.Errorf("unsupported condition: %q", condition)
 			}
 			if delay := restartPolicy.Delay; delay != nil {
 				c.Service.Set("RestartSec", delay.String())
@@ -182,7 +180,10 @@ func parseRestartPolicyAndSystemdLabels(service *types.ServiceConfig) (*NixConta
 		}
 	}
 
-	// Custom values provided via labels will override any explicit restart settings.
+	return nil
+}
+
+func (c *NixContainerSystemdConfig) ParseSystemdLabels(service *types.ServiceConfig) error {
 	var labelsToDrop []string
 	for label, value := range service.Labels {
 		if !strings.HasPrefix(label, composeLabelPrefix) {
@@ -190,7 +191,7 @@ func parseRestartPolicyAndSystemdLabels(service *types.ServiceConfig) (*NixConta
 		}
 		m := systemdLabelRegexp.FindStringSubmatch(label)
 		if len(m) == 0 {
-			return nil, fmt.Errorf("invalid nixose label specified for service %q: %q", service.Name, label)
+			return fmt.Errorf("invalid nixose label specified for service %q: %q", service.Name, label)
 		}
 		typ, key := m[1], m[2]
 		switch typ {
@@ -199,13 +200,12 @@ func parseRestartPolicyAndSystemdLabels(service *types.ServiceConfig) (*NixConta
 		case "unit":
 			c.Unit.Set(key, parseSystemdValue(value))
 		default:
-			return nil, fmt.Errorf(`invalid systemd type %q - must be "service" or "unit"`, typ)
+			return fmt.Errorf(`invalid systemd type %q - must be "service" or "unit"`, typ)
 		}
 		labelsToDrop = append(labelsToDrop, label)
 	}
 	for _, label := range labelsToDrop {
 		delete(service.Labels, label)
 	}
-
-	return c, nil
+	return nil
 }

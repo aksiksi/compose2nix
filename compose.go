@@ -175,8 +175,12 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 		name = g.Project.With(service.Name)
 	}
 
-	systemdConfig, err := parseRestartPolicyAndSystemdLabels(&service)
-	if err != nil {
+	systemdConfig := NewNixContainerSystemdConfig()
+	if err := systemdConfig.ParseRestartPolicy(&service); err != nil {
+		return nil, err
+	}
+	// Restart configs provided via labels will always override Compose restart settings.
+	if err := systemdConfig.ParseSystemdLabels(&service); err != nil {
 		return nil, err
 	}
 
