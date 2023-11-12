@@ -141,15 +141,23 @@ func (g *Generator) postProcessContainers(containers []*NixContainer, volumes []
 					}
 				}
 				if path == "" {
-					// This is a non-volume bind mount.
+					// This is a bind mount.
 					path = name
+				}
+				if !strings.HasPrefix(path, "/") {
+					log.Printf("Volume path %q is not absolute; skipping systemd mount dependency for service %q", path, c.service.Name)
+					continue
 				}
 				unit, err := g.SystemdProvider.FindMountForPath(path)
 				if err != nil {
 					return err
 				}
-				if unit != "" {
-					c.SystemdConfig.Requires = append(c.SystemdConfig.Requires, unit)
+				if unit == "" {
+					// No unit exists for this path.
+					continue
+				} else if !slices.Contains(c.SystemdConfig.Unit.Requires, unit) {
+					c.SystemdConfig.Unit.After = append(c.SystemdConfig.Unit.After, unit)
+					c.SystemdConfig.Unit.Requires = append(c.SystemdConfig.Unit.Requires, unit)
 				}
 			}
 		}
@@ -158,7 +166,7 @@ func (g *Generator) postProcessContainers(containers []*NixContainer, volumes []
 		// kick in and free the service allocation.
 		c.service = nil
 
-		// Sort slices now that we're done with the container.
+		// Sort slices now that we're done processing the container.
 		slices.Sort(c.DependsOn)
 		slices.Sort(c.ExtraOptions)
 	}

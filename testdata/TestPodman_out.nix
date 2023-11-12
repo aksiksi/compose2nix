@@ -216,18 +216,19 @@
     path = [ pkgs.podman ];
     serviceConfig = {
       Type = "oneshot";
+      RemainAfterExit = true;
       ExecStop = "${pkgs.podman}/bin/podman network rm -f default";
     };
     script = ''
       podman network inspect default || podman network create default --opt isolate=true
     '';
-    wantedBy = [
+    before = [
       "podman-photoprism-mariadb.service"
       "podman-sabnzbd.service"
       "podman-torrent-client.service"
       "podman-traefik.service"
     ];
-    before = [
+    requiredBy = [
       "podman-photoprism-mariadb.service"
       "podman-sabnzbd.service"
       "podman-torrent-client.service"

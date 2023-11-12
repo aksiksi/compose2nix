@@ -2,7 +2,10 @@
 {{- $name := .Name -}}
 {{- $driverOptsString := mapToKeyValArray .DriverOpts | join "," -}}
 systemd.services."create-{{.Runtime}}-volume-{{$name}}" = {
-  serviceConfig.Type = "oneshot";
+  serviceConfig = {
+    Type = "oneshot";
+    RemainAfterExit = true;
+  };
   path = [ pkgs.{{.Runtime}} ];
   script = ''
     {{- if eq .Driver ""}}
@@ -12,12 +15,12 @@ systemd.services."create-{{.Runtime}}-volume-{{$name}}" = {
     {{- end}}
   '';
   {{- if .Containers}}
-  wantedBy = [
+  before = [
     {{- range .Containers}}
     {{. | printf "%q"}}
     {{- end}}
   ];
-  before = [
+  requiredBy = [
     {{- range .Containers}}
     {{. | printf "%q"}}
     {{- end}}

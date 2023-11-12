@@ -43,6 +43,41 @@ func parseSystemdValue(v string) any {
 	return v
 }
 
+// TODO(aksiksi): Add support for repeated keys.
+type ServiceConfig struct {
+	// Map for generic options.
+	Options map[string]any
+}
+
+func (s *ServiceConfig) Set(key string, value any) {
+	if s.Options == nil {
+		s.Options = map[string]any{}
+	}
+	s.Options[key] = value
+}
+
+// TODO(aksiksi): Add support for repeated keys.
+type UnitConfig struct {
+	After    []string
+	Requires []string
+	// Map for generic options.
+	Options map[string]any
+}
+
+func (u *UnitConfig) Set(key string, value any) {
+	if u.Options == nil {
+		u.Options = map[string]any{}
+	}
+	switch key {
+	case "After":
+		u.After = append(u.After, value.(string))
+	case "Requires":
+		u.Requires = append(u.Requires, value.(string))
+	default:
+		u.Options[key] = value
+	}
+}
+
 type SystemdUnit struct {
 	Unit        string `json:"unit"`
 	Active      string `json:"active"`
@@ -85,14 +120,14 @@ func parseRestartPolicyAndSystemdLabels(service *types.ServiceConfig) (*NixConta
 	// https://docs.docker.com/compose/compose-file/compose-file-v2/#restart
 	switch restart := service.Restart; restart {
 	case "":
-		c.Service["Restart"] = "no"
+		c.Service.Set("Restart", "no")
 	case "no", "always", "on-failure":
-		c.Service["Restart"] = restart
+		c.Service.Set("Restart", restart)
 	case "unless-stopped":
-		c.Service["Restart"] = "always"
+		c.Service.Set("Restart", "always")
 	default:
 		if strings.HasPrefix(restart, "on-failure") && strings.Contains(restart, ":") {
-			c.Service["Restart"] = "on-failure"
+			c.Service.Set("Restart", "on-failure")
 			maxAttemptsString := strings.TrimSpace(strings.Split(restart, ":")[1])
 			if maxAttempts, err := strconv.ParseInt(maxAttemptsString, 10, 64); err != nil {
 				return nil, fmt.Errorf("failed to parse on-failure attempts: %q: %w", maxAttemptsString, err)
@@ -113,16 +148,16 @@ func parseRestartPolicyAndSystemdLabels(service *types.ServiceConfig) (*NixConta
 		if restartPolicy := service.Deploy.RestartPolicy; restartPolicy != nil {
 			switch condition := restartPolicy.Condition; condition {
 			case "none":
-				c.Service["Restart"] = "no"
+				c.Service.Set("Restart", "no")
 			case "any":
-				c.Service["Restart"] = "always"
+				c.Service.Set("Restart", "always")
 			case "on-failure":
-				c.Service["Restart"] = "on-failure"
+				c.Service.Set("Restart", condition)
 			default:
 				return nil, fmt.Errorf("unsupported condition: %q", condition)
 			}
 			if delay := restartPolicy.Delay; delay != nil {
-				c.Service["RestartSec"] = delay.String()
+				c.Service.Set("RestartSec", delay.String())
 			}
 			if maxAttempts := restartPolicy.MaxAttempts; maxAttempts != nil {
 				v := int(*maxAttempts)
@@ -151,19 +186,9 @@ func parseRestartPolicyAndSystemdLabels(service *types.ServiceConfig) (*NixConta
 		typ, key := m[1], m[2]
 		switch typ {
 		case "service":
-			c.Service[key] = parseSystemdValue(value)
+			c.Service.Set(key, parseSystemdValue(value))
 		case "unit":
-			switch key {
-			case "Requires":
-				switch v := parseSystemdValue(value).(type) {
-				case string:
-					c.Requires = append(c.Requires, v)
-				case []string:
-					c.Requires = append(c.Requires, v...)
-				}
-			default:
-				c.Unit[key] = parseSystemdValue(value)
-			}
+			c.Unit.Set(key, parseSystemdValue(value))
 		default:
 			return nil, fmt.Errorf(`invalid systemd type %q - must be "service" or "unit"`, typ)
 		}

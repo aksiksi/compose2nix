@@ -3,6 +3,7 @@ systemd.services."create-{{.Runtime}}-network-{{.Name}}" = {
   path = [ pkgs.{{.Runtime}} ];
   serviceConfig = {
     Type = "oneshot";
+    RemainAfterExit = true;
     ExecStop = "${pkgs.{{.Runtime}}}/bin/{{.Runtime}} network rm -f {{.Name}}";
   };
   {{- if eq (.Runtime | printf "%s") "docker"}}
@@ -15,12 +16,12 @@ systemd.services."create-{{.Runtime}}-network-{{.Name}}" = {
   '';
   {{- end}}
   {{- if .Containers}}
-  wantedBy = [
+  before = [
     {{- range .Containers}}
     {{. | printf "%q"}}
     {{- end}}
   ];
-  before = [
+  requiredBy = [
     {{- range .Containers}}
     {{. | printf "%q"}}
     {{- end}}

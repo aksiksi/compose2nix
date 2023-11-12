@@ -44,6 +44,9 @@
     serviceConfig = {
       Restart = "always";
     };
+    after = [
+      "mnt-media.mount"
+    ];
     requires = [
       "mnt-media.mount"
     ];
@@ -77,6 +80,9 @@
     serviceConfig = {
       Restart = "always";
     };
+    after = [
+      "mnt-photos.mount"
+    ];
     requires = [
       "mnt-photos.mount"
     ];
@@ -117,6 +123,9 @@
       Restart = "always";
       RuntimeMaxSec = 10;
     };
+    after = [
+      "mnt-media.mount"
+    ];
     requires = [
       "mnt-media.mount"
     ];
@@ -174,6 +183,9 @@
     serviceConfig = {
       Restart = "on-failure";
     };
+    after = [
+      "mnt-media.mount"
+    ];
     requires = [
       "mnt-media.mount"
     ];
@@ -223,18 +235,19 @@
     path = [ pkgs.docker ];
     serviceConfig = {
       Type = "oneshot";
+      RemainAfterExit = true;
       ExecStop = "${pkgs.docker}/bin/docker network rm -f default";
     };
     script = ''
       docker network inspect default || docker network create default
     '';
-    wantedBy = [
+    before = [
       "docker-photoprism-mariadb.service"
       "docker-sabnzbd.service"
       "docker-torrent-client.service"
       "docker-traefik.service"
     ];
-    before = [
+    requiredBy = [
       "docker-photoprism-mariadb.service"
       "docker-sabnzbd.service"
       "docker-torrent-client.service"
@@ -244,42 +257,51 @@
 
   # Volumes
   systemd.services."create-docker-volume-books" = {
-    serviceConfig.Type = "oneshot";
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
     path = [ pkgs.docker ];
     script = ''
       docker volume inspect books || docker volume create books --opt device=/mnt/media/Books,o=bind,type=none
     '';
-    wantedBy = [
+    before = [
       "docker-jellyseerr.service"
     ];
-    before = [
+    requiredBy = [
       "docker-jellyseerr.service"
     ];
   };
   systemd.services."create-docker-volume-photos" = {
-    serviceConfig.Type = "oneshot";
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
     path = [ pkgs.docker ];
     script = ''
       docker volume inspect photos || docker volume create photos --opt device=/mnt/photos,o=bind,type=none
     '';
-    wantedBy = [
+    before = [
       "docker-photoprism-mariadb.service"
     ];
-    before = [
+    requiredBy = [
       "docker-photoprism-mariadb.service"
     ];
   };
   systemd.services."create-docker-volume-storage" = {
-    serviceConfig.Type = "oneshot";
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
     path = [ pkgs.docker ];
     script = ''
       docker volume inspect storage || docker volume create storage --opt device=/mnt/media,o=bind,type=none
     '';
-    wantedBy = [
+    before = [
       "docker-sabnzbd.service"
       "docker-torrent-client.service"
     ];
-    before = [
+    requiredBy = [
       "docker-sabnzbd.service"
       "docker-torrent-client.service"
     ];

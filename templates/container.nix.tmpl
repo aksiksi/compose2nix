@@ -73,24 +73,33 @@ virtualisation.oci-containers.containers."{{.Name}}" = {
 systemd.services."{{.Runtime}}-{{.Name}}" = {
   {{- if .SystemdConfig.Service}}
   serviceConfig = {
-    {{- range $k, $v := .SystemdConfig.Service}}
+    {{- range $k, $v := .SystemdConfig.Service.Options}}
     {{$k}} = {{toNixValue $v}};
     {{- end}}
   };
   {{- end}}
   {{- if .SystemdConfig.Unit}}
+  {{- if .SystemdConfig.Unit.Options}}
   unitConfig = {
-    {{- range $k, $v := .SystemdConfig.Unit}}
+    {{- range $k, $v := .SystemdConfig.Unit.Options}}
     {{$k}} = {{toNixValue $v}};
     {{- end}}
   };
   {{- end}}
-  {{- if .SystemdConfig.Requires}}
-  requires = [
-    {{- range $v := .SystemdConfig.GetRequires}}
-    "{{$v}}"
+  {{- if .SystemdConfig.Unit.After}}
+  after = [
+    {{- range .SystemdConfig.Unit.After}}
+    "{{.}}"
     {{- end}}
   ];
+  {{- end}}
+  {{- if .SystemdConfig.Unit.Requires}}
+  requires = [
+    {{- range .SystemdConfig.Unit.Requires}}
+    "{{.}}"
+    {{- end}}
+  ];
+  {{- end}}
   {{- end}}
   {{- if .SystemdConfig.StartLimitBurst}}
   startLimitBurst = {{derefInt .SystemdConfig.StartLimitBurst}};

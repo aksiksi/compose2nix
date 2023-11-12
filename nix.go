@@ -60,13 +60,6 @@ func (p *Project) With(name string) string {
 	return fmt.Sprintf("%s%s%s", p.Name, p.separator, name)
 }
 
-func (p *Project) WithSeparator(name, separator string) string {
-	if p == nil {
-		return name
-	}
-	return fmt.Sprintf("%s%s%s", p.Name, separator, name)
-}
-
 type NixNetwork struct {
 	Runtime    ContainerRuntime
 	Name       string
@@ -93,9 +86,8 @@ func (v *NixVolume) Path() string {
 // Each key-value pair in a map represents a systemd key and its value (e.g., Restart=always).
 // Users can provide custom config keys by setting the nixose.systemd.* label on the service.
 type NixContainerSystemdConfig struct {
-	Service  map[string]any
-	Unit     map[string]any
-	Requires []string
+	Service ServiceConfig
+	Unit    UnitConfig
 	// NixOS treats these differently, probably to fix the rename issue in
 	// earlier systemd versions.
 	// See: https://unix.stackexchange.com/a/464098
@@ -105,13 +97,9 @@ type NixContainerSystemdConfig struct {
 
 func NewNixContainerSystemdConfig() *NixContainerSystemdConfig {
 	return &NixContainerSystemdConfig{
-		Service: map[string]any{},
-		Unit:    map[string]any{},
+		Service: ServiceConfig{},
+		Unit:    UnitConfig{},
 	}
-}
-
-func (c *NixContainerSystemdConfig) GetRequires() []string {
-	return removeDuplicates(c.Requires)
 }
 
 // https://search.nixos.org/options?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=oci-container

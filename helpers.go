@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"cmp"
 	"fmt"
 	"log"
 	"os"
@@ -26,21 +25,6 @@ func mapToRepeatedKeyValFlag(flagName string, m map[string]string) []string {
 		arr[i] = fmt.Sprintf("%s=%s", flagName, v)
 	}
 	return arr
-}
-
-func removeDuplicates[T cmp.Ordered](s []T) []T {
-	if len(s) <= 1 {
-		return s
-	}
-	slices.Sort(s)
-	last := 1
-	for i := 1; i < len(s); i++ {
-		if s[i] != s[i-1] {
-			s[last] = s[i]
-			last++
-		}
-	}
-	return s[:last]
 }
 
 func ReadEnvFiles(envFiles []string, mergeWithEnv bool) (env []string, _ error) {
