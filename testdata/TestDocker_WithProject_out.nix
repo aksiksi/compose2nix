@@ -18,6 +18,7 @@
     };
     volumes = [
       "/var/volumes/jellyseerr:/app/config:rw"
+      "books:/books:rw"
     ];
     labels = {
       "traefik.enable" = "true";
@@ -93,6 +94,7 @@
     };
     volumes = [
       "/var/volumes/photoprism-mariadb:/var/lib/mysql:rw"
+      "photos:/photos:rw"
     ];
     user = "1000:1000";
     log-driver = "journald";
@@ -226,6 +228,32 @@
   };
 
   # Volumes
+  systemd.services."create-docker-volume-books" = {
+    serviceConfig.Type = "oneshot";
+    path = [ pkgs.docker ];
+    script = ''
+      docker volume inspect books || docker volume create books --opt device=/mnt/media/Books,o=bind,type=none
+    '';
+    wantedBy = [
+      "docker-jellyseerr.service"
+    ];
+    before = [
+      "docker-jellyseerr.service"
+    ];
+  };
+  systemd.services."create-docker-volume-photos" = {
+    serviceConfig.Type = "oneshot";
+    path = [ pkgs.docker ];
+    script = ''
+      docker volume inspect photos || docker volume create photos --opt device=/mnt/photos,o=bind,type=none
+    '';
+    wantedBy = [
+      "docker-photoprism-mariadb.service"
+    ];
+    before = [
+      "docker-photoprism-mariadb.service"
+    ];
+  };
   systemd.services."create-docker-volume-storage" = {
     serviceConfig.Type = "oneshot";
     path = [ pkgs.docker ];

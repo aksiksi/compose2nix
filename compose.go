@@ -7,7 +7,6 @@ import (
 	"log"
 	"regexp"
 	"slices"
-	"strconv"
 	"strings"
 	"time"
 
@@ -26,7 +25,7 @@ var (
 var systemdLabelRegexp regexp.Regexp = *regexp.MustCompile(`nixose\.systemd\.(service|unit)\.(\w+)`)
 
 func composeEnvironmentToMap(env types.MappingWithEquals) map[string]string {
-	m := make(map[string]string)
+	m := map[string]string{}
 	for k, v := range env {
 		// Skip empty env variables.
 		if v == nil {
@@ -59,96 +58,6 @@ func portConfigsToPortStrings(portConfigs []types.ServicePortConfig) []string {
 	return ports
 }
 
-func parseRestartPolicyAndSystemdLabels(service *types.ServiceConfig) (*NixContainerSystemdConfig, error) {
-	p := &NixContainerSystemdConfig{
-		Service: make(map[string]any),
-		Unit:    make(map[string]any),
-	}
-
-	// https://docs.docker.com/compose/compose-file/compose-file-v2/#restart
-	switch restart := service.Restart; restart {
-	case "":
-		p.Service["Restart"] = "no"
-	case "no", "always", "on-failure":
-		p.Service["Restart"] = restart
-	case "unless-stopped":
-		p.Service["Restart"] = "always"
-	default:
-		if strings.HasPrefix(restart, "on-failure") && strings.Contains(restart, ":") {
-			p.Service["Restart"] = "on-failure"
-			maxAttemptsString := strings.TrimSpace(strings.Split(restart, ":")[1])
-			if maxAttempts, err := strconv.ParseInt(maxAttemptsString, 10, 64); err != nil {
-				return nil, fmt.Errorf("failed to parse on-failure attempts: %q: %w", maxAttemptsString, err)
-			} else {
-				burst := int(maxAttempts)
-				p.StartLimitBurst = &burst
-				// Retry limit resets once per day.
-				p.StartLimitIntervalSec = &defaultStartLimitIntervalSec
-			}
-		} else {
-			return nil, fmt.Errorf("unsupported restart: %q", restart)
-		}
-	}
-
-	if service.Deploy != nil {
-		// The newer "deploy" config will always override the legacy "restart" config.
-		// https://docs.docker.com/compose/compose-file/compose-file-v3/#restart_policy
-		if restartPolicy := service.Deploy.RestartPolicy; restartPolicy != nil {
-			switch condition := restartPolicy.Condition; condition {
-			case "none":
-				p.Service["Restart"] = "no"
-			case "any":
-				p.Service["Restart"] = "always"
-			case "on-failure":
-				p.Service["Restart"] = "on-failure"
-			default:
-				return nil, fmt.Errorf("unsupported condition: %q", condition)
-			}
-			if delay := restartPolicy.Delay; delay != nil {
-				p.Service["RestartSec"] = delay.String()
-			}
-			if maxAttempts := restartPolicy.MaxAttempts; maxAttempts != nil {
-				v := int(*maxAttempts)
-				p.StartLimitBurst = &v
-			}
-			if window := restartPolicy.Window; window != nil {
-				windowSecs := int(time.Duration(*window).Seconds())
-				p.StartLimitIntervalSec = &windowSecs
-			} else if p.StartLimitBurst != nil {
-				// Retry limit resets once per day by default.
-				p.StartLimitIntervalSec = &defaultStartLimitIntervalSec
-			}
-		}
-	}
-
-	// Custom values provided via labels will override any explicit restart settings.
-	var labelsToDrop []string
-	for label, value := range service.Labels {
-		if !strings.HasPrefix(label, "nixose.") {
-			continue
-		}
-		m := systemdLabelRegexp.FindStringSubmatch(label)
-		if len(m) == 0 {
-			return nil, fmt.Errorf("invalid nixose label specified for service %q: %q", service.Name, label)
-		}
-		typ, key := m[1], m[2]
-		switch typ {
-		case "service":
-			p.Service[key] = parseSystemdValue(value)
-		case "unit":
-			p.Unit[key] = parseSystemdValue(value)
-		default:
-			return nil, fmt.Errorf(`invalid systemd type %q - must be "service" or "unit"`, typ)
-		}
-		labelsToDrop = append(labelsToDrop, label)
-	}
-	for _, label := range labelsToDrop {
-		delete(service.Labels, label)
-	}
-
-	return p, nil
-}
-
 type Generator struct {
 	Project                *Project
 	Runtime                ContainerRuntime
@@ -159,6 +68,8 @@ type Generator struct {
 	EnvFilesOnly           bool
 	UseComposeLogDriver    bool
 	GenerateUnusedResoures bool
+	SystemdProvider        SystemdProvider
+	CheckSystemdMounts     bool
 }
 
 func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
@@ -182,7 +93,7 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 	volumes := g.buildNixVolumes(composeProject, containers)
 
 	// Post-process any Compose settings that require the full state.
-	g.postProcessContainers(containers)
+	g.postProcessContainers(containers, volumes)
 
 	return &NixContainerConfig{
 		Project:    g.Project,
@@ -193,13 +104,14 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 	}, nil
 }
 
-func (g *Generator) postProcessContainers(containers []*NixContainer) {
-	serviceToContainer := make(map[string]*NixContainer)
+func (g *Generator) postProcessContainers(containers []*NixContainer, volumes []*NixVolume) error {
+	serviceToContainer := map[string]*NixContainer{}
 	for _, c := range containers {
 		serviceToContainer[c.service.Name] = c
 	}
 
 	for _, c := range containers {
+		// Convert the Compose "service" network mode to a container.
 		if networkMode := c.service.NetworkMode; strings.HasPrefix(networkMode, "service:") {
 			targetService := strings.Split(networkMode, ":")[1]
 			targetContainerName := serviceToContainer[targetService].Name
@@ -207,11 +119,40 @@ func (g *Generator) postProcessContainers(containers []*NixContainer) {
 			c.DependsOn = append(c.DependsOn, targetContainerName)
 		}
 
+		// Figure out the dependencies for this container.
 		dependsOn := c.service.GetDependencies()
 		for i, service := range dependsOn {
 			dependsOn[i] = serviceToContainer[service].Name
 		}
 		c.DependsOn = dependsOn
+
+		// Add dependencies on systemd mounts for volumes used by this container, if any.
+		if g.CheckSystemdMounts {
+			if g.SystemdProvider == nil {
+				return fmt.Errorf("no systemd provider specified")
+			}
+			for name := range c.Volumes {
+				var path string
+				// Check to see if this is a named volume.
+				for _, v := range volumes {
+					if v.Name == name {
+						path = v.Path()
+						break
+					}
+				}
+				if path == "" {
+					// This is a non-volume bind mount.
+					path = name
+				}
+				unit, err := g.SystemdProvider.FindMountForPath(path)
+				if err != nil {
+					return err
+				}
+				if unit != "" {
+					c.SystemdConfig.Requires = append(c.SystemdConfig.Requires, unit)
+				}
+			}
+		}
 
 		// Drop the reference to the service at the end of post-processing. This allows GC to
 		// kick in and free the service allocation.
@@ -221,6 +162,8 @@ func (g *Generator) postProcessContainers(containers []*NixContainer) {
 		slices.Sort(c.DependsOn)
 		slices.Sort(c.ExtraOptions)
 	}
+
+	return nil
 }
 
 func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContainer, error) {

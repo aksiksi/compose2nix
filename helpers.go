@@ -2,27 +2,18 @@ package compose2nix
 
 import (
 	"bufio"
+	"cmp"
 	"fmt"
 	"log"
 	"os"
 	"slices"
-	"strconv"
 	"strings"
 )
 
-// https://www.freedesktop.org/software/systemd/man/latest/systemd.syntax.html
-func parseSystemdValue(v string) any {
-	if i, err := strconv.ParseInt(v, 10, 64); err == nil {
-		return int(i)
-	}
-	switch v {
-	case "true", "yes", "on", "1":
-		return true
-	case "false", "no", "off", "0":
-		return false
-	}
-	return v
-}
+var (
+	systemdTrue  = []string{"true", "yes", "on", "1"}
+	systemdFalse = []string{"false", "no", "off", "0"}
+)
 
 // mapToKeyValArray converts a map into a _sorted_ list of KEY=VAL entries.
 func mapToKeyValArray(m map[string]string) []string {
@@ -40,6 +31,21 @@ func mapToRepeatedKeyValFlag(flagName string, m map[string]string) []string {
 		arr[i] = fmt.Sprintf("%s=%s", flagName, v)
 	}
 	return arr
+}
+
+func removeDuplicates[T cmp.Ordered](s []T) []T {
+	if len(s) <= 1 {
+		return s
+	}
+	slices.Sort(s)
+	last := 1
+	for i := 1; i < len(s); i++ {
+		if s[i] != s[i-1] {
+			s[last] = s[i]
+			last++
+		}
+	}
+	return s[:last]
 }
 
 func ReadEnvFiles(envFiles []string, mergeWithEnv bool) (env []string, _ error) {

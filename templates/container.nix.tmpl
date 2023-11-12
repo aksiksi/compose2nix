@@ -81,10 +81,17 @@ systemd.services."{{$runtime}}-{{.Name}}" = {
   {{- end}}
   {{- if .SystemdConfig.Unit}}
   unitConfig = {
-  {{- range $k, $v := .SystemdConfig.Unit}}
+    {{- range $k, $v := .SystemdConfig.UnitConfig}}
     {{$k}} = {{toNixValue $v}};
-  {{- end}}
+    {{- end}}
   };
+  {{- end}}
+  {{- if .SystemdConfig.Requires}}
+  requires = [
+    {{- range $v := .SystemdConfig.GetRequires}}
+    "{{$v}}"
+    {{- end}}
+  ];
   {{- end}}
   {{- if .SystemdConfig.StartLimitBurst}}
   startLimitBurst = {{derefInt .SystemdConfig.StartLimitBurst}};

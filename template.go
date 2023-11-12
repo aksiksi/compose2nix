@@ -26,9 +26,15 @@ func derefInt(v *int) int {
 }
 
 func toNixValue(v any) any {
-	switch v.(type) {
+	switch v := v.(type) {
 	case string:
 		return fmt.Sprintf("%q", v)
+	case []string:
+		var l []string
+		for _, s := range v {
+			l = append(l, toNixValue(s).(string))
+		}
+		return fmt.Sprintf("[ %s ]", strings.Join(l, " "))
 	default:
 		return v
 	}

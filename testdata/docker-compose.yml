@@ -93,6 +93,7 @@ services:
       - 1.1.1.1
     volumes:
       - /var/volumes/jellyseerr:/app/config
+      - books:/books
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.jellyseerr.rule=Host(`requests.${DOMAIN}`)"
@@ -119,6 +120,7 @@ services:
     user: "${PUID}:${PGID}"
     volumes:
        - /var/volumes/photoprism-mariadb:/var/lib/mysql
+       - photos:/photos
     logging:
       driver: "json-file"
       options:

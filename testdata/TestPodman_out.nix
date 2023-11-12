@@ -23,6 +23,7 @@
     };
     volumes = [
       "/var/volumes/jellyseerr:/app/config:rw"
+      "/mnt/media/Books:/books:rw"
     ];
     labels = {
       "traefik.enable" = "true";
@@ -61,6 +62,7 @@
     };
     volumes = [
       "/var/volumes/photoprism-mariadb:/var/lib/mysql:rw"
+      "/mnt/photos:/photos:rw"
     ];
     user = "1000:1000";
     log-driver = "journald";

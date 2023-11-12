@@ -25,6 +25,7 @@ var autoStart = flag.Bool("auto_start", true, "auto-start setting for generated 
 var runtime = flag.String("runtime", "podman", `one of: ["podman", "docker"].`)
 var useComposeLogDriver = flag.Bool("use_compose_log_driver", false, "if set, always use the Docker Compose log driver.")
 var generateUnusedResources = flag.Bool("generate_unused_resources", false, "if set, unused resources (e.g., networks) will be generated even if no containers use them.")
+var checkSystemdMounts = flag.Bool("check_systemd_mounts", false, "if set, volume paths will be checked against systemd mount paths on the current machine and marked as container dependencies.")
 
 func main() {
 	flag.Parse()
@@ -67,6 +68,8 @@ func main() {
 		AutoStart:              *autoStart,
 		UseComposeLogDriver:    *useComposeLogDriver,
 		GenerateUnusedResoures: *generateUnusedResources,
+		SystemdProvider:        &compose2nix.SystemdCLI{},
+		CheckSystemdMounts:     *checkSystemdMounts,
 	}
 	containerConfig, err := g.Run(ctx)
 	if err != nil {

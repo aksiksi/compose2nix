@@ -9,9 +9,7 @@ require (
 )
 
 // Test
-require (
-	github.com/google/go-cmp v0.5.9
-)
+require github.com/google/go-cmp v0.5.9
 
 require (
 	github.com/Masterminds/goutils v1.1.1 // indirect

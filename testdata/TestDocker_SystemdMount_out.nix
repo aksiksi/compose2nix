@@ -44,6 +44,9 @@
     serviceConfig = {
       Restart = "always";
     };
+    requires = [
+      "mnt-media.mount"
+    ];
   };
   virtualisation.oci-containers.containers."photoprism-mariadb" = {
     image = "docker.io/library/mariadb:10.9";
@@ -74,6 +77,9 @@
     serviceConfig = {
       Restart = "always";
     };
+    requires = [
+      "mnt-photos.mount"
+    ];
   };
   virtualisation.oci-containers.containers."sabnzbd" = {
     image = "lscr.io/linuxserver/sabnzbd";
@@ -111,6 +117,9 @@
       Restart = "always";
       RuntimeMaxSec = 10;
     };
+    requires = [
+      "mnt-media.mount"
+    ];
   };
   virtualisation.oci-containers.containers."torrent-client" = {
     image = "docker.io/haugene/transmission-openvpn";
@@ -165,6 +174,9 @@
     serviceConfig = {
       Restart = "on-failure";
     };
+    requires = [
+      "mnt-media.mount"
+    ];
     startLimitBurst = 3;
     startLimitIntervalSec = 86400;
   };

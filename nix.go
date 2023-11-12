@@ -82,6 +82,10 @@ type NixVolume struct {
 	Containers []string
 }
 
+func (v *NixVolume) Path() string {
+	return v.DriverOpts["device"]
+}
+
 // NixContainerSystemdConfig configures the container's systemd config.
 // In particular, this allows control of the container restart policy through systemd
 // service and unit configs.
@@ -89,13 +93,25 @@ type NixVolume struct {
 // Each key-value pair in a map represents a systemd key and its value (e.g., Restart=always).
 // Users can provide custom config keys by setting the nixose.systemd.* label on the service.
 type NixContainerSystemdConfig struct {
-	Service map[string]any
-	Unit    map[string]any
+	Service  map[string]any
+	Unit     map[string]any
+	Requires []string
 	// NixOS treats these differently, probably to fix the rename issue in
 	// earlier systemd versions.
 	// See: https://unix.stackexchange.com/a/464098
 	StartLimitBurst       *int
 	StartLimitIntervalSec *int
+}
+
+func NewNixContainerSystemdConfig() *NixContainerSystemdConfig {
+	return &NixContainerSystemdConfig{
+		Service: map[string]any{},
+		Unit:    map[string]any{},
+	}
+}
+
+func (c *NixContainerSystemdConfig) GetRequires() []string {
+	return removeDuplicates(c.Requires)
 }
 
 // https://search.nixos.org/options?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=oci-container
