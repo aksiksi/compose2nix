@@ -222,7 +222,6 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 		// project.
 		targetContainerName := strings.TrimSpace(strings.Split(networkMode, ":")[1])
 		c.ExtraOptions = append(c.ExtraOptions, "--network=container:"+targetContainerName)
-		c.DependsOn = append(c.DependsOn, targetContainerName)
 		if !slices.Contains(c.DependsOn, targetContainerName) {
 			c.DependsOn = append(c.DependsOn, targetContainerName)
 		}

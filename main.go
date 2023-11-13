@@ -12,6 +12,11 @@ import (
 	"time"
 )
 
+const (
+	appVersion = "0.1.2"
+)
+
+// TODO(aksiksi): Investigate parsing flags into structs using the *Val functions.
 var inputs = flag.String("inputs", "docker-compose.yml", "one or more comma-separated path(s) to Compose file(s).")
 var envFiles = flag.String("env_files", "", "one or more comma-separated paths to .env file(s).")
 var envFilesOnly = flag.Bool("env_files_only", false, "only use env file(s) in the NixOS container definitions.")
@@ -26,9 +31,15 @@ var generateUnusedResources = flag.Bool("generate_unused_resources", false, "if 
 var checkSystemdMounts = flag.Bool("check_systemd_mounts", false, "if set, volume paths will be checked against systemd mount paths on the current machine and marked as container dependencies.")
 var removeVolumes = flag.Bool("remove_volumes", false, "if set, volumes will be removed on systemd service stop.")
 var createRootService = flag.Bool("create_root_service", true, "if set, a root systemd service will be created, which when stopped tears down all resources.")
+var version = flag.Bool("version", false, "display version and exit")
 
 func main() {
 	flag.Parse()
+
+	if *version {
+		fmt.Printf("compose2nix v%s\n", appVersion)
+		return
+	}
 
 	ctx := context.Background()
 
