@@ -62,6 +62,7 @@ type Generator struct {
 	CheckSystemdMounts     bool
 	RemoveVolumes          bool
 	NoCreateRootService    bool
+	WriteHeader            bool
 
 	serviceToContainerName map[string]string
 }
@@ -101,7 +102,13 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 	// Post-process any Compose settings that require the full state.
 	g.postProcessContainers(containers, volumes)
 
+	var version string
+	if g.WriteHeader {
+		version = appVersion
+	}
+
 	return &NixContainerConfig{
+		Version:           version,
 		Project:           g.Project,
 		Runtime:           g.Runtime,
 		Containers:        containers,

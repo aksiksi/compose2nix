@@ -1,5 +1,10 @@
 {{- $units := .Units -}}
+{{- if .Version -}}
+# Auto-generated using compose2nix v{{.Version}}.
 { pkgs, ... }:
+{{- else -}}
+{ pkgs, ... }:
+{{- end}}
 
 {
   # Runtime

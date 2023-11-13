@@ -83,6 +83,7 @@ func main() {
 		CheckSystemdMounts:     *checkSystemdMounts,
 		RemoveVolumes:          *removeVolumes,
 		NoCreateRootService:    !*createRootService,
+		WriteHeader:            true,
 	}
 	containerConfig, err := g.Run(ctx)
 	if err != nil {

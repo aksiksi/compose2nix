@@ -133,6 +133,7 @@ func (c *NixContainer) Unit() string {
 }
 
 type NixContainerConfig struct {
+	Version           string
 	Project           *Project
 	Runtime           ContainerRuntime
 	Containers        []*NixContainer
