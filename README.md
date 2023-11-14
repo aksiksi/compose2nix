@@ -85,7 +85,7 @@ By default, the tool looks for `docker-compose.yml` in the **current directory**
 $ compose2nix -h
 Usage of compose2nix:
   -auto_start
-        auto-start setting for generated container(s). (default true)
+        auto-start setting for generated service(s). this applies to all services, not just containers. (default true)
   -check_systemd_mounts
         if set, volume paths will be checked against systemd mount paths on the current machine and marked as container dependencies.
   -create_root_service
@@ -101,9 +101,7 @@ Usage of compose2nix:
   -output string
         path to output Nix file. (default "docker-compose.nix")
   -project string
-        project name used as a prefix for generated resources.
-  -project_separator string
-        seperator for project prefix. (default "_")
+        project name used as a prefix for generated resources. this overrides any top-level "name" set in the Compose file(s).
   -remove_volumes
         if set, volumes will be removed on systemd service stop.
   -runtime string
@@ -112,4 +110,6 @@ Usage of compose2nix:
         regex pattern for services to include.
   -use_compose_log_driver
         if set, always use the Docker Compose log driver.
+  -version
+        display version and exit
 ```
