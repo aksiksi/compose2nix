@@ -125,7 +125,6 @@ type NixContainer struct {
 	ExtraOptions  []string
 	SystemdConfig *NixContainerSystemdConfig
 	User          string
-	AutoStart     bool
 }
 
 func (c *NixContainer) Unit() string {
@@ -140,11 +139,13 @@ type NixContainerConfig struct {
 	Networks          []*NixNetwork
 	Volumes           []*NixVolume
 	CreateRootService bool
+	AutoStart         bool
 }
 
 func (c *NixContainerConfig) String() string {
 	s := strings.Builder{}
 	internalFuncMap := template.FuncMap{
+		"cfg":          c.configTemplateFunc,
 		"execTemplate": execTemplate(nixTemplates),
 		"rootTarget":   c.rootTargetTemplateFunc,
 	}
@@ -162,6 +163,10 @@ func (c *NixContainerConfig) rootTargetTemplateFunc() string {
 		return ""
 	}
 	return fmt.Sprintf("%s-compose-%s", c.Runtime, c.Project.With("root"))
+}
+
+func (c *NixContainerConfig) configTemplateFunc() *NixContainerConfig {
+	return c
 }
 
 func (c *NixContainerConfig) Units() []string {

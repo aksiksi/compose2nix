@@ -57,7 +57,7 @@ virtualisation.oci-containers.containers."{{.Name}}" = {
   log-driver = "{{.LogDriver}}";
   {{- end}}
 
-  {{- if not .AutoStart}}
+  {{- if not cfg.AutoStart}}
   autoStart = false;
   {{- end}}
 

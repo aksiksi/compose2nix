@@ -115,6 +115,7 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 		Networks:          networks,
 		Volumes:           volumes,
 		CreateRootService: !g.NoCreateRootService,
+		AutoStart:         g.AutoStart,
 	}, nil
 }
 
@@ -190,7 +191,6 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 		Volumes:       make(map[string]string),
 		Networks:      maps.Keys(service.Networks),
 		SystemdConfig: systemdConfig,
-		AutoStart:     g.AutoStart,
 		LogDriver:     "journald", // This is the NixOS default
 	}
 	slices.Sort(c.Networks)
