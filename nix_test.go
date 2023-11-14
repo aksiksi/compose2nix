@@ -39,10 +39,11 @@ func TestDocker(t *testing.T) {
 	ctx := context.Background()
 	composePath, envFilePath, outFilePath := getPaths(t)
 	g := Generator{
-		Runtime:   ContainerRuntimeDocker,
-		Inputs:    []string{composePath},
-		EnvFiles:  []string{envFilePath},
-		AutoStart: true,
+		Runtime:                ContainerRuntimeDocker,
+		Inputs:                 []string{composePath},
+		EnvFiles:               []string{envFilePath},
+		AutoStart:              true,
+		GenerateUnusedResoures: true,
 	}
 	c, err := g.Run(ctx)
 	if err != nil {
@@ -93,10 +94,11 @@ func TestPodman(t *testing.T) {
 	ctx := context.Background()
 	composePath, envFilePath, outFilePath := getPaths(t)
 	g := Generator{
-		Runtime:   ContainerRuntimePodman,
-		Inputs:    []string{composePath},
-		EnvFiles:  []string{envFilePath},
-		AutoStart: true,
+		Runtime:                ContainerRuntimePodman,
+		Inputs:                 []string{composePath},
+		EnvFiles:               []string{envFilePath},
+		AutoStart:              true,
+		GenerateUnusedResoures: true,
 	}
 	c, err := g.Run(ctx)
 	if err != nil {

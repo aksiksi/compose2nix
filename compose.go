@@ -355,6 +355,7 @@ func (g *Generator) buildNixVolumes(composeProject *types.Project, containers []
 			Name:         name,
 			Driver:       volume.Driver,
 			DriverOpts:   volume.DriverOpts,
+			Labels:       volume.Labels,
 			RemoveOnStop: g.RemoveVolumes,
 		}
 

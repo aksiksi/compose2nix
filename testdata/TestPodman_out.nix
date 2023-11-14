@@ -244,6 +244,18 @@
     ];
     partOf = [ "podman-compose-root.target" ];
   };
+  systemd.services."podman-network-something" = {
+    path = [ pkgs.podman ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStop = "${pkgs.podman}/bin/podman network rm -f something";
+    };
+    script = ''
+      podman network inspect something || podman network create something --opt isolate=true --label=test-label=okay
+    '';
+    partOf = [ "podman-compose-root.target" ];
+  };
 
   # Root service
   # When started, this will automatically create all resources and start
@@ -259,6 +271,7 @@
       "podman-torrent-client.service"
       "podman-traefik.service"
       "podman-network-default.service"
+      "podman-network-something.service"
     ];
     wantedBy = [ "multi-user.target" ];
   };

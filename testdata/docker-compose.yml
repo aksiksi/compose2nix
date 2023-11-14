@@ -169,6 +169,10 @@ services:
         max-file: "3"
         compress: "true"
     restart: unless-stopped
+networks:
+  something:
+    labels:
+      - "test-label=okay"
 volumes:
   storage:
     name: storage
@@ -184,6 +188,8 @@ volumes:
       o: bind
   photos:
     name: photos
+    labels:
+      - "test-label=okay"
     driver_opts:
       type: none
       device: /mnt/photos

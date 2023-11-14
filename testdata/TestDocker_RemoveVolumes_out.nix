@@ -272,7 +272,7 @@
       ExecStop = "${pkgs.docker}/bin/docker volume rm -f photos";
     };
     script = ''
-      docker volume inspect photos || docker volume create photos --opt device=/mnt/photos,o=bind,type=none
+      docker volume inspect photos || docker volume create photos --opt device=/mnt/photos,o=bind,type=none --label=test-label=okay
     '';
     before = [
       "docker-photoprism-mariadb.service"

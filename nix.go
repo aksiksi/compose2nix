@@ -74,6 +74,7 @@ type NixVolume struct {
 	Name         string
 	Driver       string
 	DriverOpts   map[string]string
+	Labels       map[string]string
 	Containers   []string
 	RemoveOnStop bool
 }

@@ -8,11 +8,11 @@ systemd.services."{{.Runtime}}-network-{{.Name}}" = {
   };
   {{- if eq (.Runtime | printf "%s") "docker"}}
   script = ''
-    {{.Runtime}} network inspect {{.Name}} || {{.Runtime}} network create {{.Name}}{{ $labels | join " "}}
+    {{.Runtime}} network inspect {{.Name}} || {{.Runtime}} network create {{.Name}}{{- if $labels}} {{ $labels | join " "}}{{- end}}
   '';
   {{- else}}
   script = ''
-    {{.Runtime}} network inspect {{.Name}} || {{.Runtime}} network create {{.Name}} --opt isolate=true{{ $labels | join " "}}
+    {{.Runtime}} network inspect {{.Name}} || {{.Runtime}} network create {{.Name}} --opt isolate=true{{- if $labels}} {{ $labels | join " "}}{{- end}}
   '';
   {{- end}}
   {{- if .Containers}}

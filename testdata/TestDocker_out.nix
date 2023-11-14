@@ -239,6 +239,18 @@
     ];
     partOf = [ "docker-compose-root.target" ];
   };
+  systemd.services."docker-network-something" = {
+    path = [ pkgs.docker ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStop = "${pkgs.docker}/bin/docker network rm -f something";
+    };
+    script = ''
+      docker network inspect something || docker network create something --label=test-label=okay
+    '';
+    partOf = [ "docker-compose-root.target" ];
+  };
 
   # Volumes
   systemd.services."docker-volume-books" = {
@@ -265,7 +277,7 @@
       RemainAfterExit = true;
     };
     script = ''
-      docker volume inspect photos || docker volume create photos --opt device=/mnt/photos,o=bind,type=none
+      docker volume inspect photos || docker volume create photos --opt device=/mnt/photos,o=bind,type=none --label=test-label=okay
     '';
     before = [
       "docker-photoprism-mariadb.service"
@@ -309,6 +321,7 @@
       "docker-torrent-client.service"
       "docker-traefik.service"
       "docker-network-default.service"
+      "docker-network-something.service"
       "docker-volume-books.service"
       "docker-volume-photos.service"
       "docker-volume-storage.service"
