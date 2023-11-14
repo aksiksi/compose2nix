@@ -142,12 +142,13 @@ type NixContainerConfig struct {
 	CreateRootService bool
 }
 
-func (c NixContainerConfig) String() string {
+func (c *NixContainerConfig) String() string {
 	s := strings.Builder{}
-	execTemplateFuncMap := template.FuncMap{
+	internalFuncMap := template.FuncMap{
 		"execTemplate": execTemplate(nixTemplates),
+		"rootTarget":   c.rootTargetTemplateFunc,
 	}
-	nixTemplates := template.Must(nixTemplates.Funcs(execTemplateFuncMap).ParseFS(templateFS, "templates/*.tmpl"))
+	nixTemplates := template.Must(nixTemplates.Funcs(internalFuncMap).ParseFS(templateFS, "templates/*.tmpl"))
 	if err := nixTemplates.ExecuteTemplate(&s, "main.nix.tmpl", c); err != nil {
 		// This should never be hit under normal operation.
 		panic(err)
@@ -155,7 +156,15 @@ func (c NixContainerConfig) String() string {
 	return s.String()
 }
 
-func (c NixContainerConfig) Units() []string {
+func (c *NixContainerConfig) rootTargetTemplateFunc() string {
+	// NOTE(aksiksi): We can cache the list of units if this slows things down.
+	if !c.CreateRootService || len(c.Units()) == 0 {
+		return ""
+	}
+	return fmt.Sprintf("%s-compose-%s", c.Runtime, c.Project.With("root"))
+}
+
+func (c *NixContainerConfig) Units() []string {
 	var units []string
 	for _, container := range c.Containers {
 		units = append(units, container.Unit())

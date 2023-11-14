@@ -69,7 +69,6 @@ virtualisation.oci-containers.containers."{{.Name}}" = {
   ];
   {{- end}}
 };
-{{- if .SystemdConfig}}
 systemd.services."{{.Runtime}}-{{.Name}}" = {
   {{- if .SystemdConfig.Service}}
   serviceConfig = {
@@ -107,5 +106,7 @@ systemd.services."{{.Runtime}}-{{.Name}}" = {
   {{- if .SystemdConfig.StartLimitIntervalSec}}
   startLimitIntervalSec = {{derefInt .SystemdConfig.StartLimitIntervalSec}};
   {{- end}}
+  {{- if rootTarget}}
+  partOf = [ "{{rootTarget}}.target" ];
+  {{- end}}
 };
-{{- end}}

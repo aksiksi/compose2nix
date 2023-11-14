@@ -1,5 +1,6 @@
 {{- $driverOptsString := mapToKeyValArray .DriverOpts | join "," -}}
 systemd.services."{{.Runtime}}-volume-{{.Name}}" = {
+  path = [ pkgs.{{.Runtime}} ];
   serviceConfig = {
     Type = "oneshot";
     RemainAfterExit = true;
@@ -7,7 +8,6 @@ systemd.services."{{.Runtime}}-volume-{{.Name}}" = {
     ExecStop = "${pkgs.{{.Runtime}}}/bin/{{.Runtime}} volume rm -f {{.Name}}";
     {{- end}}
   };
-  path = [ pkgs.{{.Runtime}} ];
   script = ''
     {{- if eq .Driver ""}}
     {{.Runtime}} volume inspect {{.Name}} || {{.Runtime}} volume create {{.Name}} --opt {{$driverOptsString}}
@@ -26,5 +26,8 @@ systemd.services."{{.Runtime}}-volume-{{.Name}}" = {
     "{{.}}"
     {{- end}}
   ];
+  {{- end}}
+  {{- if rootTarget}}
+  partOf = [ "{{rootTarget}}.target" ];
   {{- end}}
 };

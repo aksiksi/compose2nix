@@ -27,4 +27,7 @@ systemd.services."{{.Runtime}}-network-{{.Name}}" = {
     {{- end}}
   ];
   {{- end}}
+  {{- if rootTarget}}
+  partOf = [ "{{rootTarget}}.target" ];
+  {{- end}}
 };
