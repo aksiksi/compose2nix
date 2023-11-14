@@ -12,7 +12,6 @@ import (
 
 	"github.com/compose-spec/compose-go/loader"
 	"github.com/compose-spec/compose-go/types"
-	"golang.org/x/exp/maps"
 )
 
 func composeEnvironmentToMap(env types.MappingWithEquals) map[string]string {
@@ -217,11 +216,9 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 		Ports:         portConfigsToPortStrings(service.Ports),
 		User:          service.User,
 		Volumes:       make(map[string]string),
-		Networks:      maps.Keys(service.Networks),
 		SystemdConfig: systemdConfig,
 		LogDriver:     "journald", // This is the NixOS default
 	}
-	slices.Sort(c.Networks)
 
 	if !g.EnvFilesOnly {
 		c.Environment = composeEnvironmentToMap(service.Environment)
@@ -233,9 +230,48 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 		c.Volumes[v.Source] = v.String()
 	}
 
-	for _, name := range c.Networks {
+	for name, net := range service.Networks {
 		networkName := g.Project.With(name)
+		c.Networks = append(c.Networks, name)
 		c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--network=%s", networkName))
+		if net != nil {
+			for _, alias := range net.Aliases {
+				c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--network-alias=%s", alias))
+			}
+		}
+	}
+
+	// https://docs.docker.com/compose/compose-file/05-services/#network_mode
+	// https://docs.podman.io/en/latest/markdown/podman-run.1.html#network-mode-net
+	if networkMode := strings.TrimSpace(service.NetworkMode); networkMode != "" {
+		switch {
+		case networkMode == "none":
+			c.ExtraOptions = append(c.ExtraOptions, "--network=none")
+		case networkMode == "host":
+			c.ExtraOptions = append(c.ExtraOptions, "--network=host")
+		case strings.HasPrefix(networkMode, "service:"):
+			// Convert the Compose "service" network mode to a "container" network mode.
+			targetService := strings.Split(networkMode, ":")[1]
+			targetContainerName, ok := g.serviceToContainerName[targetService]
+			if !ok {
+				return nil, fmt.Errorf("network_mode for service %q refers to a non-existent service %q", service.Name, targetService)
+			}
+			c.ExtraOptions = append(c.ExtraOptions, "--network=container:"+targetContainerName)
+			if !slices.Contains(c.DependsOn, targetContainerName) {
+				c.DependsOn = append(c.DependsOn, targetContainerName)
+			}
+		case strings.HasPrefix(networkMode, "container:"):
+			// container:[name] mode is supported by both Docker and Podman.
+			// This container could be external, so we can't fail if it doesn't exist in this Compose
+			// project.
+			targetContainerName := strings.TrimSpace(strings.Split(networkMode, ":")[1])
+			c.ExtraOptions = append(c.ExtraOptions, "--network=container:"+targetContainerName)
+			if !slices.Contains(c.DependsOn, targetContainerName) {
+				c.DependsOn = append(c.DependsOn, targetContainerName)
+			}
+		default:
+			return nil, fmt.Errorf("unsupported network_mode: %s", networkMode)
+		}
 	}
 
 	// Figure out explicit dependencies for this container.
@@ -243,32 +279,7 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 		if _, ok := g.serviceToContainerName[s]; !ok {
 			return nil, fmt.Errorf("service %q depends on non-existent service %q", service.Name, s)
 		}
-		c.DependsOn = append(c.DependsOn, g.serviceToContainerName[s])
-	}
-
-	// https://docs.docker.com/compose/compose-file/compose-file-v3/#network_mode
-	// https://docs.podman.io/en/latest/markdown/podman-run.1.html#network-mode-net
-	switch networkMode := strings.TrimSpace(service.NetworkMode); {
-	case networkMode == "host":
-		c.ExtraOptions = append(c.ExtraOptions, "--network=host")
-	case strings.HasPrefix(networkMode, "container:"):
-		// container:[name] mode is supported by both Docker and Podman.
-		// This container could be external, so we can't fail if it doesn't exist in this Compose
-		// project.
-		targetContainerName := strings.TrimSpace(strings.Split(networkMode, ":")[1])
-		c.ExtraOptions = append(c.ExtraOptions, "--network=container:"+targetContainerName)
-		if !slices.Contains(c.DependsOn, targetContainerName) {
-			c.DependsOn = append(c.DependsOn, targetContainerName)
-		}
-	case strings.HasPrefix(networkMode, "service:"):
-		// Convert the Compose "service" network mode to a "container" network mode.
-		targetService := strings.Split(networkMode, ":")[1]
-		targetContainerName, ok := g.serviceToContainerName[targetService]
-		if !ok {
-			return nil, fmt.Errorf("network_mode for service %q refers to a non-existent service %q", service.Name, targetService)
-		}
-		c.ExtraOptions = append(c.ExtraOptions, "--network=container:"+targetContainerName)
-		if !slices.Contains(c.DependsOn, targetContainerName) {
+		if targetContainerName := g.serviceToContainerName[s]; !slices.Contains(c.DependsOn, targetContainerName) {
 			c.DependsOn = append(c.DependsOn, targetContainerName)
 		}
 	}
@@ -319,6 +330,7 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 	// Sort slices now that we're done processing the container.
 	slices.Sort(c.DependsOn)
 	slices.Sort(c.ExtraOptions)
+	slices.Sort(c.Networks)
 
 	return c, nil
 }

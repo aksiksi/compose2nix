@@ -48,6 +48,7 @@ By default, the tool looks for `docker-compose.yml` in the **current directory**
 | [`restart`](https://docs.docker.com/compose/compose-file/05-services/#restart) | ✅ |
 | [`deploy.restart_policy`](https://docs.docker.com/compose/compose-file/deploy/#restart_policy) | ✅ |
 | [`devices`](https://docs.docker.com/compose/compose-file/05-services/#devices) | ✅ |
+| [`networks.aliases`](https://docs.docker.com/compose/compose-file/05-services/#aliases) | ✅ |
 | [`network_mode`](https://docs.docker.com/compose/compose-file/05-services/#network_mode) | ✅ |
 | [`privileged`](https://docs.docker.com/compose/compose-file/05-services/#privileged) | ✅ |
 
