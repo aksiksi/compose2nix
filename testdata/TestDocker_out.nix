@@ -27,7 +27,7 @@
       "traefik.http.routers.jellyseerr.tls.certresolver" = "htpc";
     };
     dependsOn = [
-      "myproject_sabnzbd"
+      "myproject-sabnzbd"
     ];
     log-driver = "journald";
     extraOptions = [
@@ -36,7 +36,7 @@
       "--log-opt=max-file=3"
       "--log-opt=max-size=10m"
       "--network-alias=jellyseerr"
-      "--network=container:myproject_sabnzbd"
+      "--network=container:myproject-sabnzbd"
     ];
   };
   systemd.services."docker-jellyseerr" = {
@@ -46,9 +46,9 @@
     };
     startLimitBurst = 3;
     startLimitIntervalSec = 120;
-    partOf = [ "docker-compose-myproject_root.target" ];
+    partOf = [ "docker-compose-myproject-root.target" ];
   };
-  virtualisation.oci-containers.containers."myproject_sabnzbd" = {
+  virtualisation.oci-containers.containers."myproject-sabnzbd" = {
     image = "lscr.io/linuxserver/sabnzbd";
     environment = {
       DOCKER_MODS = "ghcr.io/gilbn/theme.park:sabnzbd";
@@ -75,10 +75,10 @@
       "--log-opt=max-file=3"
       "--log-opt=max-size=10m"
       "--network-alias=sabnzbd"
-      "--network=myproject_default"
+      "--network=myproject-default"
     ];
   };
-  systemd.services."docker-myproject_sabnzbd" = {
+  systemd.services."docker-myproject-sabnzbd" = {
     serviceConfig = {
       Restart = "always";
       RuntimeMaxSec = 10;
@@ -86,7 +86,7 @@
     unitConfig = {
       Description = "This is the sabnzbd container!";
     };
-    partOf = [ "docker-compose-myproject_root.target" ];
+    partOf = [ "docker-compose-myproject-root.target" ];
   };
   virtualisation.oci-containers.containers."photoprism-mariadb" = {
     image = "docker.io/library/mariadb:10.9";
@@ -119,7 +119,7 @@
     };
     startLimitBurst = 10;
     startLimitIntervalSec = 86400;
-    partOf = [ "docker-compose-myproject_root.target" ];
+    partOf = [ "docker-compose-myproject-root.target" ];
   };
   virtualisation.oci-containers.containers."torrent-client" = {
     image = "docker.io/haugene/transmission-openvpn";
@@ -156,7 +156,7 @@
       "traefik.http.services.transmission.loadbalancer.server.port" = "9091";
     };
     dependsOn = [
-      "myproject_sabnzbd"
+      "myproject-sabnzbd"
     ];
     log-driver = "journald";
     extraOptions = [
@@ -165,7 +165,7 @@
       "--dns=8.8.4.4"
       "--dns=8.8.8.8"
       "--network-alias=transmission"
-      "--network=myproject_default"
+      "--network=myproject-default"
       "--privileged"
     ];
   };
@@ -175,7 +175,7 @@
     };
     startLimitBurst = 3;
     startLimitIntervalSec = 86400;
-    partOf = [ "docker-compose-myproject_root.target" ];
+    partOf = [ "docker-compose-myproject-root.target" ];
   };
   virtualisation.oci-containers.containers."traefik" = {
     image = "docker.io/library/traefik";
@@ -215,41 +215,41 @@
     serviceConfig = {
       Restart = "none";
     };
-    partOf = [ "docker-compose-myproject_root.target" ];
+    partOf = [ "docker-compose-myproject-root.target" ];
   };
 
   # Networks
-  systemd.services."docker-network-myproject_default" = {
+  systemd.services."docker-network-myproject-default" = {
     path = [ pkgs.docker ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.docker}/bin/docker network rm -f myproject_default";
+      ExecStop = "${pkgs.docker}/bin/docker network rm -f myproject-default";
     };
     script = ''
-      docker network inspect myproject_default || docker network create myproject_default
+      docker network inspect myproject-default || docker network create myproject-default
     '';
     before = [
-      "docker-myproject_sabnzbd.service"
+      "docker-myproject-sabnzbd.service"
       "docker-torrent-client.service"
     ];
     requiredBy = [
-      "docker-myproject_sabnzbd.service"
+      "docker-myproject-sabnzbd.service"
       "docker-torrent-client.service"
     ];
-    partOf = [ "docker-compose-myproject_root.target" ];
+    partOf = [ "docker-compose-myproject-root.target" ];
   };
-  systemd.services."docker-network-myproject_something" = {
+  systemd.services."docker-network-myproject-something" = {
     path = [ pkgs.docker ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.docker}/bin/docker network rm -f myproject_something";
+      ExecStop = "${pkgs.docker}/bin/docker network rm -f myproject-something";
     };
     script = ''
-      docker network inspect myproject_something || docker network create myproject_something --label=test-label=okay
+      docker network inspect myproject-something || docker network create myproject-something --label=test-label=okay
     '';
-    partOf = [ "docker-compose-myproject_root.target" ];
+    partOf = [ "docker-compose-myproject-root.target" ];
   };
 
   # Volumes
@@ -268,7 +268,7 @@
     requiredBy = [
       "docker-jellyseerr.service"
     ];
-    partOf = [ "docker-compose-myproject_root.target" ];
+    partOf = [ "docker-compose-myproject-root.target" ];
   };
   systemd.services."docker-volume-photos" = {
     path = [ pkgs.docker ];
@@ -285,7 +285,7 @@
     requiredBy = [
       "docker-photoprism-mariadb.service"
     ];
-    partOf = [ "docker-compose-myproject_root.target" ];
+    partOf = [ "docker-compose-myproject-root.target" ];
   };
   systemd.services."docker-volume-storage" = {
     path = [ pkgs.docker ];
@@ -297,31 +297,31 @@
       docker volume inspect storage || docker volume create storage --opt device=/mnt/media,o=bind,type=none
     '';
     before = [
-      "docker-myproject_sabnzbd.service"
+      "docker-myproject-sabnzbd.service"
       "docker-torrent-client.service"
     ];
     requiredBy = [
-      "docker-myproject_sabnzbd.service"
+      "docker-myproject-sabnzbd.service"
       "docker-torrent-client.service"
     ];
-    partOf = [ "docker-compose-myproject_root.target" ];
+    partOf = [ "docker-compose-myproject-root.target" ];
   };
 
   # Root service
   # When started, this will automatically create all resources and start
   # the containers. When stopped, this will teardown all resources.
-  systemd.targets."docker-compose-myproject_root" = {
+  systemd.targets."docker-compose-myproject-root" = {
     unitConfig = {
       Description = "Root target generated by compose2nix.";
     };
     wants = [
       "docker-jellyseerr.service"
-      "docker-myproject_sabnzbd.service"
+      "docker-myproject-sabnzbd.service"
       "docker-photoprism-mariadb.service"
       "docker-torrent-client.service"
       "docker-traefik.service"
-      "docker-network-myproject_default.service"
-      "docker-network-myproject_something.service"
+      "docker-network-myproject-default.service"
+      "docker-network-myproject-something.service"
       "docker-volume-books.service"
       "docker-volume-photos.service"
       "docker-volume-storage.service"

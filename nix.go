@@ -6,7 +6,10 @@ import (
 	"text/template"
 )
 
-const DefaultProjectSeparator = "_"
+// Compose V2 uses "-" for container names: https://docs.docker.com/compose/migrate/#service-container-names
+//
+// Volumes and networks still use "_", but we'll ignore that here: https://github.com/docker/compose/issues/9618
+const DefaultProjectSeparator = "-"
 
 type ContainerRuntime int
 
@@ -39,16 +42,6 @@ func NewProject(name string) *Project {
 		return nil
 	}
 	return &Project{Name: name, separator: DefaultProjectSeparator}
-}
-
-func NewProjectWithSeparator(name, separator string) *Project {
-	if name == "" {
-		return nil
-	}
-	if separator == "" {
-		separator = DefaultProjectSeparator
-	}
-	return &Project{name, separator}
 }
 
 func (p *Project) With(name string) string {
