@@ -15,7 +15,7 @@
     forAllSystems = function: nixpkgs.lib.genAttrs supportedSystems (system: function nixpkgs.legacyPackages.${system});
     pname = "compose2nix";
     owner = "aksiksi";
-    version = "0.1.2";
+    version = "0.1.3";
   in {
     # Nix package
     packages = forAllSystems (pkgs: {

@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	appVersion = "0.1.2"
+	appVersion = "0.1.3"
 )
 
 // TODO(aksiksi): Investigate parsing flags into structs using the *Val functions.
