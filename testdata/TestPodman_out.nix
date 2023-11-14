@@ -170,7 +170,7 @@
       "--dns=8.8.4.4"
       "--dns=8.8.8.8"
       "--network-alias=transmission"
-      "--network=myproject-default"
+      "--network=myproject-something:alias=my-torrent-client"
       "--privileged"
     ];
   };
@@ -236,11 +236,9 @@
     '';
     before = [
       "podman-myproject-sabnzbd.service"
-      "podman-torrent-client.service"
     ];
     requiredBy = [
       "podman-myproject-sabnzbd.service"
-      "podman-torrent-client.service"
     ];
     partOf = [ "podman-compose-myproject-root.target" ];
   };
@@ -254,6 +252,12 @@
     script = ''
       podman network inspect myproject-something || podman network create myproject-something --opt isolate=true --label=test-label=okay
     '';
+    before = [
+      "podman-torrent-client.service"
+    ];
+    requiredBy = [
+      "podman-torrent-client.service"
+    ];
     partOf = [ "podman-compose-myproject-root.target" ];
   };
 

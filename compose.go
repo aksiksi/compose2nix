@@ -230,15 +230,60 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 		c.Volumes[v.Source] = v.String()
 	}
 
+	// Figure out explicit dependencies for this container.
+	for _, s := range service.GetDependencies() {
+		targetContainerName, ok := g.serviceToContainerName[s]
+		if !ok {
+			return nil, fmt.Errorf("service %q depends on non-existent service %q", service.Name, s)
+		}
+		if !slices.Contains(c.DependsOn, targetContainerName) {
+			c.DependsOn = append(c.DependsOn, targetContainerName)
+		}
+	}
+
+	// Allow other containers to use service name as an alias.
+	//
+	// In the case of Podman, this alias applies to all networks the container is a part of.
+	// Network-scoped aliases are handled below.
+	//
+	// See: https://docs.podman.io/en/latest/markdown/podman-run.1.html#network-alias-alias
+	c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--network-alias=%s", service.Name))
+
+	// https://docs.docker.com/network/#ip-address-and-hostname
+	if g.Runtime == ContainerRuntimeDocker && len(service.Networks) > 1 {
+		return nil, fmt.Errorf("only a single network is supported for each Docker service")
+	}
+
 	for name, net := range service.Networks {
 		networkName := g.Project.With(name)
 		c.Networks = append(c.Networks, name)
-		c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--network=%s", networkName))
+
+		// Network-scoped aliases.
+		var aliases []string
 		if net != nil {
-			for _, alias := range net.Aliases {
-				c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--network-alias=%s", alias))
+			aliases = append(aliases, net.Aliases...)
+		}
+
+		networkFlag := fmt.Sprintf("--network=%s", networkName)
+		switch g.Runtime {
+		case ContainerRuntimeDocker:
+			// Aliases are scoped to this (single) network.
+			for _, alias := range aliases {
+				c.ExtraOptions = append(c.ExtraOptions, "--network-alias="+alias)
+			}
+		case ContainerRuntimePodman:
+			// Aliases are scoped to the current network.
+			// https://docs.podman.io/en/latest/markdown/podman-run.1.html#network-mode-net
+			var networkOpts []string
+			for _, alias := range aliases {
+				networkOpts = append(networkOpts, "alias="+alias)
+			}
+			if len(networkOpts) > 0 {
+				networkFlag += fmt.Sprintf(":%s", strings.Join(networkOpts, ","))
 			}
 		}
+
+		c.ExtraOptions = append(c.ExtraOptions, networkFlag)
 	}
 
 	// https://docs.docker.com/compose/compose-file/05-services/#network_mode
@@ -273,19 +318,6 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 			return nil, fmt.Errorf("unsupported network_mode: %s", networkMode)
 		}
 	}
-
-	// Figure out explicit dependencies for this container.
-	for _, s := range service.GetDependencies() {
-		if _, ok := g.serviceToContainerName[s]; !ok {
-			return nil, fmt.Errorf("service %q depends on non-existent service %q", service.Name, s)
-		}
-		if targetContainerName := g.serviceToContainerName[s]; !slices.Contains(c.DependsOn, targetContainerName) {
-			c.DependsOn = append(c.DependsOn, targetContainerName)
-		}
-	}
-
-	// Allow other containers to use service name as an alias.
-	c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--network-alias=%s", service.Name))
 
 	for _, ip := range service.DNS {
 		c.ExtraOptions = append(c.ExtraOptions, "--dns="+ip)

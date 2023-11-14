@@ -168,8 +168,9 @@
       "--device=/dev/net/tun:/dev/net/tun"
       "--dns=8.8.4.4"
       "--dns=8.8.8.8"
+      "--network-alias=my-torrent-client"
       "--network-alias=transmission"
-      "--network=myproject-default"
+      "--network=myproject-something"
       "--privileged"
     ];
   };
@@ -236,10 +237,26 @@
     '';
     before = [
       "docker-myproject-sabnzbd.service"
-      "docker-torrent-client.service"
     ];
     requiredBy = [
       "docker-myproject-sabnzbd.service"
+    ];
+    partOf = [ "docker-compose-myproject-root.target" ];
+  };
+  systemd.services."docker-network-myproject-something" = {
+    path = [ pkgs.docker ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStop = "${pkgs.docker}/bin/docker network rm -f myproject-something";
+    };
+    script = ''
+      docker network inspect myproject-something || docker network create myproject-something --label=test-label=okay
+    '';
+    before = [
+      "docker-torrent-client.service"
+    ];
+    requiredBy = [
       "docker-torrent-client.service"
     ];
     partOf = [ "docker-compose-myproject-root.target" ];
@@ -317,6 +334,7 @@
       "docker-torrent-client.service"
       "docker-traefik.service"
       "docker-network-myproject-default.service"
+      "docker-network-myproject-something.service"
       "docker-volume-books.service"
       "docker-volume-photos.service"
       "docker-volume-storage.service"

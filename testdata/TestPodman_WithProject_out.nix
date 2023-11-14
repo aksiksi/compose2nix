@@ -174,7 +174,7 @@
       "--dns=8.8.4.4"
       "--dns=8.8.8.8"
       "--network-alias=transmission"
-      "--network=myproject-default"
+      "--network=myproject-something:alias=my-torrent-client"
       "--privileged"
     ];
   };
@@ -241,10 +241,26 @@
     '';
     before = [
       "podman-myproject-sabnzbd.service"
-      "podman-torrent-client.service"
     ];
     requiredBy = [
       "podman-myproject-sabnzbd.service"
+    ];
+    partOf = [ "podman-compose-myproject-root.target" ];
+  };
+  systemd.services."podman-network-myproject-something" = {
+    path = [ pkgs.podman ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStop = "${pkgs.podman}/bin/podman network rm -f myproject-something";
+    };
+    script = ''
+      podman network inspect myproject-something || podman network create myproject-something --opt isolate=true --label=test-label=okay
+    '';
+    before = [
+      "podman-torrent-client.service"
+    ];
+    requiredBy = [
       "podman-torrent-client.service"
     ];
     partOf = [ "podman-compose-myproject-root.target" ];
@@ -264,6 +280,7 @@
       "podman-torrent-client.service"
       "podman-traefik.service"
       "podman-network-myproject-default.service"
+      "podman-network-myproject-something.service"
     ];
   };
 }

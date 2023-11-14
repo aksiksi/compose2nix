@@ -164,8 +164,9 @@
       "--device=/dev/net/tun:/dev/net/tun"
       "--dns=8.8.4.4"
       "--dns=8.8.8.8"
+      "--network-alias=my-torrent-client"
       "--network-alias=transmission"
-      "--network=myproject-default"
+      "--network=myproject-something"
       "--privileged"
     ];
   };
@@ -231,11 +232,9 @@
     '';
     before = [
       "docker-myproject-sabnzbd.service"
-      "docker-torrent-client.service"
     ];
     requiredBy = [
       "docker-myproject-sabnzbd.service"
-      "docker-torrent-client.service"
     ];
     partOf = [ "docker-compose-myproject-root.target" ];
   };
@@ -249,6 +248,12 @@
     script = ''
       docker network inspect myproject-something || docker network create myproject-something --label=test-label=okay
     '';
+    before = [
+      "docker-torrent-client.service"
+    ];
+    requiredBy = [
+      "docker-torrent-client.service"
+    ];
     partOf = [ "docker-compose-myproject-root.target" ];
   };
 

@@ -48,6 +48,10 @@ services:
       - /var/volumes/transmission/config:/config
       - /var/volumes/transmission/scripts:/scripts
       - storage:/storage
+    networks:
+      something:
+        aliases:
+          - "my-torrent-client"
     depends_on:
       - sabnzbd
     environment:
@@ -170,6 +174,7 @@ services:
         max-file: "3"
         compress: "true"
     restart: unless-stopped
+
 networks:
   something:
     labels:
