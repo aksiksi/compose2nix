@@ -52,6 +52,8 @@ services:
       something:
         aliases:
           - "my-torrent-client"
+    extra_hosts:
+      - "abc:93.184.216.34"
     depends_on:
       - sabnzbd
     environment:

@@ -182,6 +182,7 @@
     log-driver = "journald";
     autoStart = false;
     extraOptions = [
+      "--add-host=abc:93.184.216.34"
       "--cap-add=NET_ADMIN"
       "--device=/dev/net/tun:/dev/net/tun"
       "--dns=8.8.4.4"

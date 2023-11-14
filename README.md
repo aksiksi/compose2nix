@@ -51,6 +51,7 @@ By default, the tool looks for `docker-compose.yml` in the **current directory**
 | [`networks.aliases`](https://docs.docker.com/compose/compose-file/05-services/#aliases) | ✅ |
 | [`network_mode`](https://docs.docker.com/compose/compose-file/05-services/#network_mode) | ✅ |
 | [`privileged`](https://docs.docker.com/compose/compose-file/05-services/#privileged) | ✅ |
+| [`extra_hosts`](https://docs.docker.com/compose/compose-file/05-services/#extra_hosts) | ✅ |
 
 ### [`networks`](https://docs.docker.com/compose/compose-file/06-networks/)
 

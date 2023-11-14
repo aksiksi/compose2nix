@@ -337,6 +337,13 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 		c.ExtraOptions = append(c.ExtraOptions, "--device="+device)
 	}
 
+	// https://docs.docker.com/compose/compose-file/05-services/#extra_hosts
+	// https://docs.docker.com/engine/reference/commandline/run/#add-host
+	// https://docs.podman.io/en/latest/markdown/podman-run.1.html#add-host-host-ip
+	for hostname, ip := range service.ExtraHosts {
+		c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--add-host=%s:%s", hostname, ip))
+	}
+
 	// Compose defaults to "json-file", so we'll treat _any_ "json-file" setting as a default.
 	// Users can override this behavior via CLI.
 	//
