@@ -27,7 +27,7 @@
       "traefik.http.routers.jellyseerr.tls.certresolver" = "htpc";
     };
     dependsOn = [
-      "sabnzbd"
+      "myproject_sabnzbd"
     ];
     log-driver = "journald";
     extraOptions = [
@@ -36,7 +36,7 @@
       "--log-opt=max-file=3"
       "--log-opt=max-size=10m"
       "--network-alias=jellyseerr"
-      "--network=container:sabnzbd"
+      "--network=container:myproject_sabnzbd"
     ];
   };
   systemd.services."docker-jellyseerr" = {
@@ -46,7 +46,47 @@
     };
     startLimitBurst = 3;
     startLimitIntervalSec = 120;
-    partOf = [ "docker-compose-root.target" ];
+    partOf = [ "docker-compose-myproject_root.target" ];
+  };
+  virtualisation.oci-containers.containers."myproject_sabnzbd" = {
+    image = "lscr.io/linuxserver/sabnzbd";
+    environment = {
+      DOCKER_MODS = "ghcr.io/gilbn/theme.park:sabnzbd";
+      PGID = "1000";
+      PUID = "1000";
+      TP_DOMAIN = "hey.hello.us\/themepark";
+      TP_HOTIO = "false";
+      TP_THEME = "potato";
+      TZ = "America/New_York";
+    };
+    volumes = [
+      "/var/volumes/sabnzbd:/config:rw"
+      "storage:/storage:rw"
+    ];
+    labels = {
+      "traefik.enable" = "true";
+      "traefik.http.routers.sabnzbd.middlewares" = "chain-authelia@file";
+      "traefik.http.routers.sabnzbd.rule" = "Host(`hey.hello.us`) && PathPrefix(`/sabnzbd`)";
+      "traefik.http.routers.sabnzbd.tls.certresolver" = "htpc";
+    };
+    log-driver = "journald";
+    extraOptions = [
+      "--log-opt=compress=true"
+      "--log-opt=max-file=3"
+      "--log-opt=max-size=10m"
+      "--network-alias=sabnzbd"
+      "--network=myproject_default"
+    ];
+  };
+  systemd.services."docker-myproject_sabnzbd" = {
+    serviceConfig = {
+      Restart = "always";
+      RuntimeMaxSec = 10;
+    };
+    unitConfig = {
+      Description = "This is the sabnzbd container!";
+    };
+    partOf = [ "docker-compose-myproject_root.target" ];
   };
   virtualisation.oci-containers.containers."photoprism-mariadb" = {
     image = "docker.io/library/mariadb:10.9";
@@ -79,47 +119,7 @@
     };
     startLimitBurst = 10;
     startLimitIntervalSec = 86400;
-    partOf = [ "docker-compose-root.target" ];
-  };
-  virtualisation.oci-containers.containers."sabnzbd" = {
-    image = "lscr.io/linuxserver/sabnzbd";
-    environment = {
-      DOCKER_MODS = "ghcr.io/gilbn/theme.park:sabnzbd";
-      PGID = "1000";
-      PUID = "1000";
-      TP_DOMAIN = "hey.hello.us\/themepark";
-      TP_HOTIO = "false";
-      TP_THEME = "potato";
-      TZ = "America/New_York";
-    };
-    volumes = [
-      "/var/volumes/sabnzbd:/config:rw"
-      "storage:/storage:rw"
-    ];
-    labels = {
-      "traefik.enable" = "true";
-      "traefik.http.routers.sabnzbd.middlewares" = "chain-authelia@file";
-      "traefik.http.routers.sabnzbd.rule" = "Host(`hey.hello.us`) && PathPrefix(`/sabnzbd`)";
-      "traefik.http.routers.sabnzbd.tls.certresolver" = "htpc";
-    };
-    log-driver = "journald";
-    extraOptions = [
-      "--log-opt=compress=true"
-      "--log-opt=max-file=3"
-      "--log-opt=max-size=10m"
-      "--network-alias=sabnzbd"
-      "--network=default"
-    ];
-  };
-  systemd.services."docker-sabnzbd" = {
-    serviceConfig = {
-      Restart = "always";
-      RuntimeMaxSec = 10;
-    };
-    unitConfig = {
-      Description = "This is the sabnzbd container!";
-    };
-    partOf = [ "docker-compose-root.target" ];
+    partOf = [ "docker-compose-myproject_root.target" ];
   };
   virtualisation.oci-containers.containers."torrent-client" = {
     image = "docker.io/haugene/transmission-openvpn";
@@ -156,7 +156,7 @@
       "traefik.http.services.transmission.loadbalancer.server.port" = "9091";
     };
     dependsOn = [
-      "sabnzbd"
+      "myproject_sabnzbd"
     ];
     log-driver = "journald";
     extraOptions = [
@@ -165,7 +165,7 @@
       "--dns=8.8.4.4"
       "--dns=8.8.8.8"
       "--network-alias=transmission"
-      "--network=default"
+      "--network=myproject_default"
       "--privileged"
     ];
   };
@@ -175,7 +175,7 @@
     };
     startLimitBurst = 3;
     startLimitIntervalSec = 86400;
-    partOf = [ "docker-compose-root.target" ];
+    partOf = [ "docker-compose-myproject_root.target" ];
   };
   virtualisation.oci-containers.containers."traefik" = {
     image = "docker.io/library/traefik";
@@ -215,41 +215,41 @@
     serviceConfig = {
       Restart = "none";
     };
-    partOf = [ "docker-compose-root.target" ];
+    partOf = [ "docker-compose-myproject_root.target" ];
   };
 
   # Networks
-  systemd.services."docker-network-default" = {
+  systemd.services."docker-network-myproject_default" = {
     path = [ pkgs.docker ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.docker}/bin/docker network rm -f default";
+      ExecStop = "${pkgs.docker}/bin/docker network rm -f myproject_default";
     };
     script = ''
-      docker network inspect default || docker network create default
+      docker network inspect myproject_default || docker network create myproject_default
     '';
     before = [
-      "docker-sabnzbd.service"
+      "docker-myproject_sabnzbd.service"
       "docker-torrent-client.service"
     ];
     requiredBy = [
-      "docker-sabnzbd.service"
+      "docker-myproject_sabnzbd.service"
       "docker-torrent-client.service"
     ];
-    partOf = [ "docker-compose-root.target" ];
+    partOf = [ "docker-compose-myproject_root.target" ];
   };
-  systemd.services."docker-network-something" = {
+  systemd.services."docker-network-myproject_something" = {
     path = [ pkgs.docker ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.docker}/bin/docker network rm -f something";
+      ExecStop = "${pkgs.docker}/bin/docker network rm -f myproject_something";
     };
     script = ''
-      docker network inspect something || docker network create something --label=test-label=okay
+      docker network inspect myproject_something || docker network create myproject_something --label=test-label=okay
     '';
-    partOf = [ "docker-compose-root.target" ];
+    partOf = [ "docker-compose-myproject_root.target" ];
   };
 
   # Volumes
@@ -268,7 +268,7 @@
     requiredBy = [
       "docker-jellyseerr.service"
     ];
-    partOf = [ "docker-compose-root.target" ];
+    partOf = [ "docker-compose-myproject_root.target" ];
   };
   systemd.services."docker-volume-photos" = {
     path = [ pkgs.docker ];
@@ -285,7 +285,7 @@
     requiredBy = [
       "docker-photoprism-mariadb.service"
     ];
-    partOf = [ "docker-compose-root.target" ];
+    partOf = [ "docker-compose-myproject_root.target" ];
   };
   systemd.services."docker-volume-storage" = {
     path = [ pkgs.docker ];
@@ -297,31 +297,31 @@
       docker volume inspect storage || docker volume create storage --opt device=/mnt/media,o=bind,type=none
     '';
     before = [
-      "docker-sabnzbd.service"
+      "docker-myproject_sabnzbd.service"
       "docker-torrent-client.service"
     ];
     requiredBy = [
-      "docker-sabnzbd.service"
+      "docker-myproject_sabnzbd.service"
       "docker-torrent-client.service"
     ];
-    partOf = [ "docker-compose-root.target" ];
+    partOf = [ "docker-compose-myproject_root.target" ];
   };
 
   # Root service
   # When started, this will automatically create all resources and start
   # the containers. When stopped, this will teardown all resources.
-  systemd.targets."docker-compose-root" = {
+  systemd.targets."docker-compose-myproject_root" = {
     unitConfig = {
       Description = "Root target generated by compose2nix.";
     };
     wants = [
       "docker-jellyseerr.service"
+      "docker-myproject_sabnzbd.service"
       "docker-photoprism-mariadb.service"
-      "docker-sabnzbd.service"
       "docker-torrent-client.service"
       "docker-traefik.service"
-      "docker-network-default.service"
-      "docker-network-something.service"
+      "docker-network-myproject_default.service"
+      "docker-network-myproject_something.service"
       "docker-volume-books.service"
       "docker-volume-photos.service"
       "docker-volume-storage.service"

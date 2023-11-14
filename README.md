@@ -22,10 +22,10 @@ Install the `compose2nix` CLI via one of the following methods:
     ];
     ```
 
-Run `compose2nix`.
+Run `compose2nix`. Note that project must either be passed in **or** set in the Compose file's top-level "name".
 
 ```bash
-compose2nix
+compose2nix -project=myproject
 ```
 
 By default, the tool looks for `docker-compose.yml` in the **current directory** and outputs the NixOS config to `docker-compose.nix`.
@@ -62,7 +62,6 @@ By default, the tool looks for `docker-compose.yml` in the **current directory**
 | [`external`](https://docs.docker.com/compose/compose-file/06-networks/#external) | ❌ |
 | [`internal`](https://docs.docker.com/compose/compose-file/06-networks/#internal) | ❌ |
 
-
 ### [`volumes`](https://docs.docker.com/compose/compose-file/07-volumes/)
 
 |   |     |
@@ -72,6 +71,10 @@ By default, the tool looks for `docker-compose.yml` in the **current directory**
 | [`labels`](https://docs.docker.com/compose/compose-file/07-volumes/#labels) | ✅ |
 | [`name`](https://docs.docker.com/compose/compose-file/07-volumes/#name) | ❌ |
 | [`external`](https://docs.docker.com/compose/compose-file/07-volumes/#external) | ❌ |
+
+### Misc
+
+* [`name`](https://docs.docker.com/compose/compose-file/04-version-and-name/#name-top-level-element) - ✅
 
 ## Options
 

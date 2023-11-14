@@ -1,4 +1,5 @@
 version: "3.7"
+name: "myproject"
 services:
   sabnzbd:
     image: lscr.io/linuxserver/sabnzbd

@@ -21,8 +21,7 @@ var inputs = flag.String("inputs", "docker-compose.yml", "one or more comma-sepa
 var envFiles = flag.String("env_files", "", "one or more comma-separated paths to .env file(s).")
 var envFilesOnly = flag.Bool("env_files_only", false, "only use env file(s) in the NixOS container definitions.")
 var output = flag.String("output", "docker-compose.nix", "path to output Nix file.")
-var project = flag.String("project", "", "project name used as a prefix for generated resources.")
-var projectSeparator = flag.String("project_separator", DefaultProjectSeparator, "seperator for project prefix.")
+var project = flag.String("project", "", "project name used as a prefix for generated resources. this overrides any top-level \"name\" set in the Compose file(s).")
 var serviceInclude = flag.String("service_include", "", "regex pattern for services to include.")
 var autoStart = flag.Bool("auto_start", true, "auto-start setting for generated service(s). this applies to all services, not just containers.")
 var runtime = flag.String("runtime", "podman", `one of: ["podman", "docker"].`)
@@ -70,7 +69,7 @@ func main() {
 
 	start := time.Now()
 	g := Generator{
-		Project:                NewProjectWithSeparator(*project, *projectSeparator),
+		Project:                NewProject(*project),
 		Runtime:                containerRuntime,
 		Inputs:                 inputs,
 		EnvFiles:               envFiles,

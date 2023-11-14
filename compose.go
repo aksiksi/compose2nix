@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"regexp"
 	"slices"
 	"strings"
@@ -72,12 +73,39 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	var opts []func(*loader.Options)
+	if g.Project != nil {
+		opts = append(opts, func(o *loader.Options) {
+			o.SetProjectName(g.Project.Name, true)
+		})
+	}
+
+	// Workaround for https://github.com/compose-spec/compose-go/issues/489.
+	var configFiles []types.ConfigFile
+	for _, input := range g.Inputs {
+		content, err := os.ReadFile(input)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read file %q: %w", input, err)
+		}
+		configFiles = append(configFiles, types.ConfigFile{
+			Filename: input,
+			Content:  content,
+		})
+	}
+
 	composeProject, err := loader.LoadWithContext(ctx, types.ConfigDetails{
-		ConfigFiles: types.ToConfigFiles(g.Inputs),
+		ConfigFiles: configFiles,
 		Environment: types.NewMapping(env),
-	})
+	}, opts...)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse Compose project: %w", err)
+	}
+
+	if composeProject.Name != "" {
+		// Always override the project we have set. It could have been normalized or, more commonly,
+		// pulled from one of the Compose files' top-level "name" setting.
+		g.Project = NewProject(composeProject.Name)
 	}
 
 	// Construct a map of service to container name.

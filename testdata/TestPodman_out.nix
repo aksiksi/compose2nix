@@ -32,7 +32,7 @@
       "traefik.http.routers.jellyseerr.tls.certresolver" = "htpc";
     };
     dependsOn = [
-      "sabnzbd"
+      "myproject_sabnzbd"
     ];
     log-driver = "journald";
     extraOptions = [
@@ -41,7 +41,7 @@
       "--log-opt=max-file=3"
       "--log-opt=max-size=10m"
       "--network-alias=jellyseerr"
-      "--network=container:sabnzbd"
+      "--network=container:myproject_sabnzbd"
     ];
   };
   systemd.services."podman-jellyseerr" = {
@@ -51,7 +51,47 @@
     };
     startLimitBurst = 3;
     startLimitIntervalSec = 120;
-    partOf = [ "podman-compose-root.target" ];
+    partOf = [ "podman-compose-myproject_root.target" ];
+  };
+  virtualisation.oci-containers.containers."myproject_sabnzbd" = {
+    image = "lscr.io/linuxserver/sabnzbd";
+    environment = {
+      DOCKER_MODS = "ghcr.io/gilbn/theme.park:sabnzbd";
+      PGID = "1000";
+      PUID = "1000";
+      TP_DOMAIN = "hey.hello.us\/themepark";
+      TP_HOTIO = "false";
+      TP_THEME = "potato";
+      TZ = "America/New_York";
+    };
+    volumes = [
+      "/mnt/media:/storage:rw"
+      "/var/volumes/sabnzbd:/config:rw"
+    ];
+    labels = {
+      "traefik.enable" = "true";
+      "traefik.http.routers.sabnzbd.middlewares" = "chain-authelia@file";
+      "traefik.http.routers.sabnzbd.rule" = "Host(`hey.hello.us`) && PathPrefix(`/sabnzbd`)";
+      "traefik.http.routers.sabnzbd.tls.certresolver" = "htpc";
+    };
+    log-driver = "journald";
+    extraOptions = [
+      "--log-opt=compress=true"
+      "--log-opt=max-file=3"
+      "--log-opt=max-size=10m"
+      "--network-alias=sabnzbd"
+      "--network=myproject_default"
+    ];
+  };
+  systemd.services."podman-myproject_sabnzbd" = {
+    serviceConfig = {
+      Restart = "always";
+      RuntimeMaxSec = 10;
+    };
+    unitConfig = {
+      Description = "This is the sabnzbd container!";
+    };
+    partOf = [ "podman-compose-myproject_root.target" ];
   };
   virtualisation.oci-containers.containers."photoprism-mariadb" = {
     image = "docker.io/library/mariadb:10.9";
@@ -84,47 +124,7 @@
     };
     startLimitBurst = 10;
     startLimitIntervalSec = 86400;
-    partOf = [ "podman-compose-root.target" ];
-  };
-  virtualisation.oci-containers.containers."sabnzbd" = {
-    image = "lscr.io/linuxserver/sabnzbd";
-    environment = {
-      DOCKER_MODS = "ghcr.io/gilbn/theme.park:sabnzbd";
-      PGID = "1000";
-      PUID = "1000";
-      TP_DOMAIN = "hey.hello.us\/themepark";
-      TP_HOTIO = "false";
-      TP_THEME = "potato";
-      TZ = "America/New_York";
-    };
-    volumes = [
-      "/mnt/media:/storage:rw"
-      "/var/volumes/sabnzbd:/config:rw"
-    ];
-    labels = {
-      "traefik.enable" = "true";
-      "traefik.http.routers.sabnzbd.middlewares" = "chain-authelia@file";
-      "traefik.http.routers.sabnzbd.rule" = "Host(`hey.hello.us`) && PathPrefix(`/sabnzbd`)";
-      "traefik.http.routers.sabnzbd.tls.certresolver" = "htpc";
-    };
-    log-driver = "journald";
-    extraOptions = [
-      "--log-opt=compress=true"
-      "--log-opt=max-file=3"
-      "--log-opt=max-size=10m"
-      "--network-alias=sabnzbd"
-      "--network=default"
-    ];
-  };
-  systemd.services."podman-sabnzbd" = {
-    serviceConfig = {
-      Restart = "always";
-      RuntimeMaxSec = 10;
-    };
-    unitConfig = {
-      Description = "This is the sabnzbd container!";
-    };
-    partOf = [ "podman-compose-root.target" ];
+    partOf = [ "podman-compose-myproject_root.target" ];
   };
   virtualisation.oci-containers.containers."torrent-client" = {
     image = "docker.io/haugene/transmission-openvpn";
@@ -161,7 +161,7 @@
       "traefik.http.services.transmission.loadbalancer.server.port" = "9091";
     };
     dependsOn = [
-      "sabnzbd"
+      "myproject_sabnzbd"
     ];
     log-driver = "journald";
     extraOptions = [
@@ -170,7 +170,7 @@
       "--dns=8.8.4.4"
       "--dns=8.8.8.8"
       "--network-alias=transmission"
-      "--network=default"
+      "--network=myproject_default"
       "--privileged"
     ];
   };
@@ -180,7 +180,7 @@
     };
     startLimitBurst = 3;
     startLimitIntervalSec = 86400;
-    partOf = [ "podman-compose-root.target" ];
+    partOf = [ "podman-compose-myproject_root.target" ];
   };
   virtualisation.oci-containers.containers."traefik" = {
     image = "docker.io/library/traefik";
@@ -220,58 +220,58 @@
     serviceConfig = {
       Restart = "none";
     };
-    partOf = [ "podman-compose-root.target" ];
+    partOf = [ "podman-compose-myproject_root.target" ];
   };
 
   # Networks
-  systemd.services."podman-network-default" = {
+  systemd.services."podman-network-myproject_default" = {
     path = [ pkgs.podman ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.podman}/bin/podman network rm -f default";
+      ExecStop = "${pkgs.podman}/bin/podman network rm -f myproject_default";
     };
     script = ''
-      podman network inspect default || podman network create default --opt isolate=true
+      podman network inspect myproject_default || podman network create myproject_default --opt isolate=true
     '';
     before = [
-      "podman-sabnzbd.service"
+      "podman-myproject_sabnzbd.service"
       "podman-torrent-client.service"
     ];
     requiredBy = [
-      "podman-sabnzbd.service"
+      "podman-myproject_sabnzbd.service"
       "podman-torrent-client.service"
     ];
-    partOf = [ "podman-compose-root.target" ];
+    partOf = [ "podman-compose-myproject_root.target" ];
   };
-  systemd.services."podman-network-something" = {
+  systemd.services."podman-network-myproject_something" = {
     path = [ pkgs.podman ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.podman}/bin/podman network rm -f something";
+      ExecStop = "${pkgs.podman}/bin/podman network rm -f myproject_something";
     };
     script = ''
-      podman network inspect something || podman network create something --opt isolate=true --label=test-label=okay
+      podman network inspect myproject_something || podman network create myproject_something --opt isolate=true --label=test-label=okay
     '';
-    partOf = [ "podman-compose-root.target" ];
+    partOf = [ "podman-compose-myproject_root.target" ];
   };
 
   # Root service
   # When started, this will automatically create all resources and start
   # the containers. When stopped, this will teardown all resources.
-  systemd.targets."podman-compose-root" = {
+  systemd.targets."podman-compose-myproject_root" = {
     unitConfig = {
       Description = "Root target generated by compose2nix.";
     };
     wants = [
       "podman-jellyseerr.service"
+      "podman-myproject_sabnzbd.service"
       "podman-photoprism-mariadb.service"
-      "podman-sabnzbd.service"
       "podman-torrent-client.service"
       "podman-traefik.service"
-      "podman-network-default.service"
-      "podman-network-something.service"
+      "podman-network-myproject_default.service"
+      "podman-network-myproject_something.service"
     ];
     wantedBy = [ "multi-user.target" ];
   };
