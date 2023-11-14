@@ -169,6 +169,7 @@
       "--network-alias=transmission"
       "--network=myproject-something"
       "--privileged"
+      "--sysctl=net.ipv6.conf.all.disable_ipv6=0"
     ];
   };
   systemd.services."docker-torrent-client" = {

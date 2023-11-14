@@ -344,6 +344,13 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 		c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--add-host=%s:%s", hostname, ip))
 	}
 
+	// https://docs.docker.com/compose/compose-file/05-services/#sysctls
+	// https://docs.docker.com/engine/reference/commandline/run/#sysctl
+	// https://docs.podman.io/en/latest/markdown/podman-run.1.html#sysctl-name-value
+	for name, value := range service.Sysctls {
+		c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--sysctl=%s=%s", name, value))
+	}
+
 	// Compose defaults to "json-file", so we'll treat _any_ "json-file" setting as a default.
 	// Users can override this behavior via CLI.
 	//

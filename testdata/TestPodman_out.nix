@@ -173,6 +173,7 @@
       "--network-alias=transmission"
       "--network=myproject-something:alias=my-torrent-client"
       "--privileged"
+      "--sysctl=net.ipv6.conf.all.disable_ipv6=0"
     ];
   };
   systemd.services."podman-torrent-client" = {
