@@ -30,56 +30,15 @@ compose2nix -project=myproject
 
 By default, the tool looks for `docker-compose.yml` in the **current directory** and outputs the NixOS config to `docker-compose.nix`.
 
-## Supported Features
+## Docs
 
-### [`services`](https://docs.docker.com/compose/compose-file/05-services/)
+### Sample
 
-|   |     |
-|---|:---:|
-| [`image`](https://docs.docker.com/compose/compose-file/05-services/#image) | ✅ |
-| [`container_name`](https://docs.docker.com/compose/compose-file/05-services/#container_name) | ✅ |
-| [`environment`](https://docs.docker.com/compose/compose-file/05-services/#environment) | ✅ |
-| [`volumes`](https://docs.docker.com/compose/compose-file/05-services/#volumes) | ✅ |
-| [`labels`](https://docs.docker.com/compose/compose-file/05-services/#labels) | ✅ |
-| [`ports`](https://docs.docker.com/compose/compose-file/05-services/#ports) | ✅ |
-| [`dns`](https://docs.docker.com/compose/compose-file/05-services/#dns) | ✅ |
-| [`cap_add/cap_drop`](https://docs.docker.com/compose/compose-file/05-services/#cap_add) | ✅ |
-| [`logging`](https://docs.docker.com/compose/compose-file/05-services/#logging) | ✅ |
-| [`restart`](https://docs.docker.com/compose/compose-file/05-services/#restart) | ✅ |
-| [`deploy.restart_policy`](https://docs.docker.com/compose/compose-file/deploy/#restart_policy) | ✅ |
-| [`devices`](https://docs.docker.com/compose/compose-file/05-services/#devices) | ✅ |
-| [`networks.aliases`](https://docs.docker.com/compose/compose-file/05-services/#aliases) | ✅ |
-| [`network_mode`](https://docs.docker.com/compose/compose-file/05-services/#network_mode) | ✅ |
-| [`privileged`](https://docs.docker.com/compose/compose-file/05-services/#privileged) | ✅ |
-| [`extra_hosts`](https://docs.docker.com/compose/compose-file/05-services/#extra_hosts) | ✅ |
-| [`sysctls`](https://docs.docker.com/compose/compose-file/05-services/#sysctls) | ✅ |
+* Input: https://github.com/aksiksi/compose2nix/blob/main/testdata/docker-compose.yml
+* Output (Docker): https://github.com/aksiksi/compose2nix/blob/main/testdata/TestDocker_out.nix
+* Output (Podman): https://github.com/aksiksi/compose2nix/blob/main/testdata/TestPodman_out.nix
 
-### [`networks`](https://docs.docker.com/compose/compose-file/06-networks/)
-
-|   |     |
-|---|:---:|
-| [`labels`](https://docs.docker.com/compose/compose-file/06-networks/#labels) | ✅ |
-| [`name`](https://docs.docker.com/compose/compose-file/06-networks/#name) | ❌ |
-| [`driver`](https://docs.docker.com/compose/compose-file/06-networks/#driver) | ❌ |
-| [`driver_opts`](https://docs.docker.com/compose/compose-file/06-networks/#driver_opts) | ❌ |
-| [`external`](https://docs.docker.com/compose/compose-file/06-networks/#external) | ❌ |
-| [`internal`](https://docs.docker.com/compose/compose-file/06-networks/#internal) | ❌ |
-
-### [`volumes`](https://docs.docker.com/compose/compose-file/07-volumes/)
-
-|   |     |
-|---|:---:|
-| [`driver`](https://docs.docker.com/compose/compose-file/07-volumes/#driver) | ✅ |
-| [`driver_opts`](https://docs.docker.com/compose/compose-file/07-volumes/#driver_opts) | ✅ |
-| [`labels`](https://docs.docker.com/compose/compose-file/07-volumes/#labels) | ✅ |
-| [`name`](https://docs.docker.com/compose/compose-file/07-volumes/#name) | ❌ |
-| [`external`](https://docs.docker.com/compose/compose-file/07-volumes/#external) | ❌ |
-
-### Misc
-
-* [`name`](https://docs.docker.com/compose/compose-file/04-version-and-name/#name-top-level-element) - ✅
-
-## Options
+### Usage
 
 ```
 $ compose2nix -h
@@ -113,3 +72,52 @@ Usage of compose2nix:
   -version
         display version and exit
 ```
+
+### Supported Docker Compose Features
+
+#### [`services`](https://docs.docker.com/compose/compose-file/05-services/)
+
+|   |     |
+|---|:---:|
+| [`image`](https://docs.docker.com/compose/compose-file/05-services/#image) | ✅ |
+| [`container_name`](https://docs.docker.com/compose/compose-file/05-services/#container_name) | ✅ |
+| [`environment`](https://docs.docker.com/compose/compose-file/05-services/#environment) | ✅ |
+| [`volumes`](https://docs.docker.com/compose/compose-file/05-services/#volumes) | ✅ |
+| [`labels`](https://docs.docker.com/compose/compose-file/05-services/#labels) | ✅ |
+| [`ports`](https://docs.docker.com/compose/compose-file/05-services/#ports) | ✅ |
+| [`dns`](https://docs.docker.com/compose/compose-file/05-services/#dns) | ✅ |
+| [`cap_add/cap_drop`](https://docs.docker.com/compose/compose-file/05-services/#cap_add) | ✅ |
+| [`logging`](https://docs.docker.com/compose/compose-file/05-services/#logging) | ✅ |
+| [`restart`](https://docs.docker.com/compose/compose-file/05-services/#restart) | ✅ |
+| [`deploy.restart_policy`](https://docs.docker.com/compose/compose-file/deploy/#restart_policy) | ✅ |
+| [`devices`](https://docs.docker.com/compose/compose-file/05-services/#devices) | ✅ |
+| [`networks.aliases`](https://docs.docker.com/compose/compose-file/05-services/#aliases) | ✅ |
+| [`network_mode`](https://docs.docker.com/compose/compose-file/05-services/#network_mode) | ✅ |
+| [`privileged`](https://docs.docker.com/compose/compose-file/05-services/#privileged) | ✅ |
+| [`extra_hosts`](https://docs.docker.com/compose/compose-file/05-services/#extra_hosts) | ✅ |
+| [`sysctls`](https://docs.docker.com/compose/compose-file/05-services/#sysctls) | ✅ |
+
+#### [`networks`](https://docs.docker.com/compose/compose-file/06-networks/)
+
+|   |     |
+|---|:---:|
+| [`labels`](https://docs.docker.com/compose/compose-file/06-networks/#labels) | ✅ |
+| [`name`](https://docs.docker.com/compose/compose-file/06-networks/#name) | ❌ |
+| [`driver`](https://docs.docker.com/compose/compose-file/06-networks/#driver) | ❌ |
+| [`driver_opts`](https://docs.docker.com/compose/compose-file/06-networks/#driver_opts) | ❌ |
+| [`external`](https://docs.docker.com/compose/compose-file/06-networks/#external) | ❌ |
+| [`internal`](https://docs.docker.com/compose/compose-file/06-networks/#internal) | ❌ |
+
+#### [`volumes`](https://docs.docker.com/compose/compose-file/07-volumes/)
+
+|   |     |
+|---|:---:|
+| [`driver`](https://docs.docker.com/compose/compose-file/07-volumes/#driver) | ✅ |
+| [`driver_opts`](https://docs.docker.com/compose/compose-file/07-volumes/#driver_opts) | ✅ |
+| [`labels`](https://docs.docker.com/compose/compose-file/07-volumes/#labels) | ✅ |
+| [`name`](https://docs.docker.com/compose/compose-file/07-volumes/#name) | ❌ |
+| [`external`](https://docs.docker.com/compose/compose-file/07-volumes/#external) | ❌ |
+
+#### Misc
+
+* [`name`](https://docs.docker.com/compose/compose-file/04-version-and-name/#name-top-level-element) - ✅
