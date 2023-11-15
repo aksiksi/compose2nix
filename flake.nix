@@ -4,7 +4,7 @@
 # https://nixos.org/manual/nixos/stable/#sec-writing-modules
 # https://nixos.org/manual/nixpkgs/stable/#ssec-language-go
 {
-  description = "Convert Docker Compose to Nix";
+  description = "A tool to automatically generate a NixOS config from a Docker Compose project.";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
