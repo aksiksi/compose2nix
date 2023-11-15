@@ -107,6 +107,8 @@ systemd.services."{{.Runtime}}-{{.Name}}" = {
   startLimitIntervalSec = {{derefInt .SystemdConfig.StartLimitIntervalSec}};
   {{- end}}
   {{- if rootTarget}}
+  {{- /* PartOf for stop/restart of root, WantedBy for start of root. */}}
   partOf = [ "{{rootTarget}}.target" ];
+  wantedBy = [ "{{rootTarget}}.target" ];
   {{- end}}
 };

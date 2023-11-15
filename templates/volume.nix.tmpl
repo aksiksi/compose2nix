@@ -29,6 +29,8 @@ systemd.services."{{.Runtime}}-volume-{{.Name}}" = {
   ];
   {{- end}}
   {{- if rootTarget}}
+  {{- /* PartOf for stop/restart of root, WantedBy for start of root. */}}
   partOf = [ "{{rootTarget}}.target" ];
+  wantedBy = [ "{{rootTarget}}.target" ];
   {{- end}}
 };
