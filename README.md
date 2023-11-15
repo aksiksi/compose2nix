@@ -61,6 +61,12 @@ By default, the tool looks for `docker-compose.yml` in the **current directory**
 
 ## Docs
 
+### Sample
+
+* Input: https://github.com/aksiksi/compose2nix/blob/main/testdata/docker-compose.yml
+* Output (Docker): https://github.com/aksiksi/compose2nix/blob/main/testdata/TestDocker_out.nix
+* Output (Podman): https://github.com/aksiksi/compose2nix/blob/main/testdata/TestPodman_out.nix
+
 ### Patterns
 
 In this case, the project is called `myproject` and the service name is `myservice`. Replace `podman` with `docker` if using the Docker runtime.
@@ -90,20 +96,20 @@ sudo systemctl restart podman-myproject-myservice.service
 By default, this will only remove networks.
 
 ```
-sudo systemctl stop podman-compose-myservice-root.service
+sudo systemctl stop podman-compose-myservice-root.target
 ```
 
 ##### Remove volumes
 
 Either:
 
-1. Re-generate your NixOS config with `-remove_volumes=true`.
-2. Run `sudo podman volume prune`.
+1. Re-generate your NixOS config with: `-remove_volumes=true`
+2. Run `sudo podman volume prune`
 
 #### `docker compose up`
 
 ```
-sudo systemctl start podman-compose-myservice-root.service
+sudo systemctl start podman-compose-myservice-root.target
 ```
 
 ### Usage
@@ -140,12 +146,6 @@ Usage of compose2nix:
   -version
         display version and exit
 ```
-
-### Sample
-
-* Input: https://github.com/aksiksi/compose2nix/blob/main/testdata/docker-compose.yml
-* Output (Docker): https://github.com/aksiksi/compose2nix/blob/main/testdata/TestDocker_out.nix
-* Output (Podman): https://github.com/aksiksi/compose2nix/blob/main/testdata/TestPodman_out.nix
 
 ### Supported Docker Compose Features
 
