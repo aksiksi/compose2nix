@@ -6,6 +6,26 @@
 
 A tool to automatically generate a NixOS config from a Docker Compose project.
 
+## Overview
+
+### Why?
+
+Running a Docker Compose stack/project on NixOS is not well supported. One approach is to define a systemd service that runs `docker-compose up` on start and `docker compose down` on stop. But this means that changes to invidiual services are not visible to NixOS. This can be mitigated, but it still is finicky to work with and completely opaque to NixOS.
+
+In addition, using Docker Compose on NixOS is a bit redundant as the features you get with Compose are available natively on NixOS.
+
+### How?
+
+`compose2nix` takes your existing Docker Compose file(s) and converts each YAML service definition into a [`oci-container`](https://search.nixos.org/options?query=virtualisation.oci-containers) config. The tool also creates systemd services to create any networks and volumes that are part of the Compose project.
+
+### Benefits
+
+1. Supports both Docker and Podman out of the box.
+2. Each Compose service maps into a systemd service that is natively managed by NixOS.
+3. A change to one container service only impacts that container and any of its dependents.
+4. Generated systemd services can be extended from your NixOS config.
+5. `compose2nix` supports setting additional systemd service and unit options through Docker Compose labels (search for the `compose2nix.systemd.` label in the samples).
+
 ## Quickstart
 
 Install the `compose2nix` CLI via one of the following methods:
@@ -30,13 +50,14 @@ compose2nix -project=myproject
 
 By default, the tool looks for `docker-compose.yml` in the **current directory** and outputs the NixOS config to `docker-compose.nix`.
 
+## Roadmap
+
+- [x] Basic implementation
+- [x] Support for most common Docker Compose features
+- [ ] Support for using secret environment files
+- [ ] ???
+
 ## Docs
-
-### Sample
-
-* Input: https://github.com/aksiksi/compose2nix/blob/main/testdata/docker-compose.yml
-* Output (Docker): https://github.com/aksiksi/compose2nix/blob/main/testdata/TestDocker_out.nix
-* Output (Podman): https://github.com/aksiksi/compose2nix/blob/main/testdata/TestPodman_out.nix
 
 ### Usage
 
@@ -72,6 +93,12 @@ Usage of compose2nix:
   -version
         display version and exit
 ```
+
+### Sample
+
+* Input: https://github.com/aksiksi/compose2nix/blob/main/testdata/docker-compose.yml
+* Output (Docker): https://github.com/aksiksi/compose2nix/blob/main/testdata/TestDocker_out.nix
+* Output (Podman): https://github.com/aksiksi/compose2nix/blob/main/testdata/TestPodman_out.nix
 
 ### Supported Docker Compose Features
 
