@@ -85,7 +85,7 @@ func (v *NixVolume) Unit() string {
 // service and unit configs.
 //
 // Each key-value pair in a map represents a systemd key and its value (e.g., Restart=always).
-// Users can provide custom config keys by setting the nixose.systemd.* label on the service.
+// Users can provide custom config keys by setting the compose2nix.systemd.* label on the service.
 type NixContainerSystemdConfig struct {
 	Service ServiceConfig
 	Unit    UnitConfig

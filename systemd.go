@@ -196,7 +196,7 @@ func (c *NixContainerSystemdConfig) ParseSystemdLabels(service *types.ServiceCon
 		}
 		m := systemdLabelRegexp.FindStringSubmatch(label)
 		if len(m) == 0 {
-			return fmt.Errorf("invalid nixose label specified for service %q: %q", service.Name, label)
+			return fmt.Errorf("invalid compose2nix label specified for service %q: %q", service.Name, label)
 		}
 		typ, key := m[1], m[2]
 		switch typ {
