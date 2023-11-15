@@ -218,6 +218,9 @@
     serviceConfig = {
       Restart = "none";
     };
+    unitConfig = {
+      AllowIsolate = true;
+    };
     partOf = [ "docker-compose-myproject-root.target" ];
   };
 

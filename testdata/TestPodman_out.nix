@@ -222,6 +222,9 @@
     serviceConfig = {
       Restart = "none";
     };
+    unitConfig = {
+      AllowIsolate = true;
+    };
     partOf = [ "podman-compose-myproject-root.target" ];
   };
 
