@@ -12,7 +12,7 @@ Install the `compose2nix` CLI via one of the following methods:
 
 1. Install the command using `go`:
     ```
-    go install github.com/aksiksi/compose2nix@v0.1.3
+    go install github.com/aksiksi/compose2nix@v0.1.4
     ```
 2. Clone this repo and run `make build`.
 3. Install the Flake and add the following to your NixOS config:
