@@ -326,7 +326,7 @@
       RemainAfterExit = true;
     };
     script = ''
-      docker volume inspect books || docker volume create books --opt device=/mnt/media/Books,o=bind,type=none
+      docker volume inspect books || docker volume create books --opt=device=/mnt/media/Books --opt=o=bind --opt=type=none
     '';
     partOf = [ "docker-compose-myproject-root.target" ];
     wantedBy = [ "docker-compose-myproject-root.target" ];
@@ -338,7 +338,7 @@
       RemainAfterExit = true;
     };
     script = ''
-      docker volume inspect photos || docker volume create photos --opt device=/mnt/photos,o=bind,type=none --label=test-label=okay
+      docker volume inspect photos || docker volume create photos --opt=device=/mnt/photos --opt=o=bind --opt=type=none --label=test-label=okay
     '';
     partOf = [ "docker-compose-myproject-root.target" ];
     wantedBy = [ "docker-compose-myproject-root.target" ];
@@ -350,7 +350,7 @@
       RemainAfterExit = true;
     };
     script = ''
-      docker volume inspect storage || docker volume create storage --opt device=/mnt/media,o=bind,type=none
+      docker volume inspect storage || docker volume create storage --opt=device=/mnt/media --opt=o=bind --opt=type=none
     '';
     partOf = [ "docker-compose-myproject-root.target" ];
     wantedBy = [ "docker-compose-myproject-root.target" ];

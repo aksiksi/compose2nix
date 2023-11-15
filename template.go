@@ -37,6 +37,7 @@ func toNixValue(v any) any {
 var funcMap template.FuncMap = template.FuncMap{
 	"derefInt":                derefInt,
 	"mapToKeyValArray":        mapToKeyValArray,
+	"mapToRepeatedFlag":       mapToRepeatedFlag,
 	"mapToRepeatedKeyValFlag": mapToRepeatedKeyValFlag,
 	"toNixValue":              toNixValue,
 }

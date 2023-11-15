@@ -1,4 +1,4 @@
-{{- $driverOptsString := mapToKeyValArray .DriverOpts | join "," -}}
+{{- $driverOpts := mapToRepeatedFlag "--opt" .DriverOpts | join " " -}}
 {{- $labels := mapToRepeatedKeyValFlag "--label" .Labels -}}
 systemd.services."{{.Runtime}}-volume-{{.Name}}" = {
   path = [ pkgs.{{.Runtime}} ];
@@ -11,9 +11,9 @@ systemd.services."{{.Runtime}}-volume-{{.Name}}" = {
   };
   script = ''
     {{- if eq .Driver ""}}
-    {{.Runtime}} volume inspect {{.Name}} || {{.Runtime}} volume create {{.Name}} --opt {{$driverOptsString}}{{- if $labels}} {{ $labels | join " "}}{{- end}}
+    {{.Runtime}} volume inspect {{.Name}} || {{.Runtime}} volume create {{.Name}}{{- if $driverOpts}} {{$driverOpts}}{{- end}}{{- if $labels}} {{ $labels | join " "}}{{- end}}
     {{- else}}
-    {{.Runtime}} volume inspect {{.Name}} || {{.Runtime}} volume create {{.Name}} --driver {{.Driver}} --opt {{$driverOptsString}}{{- if $labels}} {{ $labels | join " "}}{{- end}}
+    {{.Runtime}} volume inspect {{.Name}} || {{.Runtime}} volume create {{.Name}} --driver {{.Driver}}{{- if $driverOpts}} {{$driverOpts}}{{- end}}{{- if $labels}} {{ $labels | join " "}}{{- end}}
     {{- end}}
   '';
   {{- if rootTarget}}

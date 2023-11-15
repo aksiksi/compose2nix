@@ -26,6 +26,15 @@ func mapToRepeatedKeyValFlag(flagName string, m map[string]string) []string {
 	return arr
 }
 
+func mapToRepeatedFlag(flagName string, m map[string]string) []string {
+	var flags []string
+	for k, v := range m {
+		flags = append(flags, fmt.Sprintf("%s=%s=%s", flagName, k, v))
+	}
+	slices.Sort(flags)
+	return flags
+}
+
 func ReadEnvFiles(envFiles []string, mergeWithEnv bool) (env []string, _ error) {
 	for _, p := range envFiles {
 		if strings.TrimSpace(p) == "" {
