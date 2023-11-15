@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 
 {
   # Runtime
@@ -42,8 +42,8 @@
   };
   systemd.services."docker-jellyseerr" = {
     serviceConfig = {
-      Restart = "on-failure";
-      RestartSec = "5s";
+      Restart = lib.mkOverride 500 "on-failure";
+      RestartSec = lib.mkOverride 500 "5s";
     };
     startLimitBurst = 3;
     startLimitIntervalSec = 120;
@@ -95,11 +95,11 @@
   };
   systemd.services."docker-myproject-sabnzbd" = {
     serviceConfig = {
-      Restart = "always";
-      RuntimeMaxSec = 10;
+      Restart = lib.mkOverride 500 "always";
+      RuntimeMaxSec = lib.mkOverride 500 10;
     };
     unitConfig = {
-      Description = "This is the sabnzbd container!";
+      Description = lib.mkOverride 500 "This is the sabnzbd container!";
     };
     after = [
       "docker-network-myproject-default.service"
@@ -145,8 +145,8 @@
   };
   systemd.services."docker-photoprism-mariadb" = {
     serviceConfig = {
-      Restart = "always";
-      RestartSec = "3m0s";
+      Restart = lib.mkOverride 500 "always";
+      RestartSec = lib.mkOverride 500 "3m0s";
     };
     startLimitBurst = 10;
     startLimitIntervalSec = 86400;
@@ -219,7 +219,7 @@
   };
   systemd.services."docker-torrent-client" = {
     serviceConfig = {
-      Restart = "on-failure";
+      Restart = lib.mkOverride 500 "on-failure";
     };
     startLimitBurst = 3;
     startLimitIntervalSec = 86400;
@@ -277,10 +277,10 @@
   };
   systemd.services."docker-traefik" = {
     serviceConfig = {
-      Restart = "none";
+      Restart = lib.mkOverride 500 "none";
     };
     unitConfig = {
-      AllowIsolate = true;
+      AllowIsolate = lib.mkOverride 500 true;
     };
     partOf = [
       "docker-compose-myproject-root.target"

@@ -159,7 +159,7 @@ func TestUnusedResources(t *testing.T) {
 	}{
 		{
 			runtime: ContainerRuntimeDocker,
-			want: `{ pkgs, ... }:
+			want: `{ pkgs, lib, ... }:
 
 {
   # Runtime
@@ -173,7 +173,7 @@ func TestUnusedResources(t *testing.T) {
 		},
 		{
 			runtime: ContainerRuntimePodman,
-			want: `{ pkgs, ... }:
+			want: `{ pkgs, lib, ... }:
 
 {
   # Runtime

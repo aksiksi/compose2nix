@@ -1,8 +1,8 @@
 {{- if .Version -}}
 # Auto-generated using compose2nix v{{.Version}}.
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 {{- else -}}
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 {{- end}}
 
 {
