@@ -24,7 +24,7 @@
         inherit pname;
         inherit version;
         src = ./.;
-        vendorSha256 = "sha256-+Ht+cdaTwmfdZ2lMnSuX9EBkU2V8rXyH1qBet8pZ+dU=";
+        vendorSha256 = "sha256-9D6qmTs2aw6oAQdHbmlWV2JnkIyBjKSd8XfW+rRJVM0=";
       };
     });
 
