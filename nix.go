@@ -124,14 +124,14 @@ func (c *NixContainer) Unit() string {
 }
 
 type NixContainerConfig struct {
-	Version           string
-	Project           *Project
-	Runtime           ContainerRuntime
-	Containers        []*NixContainer
-	Networks          []*NixNetwork
-	Volumes           []*NixVolume
-	CreateRootService bool
-	AutoStart         bool
+	Version          string
+	Project          *Project
+	Runtime          ContainerRuntime
+	Containers       []*NixContainer
+	Networks         []*NixNetwork
+	Volumes          []*NixVolume
+	CreateRootTarget bool
+	AutoStart        bool
 }
 
 func (c *NixContainerConfig) String() string {

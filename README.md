@@ -115,8 +115,8 @@ Usage of compose2nix:
         auto-start setting for generated service(s). this applies to all services, not just containers. (default true)
   -check_systemd_mounts
         if set, volume paths will be checked against systemd mount paths on the current machine and marked as container dependencies.
-  -create_root_service
-        if set, a root systemd service will be created, which when stopped tears down all resources. (default true)
+  -create_root_target
+        if set, a root systemd target will be created, which when stopped tears down all resources. (default true)
   -env_files string
         one or more comma-separated paths to .env file(s).
   -env_files_only

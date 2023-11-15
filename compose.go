@@ -61,7 +61,7 @@ type Generator struct {
 	SystemdProvider        SystemdProvider
 	CheckSystemdMounts     bool
 	RemoveVolumes          bool
-	NoCreateRootService    bool
+	NoCreateRootTarget     bool
 	WriteHeader            bool
 
 	serviceToContainerName map[string]string
@@ -135,14 +135,14 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 	}
 
 	return &NixContainerConfig{
-		Version:           version,
-		Project:           g.Project,
-		Runtime:           g.Runtime,
-		Containers:        containers,
-		Networks:          networks,
-		Volumes:           volumes,
-		CreateRootService: !g.NoCreateRootService,
-		AutoStart:         g.AutoStart,
+		Version:          version,
+		Project:          g.Project,
+		Runtime:          g.Runtime,
+		Containers:       containers,
+		Networks:         networks,
+		Volumes:          volumes,
+		CreateRootTarget: !g.NoCreateRootTarget,
+		AutoStart:        g.AutoStart,
 	}, nil
 }
 
@@ -387,8 +387,8 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 		c.SystemdConfig.Unit.After = append(c.SystemdConfig.Unit.After, g.networkNameToService(networkName))
 		c.SystemdConfig.Unit.Requires = append(c.SystemdConfig.Unit.Requires, g.networkNameToService(networkName))
 	}
-	// Add systemd dependency on root service.
-	if !g.NoCreateRootService {
+	// Add systemd dependency on root target.
+	if !g.NoCreateRootTarget {
 		c.SystemdConfig.Unit.PartOf = append(c.SystemdConfig.Unit.PartOf, fmt.Sprintf("%s.target", rootTarget(g.Runtime, g.Project)))
 		c.SystemdConfig.Unit.WantedBy = append(c.SystemdConfig.Unit.WantedBy, fmt.Sprintf("%s.target", rootTarget(g.Runtime, g.Project)))
 	}
