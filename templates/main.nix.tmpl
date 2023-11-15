@@ -1,4 +1,3 @@
-{{- $units := .Units -}}
 {{- if .Version -}}
 # Auto-generated using compose2nix v{{.Version}}.
 { pkgs, ... }:
@@ -45,7 +44,7 @@
   {{- end}}
   {{- end}}
 
-  {{- if and .CreateRootService $units}}
+  {{- if .CreateRootService}}
 
   # Root service
   # When started, this will automatically create all resources and start

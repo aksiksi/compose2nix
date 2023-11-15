@@ -15,18 +15,6 @@ systemd.services."{{.Runtime}}-network-{{.Name}}" = {
     {{.Runtime}} network inspect {{.Name}} || {{.Runtime}} network create {{.Name}} --opt isolate=true{{- if $labels}} {{ $labels | join " "}}{{- end}}
   '';
   {{- end}}
-  {{- if .Containers}}
-  before = [
-    {{- range .Containers}}
-    {{. | printf "%q"}}
-    {{- end}}
-  ];
-  requiredBy = [
-    {{- range .Containers}}
-    {{. | printf "%q"}}
-    {{- end}}
-  ];
-  {{- end}}
   {{- if rootTarget}}
   {{- /* PartOf for stop/restart of root, WantedBy for start of root. */}}
   partOf = [ "{{rootTarget}}.target" ];

@@ -16,18 +16,6 @@ systemd.services."{{.Runtime}}-volume-{{.Name}}" = {
     {{.Runtime}} volume inspect {{.Name}} || {{.Runtime}} volume create {{.Name}} --driver {{.Driver}} --opt {{$driverOptsString}}{{- if $labels}} {{ $labels | join " "}}{{- end}}
     {{- end}}
   '';
-  {{- if .Containers}}
-  before = [
-    {{- range .Containers}}
-    "{{.}}"
-    {{- end}}
-  ];
-  requiredBy = [
-    {{- range .Containers}}
-    "{{.}}"
-    {{- end}}
-  ];
-  {{- end}}
   {{- if rootTarget}}
   {{- /* PartOf for stop/restart of root, WantedBy for start of root. */}}
   partOf = [ "{{rootTarget}}.target" ];

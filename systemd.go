@@ -69,6 +69,8 @@ func (s *ServiceConfig) Set(key string, value any) {
 type UnitConfig struct {
 	After    []string
 	Requires []string
+	PartOf   []string
+	WantedBy []string
 	// Map for generic options.
 	Options map[string]any
 }
@@ -82,6 +84,10 @@ func (u *UnitConfig) Set(key string, value any) {
 		u.After = append(u.After, value.(string))
 	case "Requires":
 		u.Requires = append(u.Requires, value.(string))
+	case "PartOf":
+		u.PartOf = append(u.PartOf, value.(string))
+	case "WantedBy":
+		u.WantedBy = append(u.WantedBy, value.(string))
 	default:
 		u.Options[key] = value
 	}

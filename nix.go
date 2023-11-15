@@ -52,10 +52,9 @@ func (p *Project) With(name string) string {
 }
 
 type NixNetwork struct {
-	Runtime    ContainerRuntime
-	Name       string
-	Labels     map[string]string
-	Containers []string
+	Runtime ContainerRuntime
+	Name    string
+	Labels  map[string]string
 }
 
 func (n *NixNetwork) Unit() string {
@@ -68,7 +67,6 @@ type NixVolume struct {
 	Driver       string
 	DriverOpts   map[string]string
 	Labels       map[string]string
-	Containers   []string
 	RemoveOnStop bool
 }
 
@@ -151,28 +149,14 @@ func (c *NixContainerConfig) String() string {
 	return s.String()
 }
 
+func rootTarget(runtime ContainerRuntime, project *Project) string {
+	return fmt.Sprintf("%s-compose-%s", runtime, project.With("root"))
+}
+
 func (c *NixContainerConfig) rootTargetTemplateFunc() string {
-	// NOTE(aksiksi): We can cache the list of units if this slows things down.
-	if !c.CreateRootService || len(c.Units()) == 0 {
-		return ""
-	}
-	return fmt.Sprintf("%s-compose-%s", c.Runtime, c.Project.With("root"))
+	return rootTarget(c.Runtime, c.Project)
 }
 
 func (c *NixContainerConfig) configTemplateFunc() *NixContainerConfig {
 	return c
-}
-
-func (c *NixContainerConfig) Units() []string {
-	var units []string
-	for _, container := range c.Containers {
-		units = append(units, container.Unit())
-	}
-	for _, network := range c.Networks {
-		units = append(units, network.Unit())
-	}
-	for _, volume := range c.Volumes {
-		units = append(units, volume.Unit())
-	}
-	return units
 }

@@ -47,8 +47,18 @@
     };
     startLimitBurst = 3;
     startLimitIntervalSec = 120;
-    partOf = [ "docker-compose-myproject-root.target" ];
-    wantedBy = [ "docker-compose-myproject-root.target" ];
+    after = [
+      "docker-volume-books.service"
+    ];
+    requires = [
+      "docker-volume-books.service"
+    ];
+    partOf = [
+      "docker-compose-myproject-root.target"
+    ];
+    wantedBy = [
+      "docker-compose-myproject-root.target"
+    ];
   };
   virtualisation.oci-containers.containers."myproject-sabnzbd" = {
     image = "lscr.io/linuxserver/sabnzbd";
@@ -89,8 +99,20 @@
     unitConfig = {
       Description = "This is the sabnzbd container!";
     };
-    partOf = [ "docker-compose-myproject-root.target" ];
-    wantedBy = [ "docker-compose-myproject-root.target" ];
+    after = [
+      "docker-network-myproject-default.service"
+      "docker-volume-storage.service"
+    ];
+    requires = [
+      "docker-network-myproject-default.service"
+      "docker-volume-storage.service"
+    ];
+    partOf = [
+      "docker-compose-myproject-root.target"
+    ];
+    wantedBy = [
+      "docker-compose-myproject-root.target"
+    ];
   };
   virtualisation.oci-containers.containers."photoprism-mariadb" = {
     image = "docker.io/library/mariadb:10.9";
@@ -124,8 +146,18 @@
     };
     startLimitBurst = 10;
     startLimitIntervalSec = 86400;
-    partOf = [ "docker-compose-myproject-root.target" ];
-    wantedBy = [ "docker-compose-myproject-root.target" ];
+    after = [
+      "docker-volume-photos.service"
+    ];
+    requires = [
+      "docker-volume-photos.service"
+    ];
+    partOf = [
+      "docker-compose-myproject-root.target"
+    ];
+    wantedBy = [
+      "docker-compose-myproject-root.target"
+    ];
   };
   virtualisation.oci-containers.containers."torrent-client" = {
     image = "docker.io/haugene/transmission-openvpn";
@@ -185,8 +217,20 @@
     };
     startLimitBurst = 3;
     startLimitIntervalSec = 86400;
-    partOf = [ "docker-compose-myproject-root.target" ];
-    wantedBy = [ "docker-compose-myproject-root.target" ];
+    after = [
+      "docker-network-myproject-something.service"
+      "docker-volume-storage.service"
+    ];
+    requires = [
+      "docker-network-myproject-something.service"
+      "docker-volume-storage.service"
+    ];
+    partOf = [
+      "docker-compose-myproject-root.target"
+    ];
+    wantedBy = [
+      "docker-compose-myproject-root.target"
+    ];
   };
   virtualisation.oci-containers.containers."traefik" = {
     image = "docker.io/library/traefik";
@@ -230,8 +274,12 @@
     unitConfig = {
       AllowIsolate = true;
     };
-    partOf = [ "docker-compose-myproject-root.target" ];
-    wantedBy = [ "docker-compose-myproject-root.target" ];
+    partOf = [
+      "docker-compose-myproject-root.target"
+    ];
+    wantedBy = [
+      "docker-compose-myproject-root.target"
+    ];
   };
 
   # Networks
@@ -245,12 +293,6 @@
     script = ''
       docker network inspect myproject-default || docker network create myproject-default
     '';
-    before = [
-      "docker-myproject-sabnzbd.service"
-    ];
-    requiredBy = [
-      "docker-myproject-sabnzbd.service"
-    ];
     partOf = [ "docker-compose-myproject-root.target" ];
     wantedBy = [ "docker-compose-myproject-root.target" ];
   };
@@ -264,12 +306,6 @@
     script = ''
       docker network inspect myproject-something || docker network create myproject-something --label=test-label=okay
     '';
-    before = [
-      "docker-torrent-client.service"
-    ];
-    requiredBy = [
-      "docker-torrent-client.service"
-    ];
     partOf = [ "docker-compose-myproject-root.target" ];
     wantedBy = [ "docker-compose-myproject-root.target" ];
   };
@@ -285,12 +321,6 @@
     script = ''
       docker volume inspect books || docker volume create books --opt device=/mnt/media/Books,o=bind,type=none
     '';
-    before = [
-      "docker-jellyseerr.service"
-    ];
-    requiredBy = [
-      "docker-jellyseerr.service"
-    ];
     partOf = [ "docker-compose-myproject-root.target" ];
     wantedBy = [ "docker-compose-myproject-root.target" ];
   };
@@ -304,12 +334,6 @@
     script = ''
       docker volume inspect photos || docker volume create photos --opt device=/mnt/photos,o=bind,type=none --label=test-label=okay
     '';
-    before = [
-      "docker-photoprism-mariadb.service"
-    ];
-    requiredBy = [
-      "docker-photoprism-mariadb.service"
-    ];
     partOf = [ "docker-compose-myproject-root.target" ];
     wantedBy = [ "docker-compose-myproject-root.target" ];
   };
@@ -323,14 +347,6 @@
     script = ''
       docker volume inspect storage || docker volume create storage --opt device=/mnt/media,o=bind,type=none
     '';
-    before = [
-      "docker-myproject-sabnzbd.service"
-      "docker-torrent-client.service"
-    ];
-    requiredBy = [
-      "docker-myproject-sabnzbd.service"
-      "docker-torrent-client.service"
-    ];
     partOf = [ "docker-compose-myproject-root.target" ];
     wantedBy = [ "docker-compose-myproject-root.target" ];
   };

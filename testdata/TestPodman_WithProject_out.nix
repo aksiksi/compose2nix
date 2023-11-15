@@ -52,8 +52,12 @@
     };
     startLimitBurst = 3;
     startLimitIntervalSec = 120;
-    partOf = [ "podman-compose-myproject-root.target" ];
-    wantedBy = [ "podman-compose-myproject-root.target" ];
+    partOf = [
+      "podman-compose-myproject-root.target"
+    ];
+    wantedBy = [
+      "podman-compose-myproject-root.target"
+    ];
   };
   virtualisation.oci-containers.containers."myproject-sabnzbd" = {
     image = "lscr.io/linuxserver/sabnzbd";
@@ -94,8 +98,18 @@
     unitConfig = {
       Description = "This is the sabnzbd container!";
     };
-    partOf = [ "podman-compose-myproject-root.target" ];
-    wantedBy = [ "podman-compose-myproject-root.target" ];
+    after = [
+      "podman-network-myproject-default.service"
+    ];
+    requires = [
+      "podman-network-myproject-default.service"
+    ];
+    partOf = [
+      "podman-compose-myproject-root.target"
+    ];
+    wantedBy = [
+      "podman-compose-myproject-root.target"
+    ];
   };
   virtualisation.oci-containers.containers."photoprism-mariadb" = {
     image = "docker.io/library/mariadb:10.9";
@@ -129,8 +143,12 @@
     };
     startLimitBurst = 10;
     startLimitIntervalSec = 86400;
-    partOf = [ "podman-compose-myproject-root.target" ];
-    wantedBy = [ "podman-compose-myproject-root.target" ];
+    partOf = [
+      "podman-compose-myproject-root.target"
+    ];
+    wantedBy = [
+      "podman-compose-myproject-root.target"
+    ];
   };
   virtualisation.oci-containers.containers."torrent-client" = {
     image = "docker.io/haugene/transmission-openvpn";
@@ -189,8 +207,18 @@
     };
     startLimitBurst = 3;
     startLimitIntervalSec = 86400;
-    partOf = [ "podman-compose-myproject-root.target" ];
-    wantedBy = [ "podman-compose-myproject-root.target" ];
+    after = [
+      "podman-network-myproject-something.service"
+    ];
+    requires = [
+      "podman-network-myproject-something.service"
+    ];
+    partOf = [
+      "podman-compose-myproject-root.target"
+    ];
+    wantedBy = [
+      "podman-compose-myproject-root.target"
+    ];
   };
   virtualisation.oci-containers.containers."traefik" = {
     image = "docker.io/library/traefik";
@@ -234,8 +262,12 @@
     unitConfig = {
       AllowIsolate = true;
     };
-    partOf = [ "podman-compose-myproject-root.target" ];
-    wantedBy = [ "podman-compose-myproject-root.target" ];
+    partOf = [
+      "podman-compose-myproject-root.target"
+    ];
+    wantedBy = [
+      "podman-compose-myproject-root.target"
+    ];
   };
 
   # Networks
@@ -249,12 +281,6 @@
     script = ''
       podman network inspect myproject-default || podman network create myproject-default --opt isolate=true
     '';
-    before = [
-      "podman-myproject-sabnzbd.service"
-    ];
-    requiredBy = [
-      "podman-myproject-sabnzbd.service"
-    ];
     partOf = [ "podman-compose-myproject-root.target" ];
     wantedBy = [ "podman-compose-myproject-root.target" ];
   };
@@ -268,12 +294,6 @@
     script = ''
       podman network inspect myproject-something || podman network create myproject-something --opt isolate=true --label=test-label=okay
     '';
-    before = [
-      "podman-torrent-client.service"
-    ];
-    requiredBy = [
-      "podman-torrent-client.service"
-    ];
     partOf = [ "podman-compose-myproject-root.target" ];
     wantedBy = [ "podman-compose-myproject-root.target" ];
   };

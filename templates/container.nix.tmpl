@@ -77,6 +77,12 @@ systemd.services."{{.Runtime}}-{{.Name}}" = {
     {{- end}}
   };
   {{- end}}
+  {{- if .SystemdConfig.StartLimitBurst}}
+  startLimitBurst = {{derefInt .SystemdConfig.StartLimitBurst}};
+  {{- end}}
+  {{- if .SystemdConfig.StartLimitIntervalSec}}
+  startLimitIntervalSec = {{derefInt .SystemdConfig.StartLimitIntervalSec}};
+  {{- end}}
   {{- if .SystemdConfig.Unit}}
   {{- if .SystemdConfig.Unit.Options}}
   unitConfig = {
@@ -99,16 +105,19 @@ systemd.services."{{.Runtime}}-{{.Name}}" = {
     {{- end}}
   ];
   {{- end}}
+  {{- if .SystemdConfig.Unit.PartOf}}
+  partOf = [
+    {{- range .SystemdConfig.Unit.PartOf}}
+    "{{.}}"
+    {{- end}}
+  ];
   {{- end}}
-  {{- if .SystemdConfig.StartLimitBurst}}
-  startLimitBurst = {{derefInt .SystemdConfig.StartLimitBurst}};
+  {{- if .SystemdConfig.Unit.WantedBy}}
+  wantedBy = [
+    {{- range .SystemdConfig.Unit.WantedBy}}
+    "{{.}}"
+    {{- end}}
+  ];
   {{- end}}
-  {{- if .SystemdConfig.StartLimitIntervalSec}}
-  startLimitIntervalSec = {{derefInt .SystemdConfig.StartLimitIntervalSec}};
-  {{- end}}
-  {{- if rootTarget}}
-  {{- /* PartOf for stop/restart of root, WantedBy for start of root. */}}
-  partOf = [ "{{rootTarget}}.target" ];
-  wantedBy = [ "{{rootTarget}}.target" ];
   {{- end}}
 };

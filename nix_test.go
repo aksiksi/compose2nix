@@ -195,9 +195,10 @@ func TestUnusedResources(t *testing.T) {
 	for _, tc := range testcases {
 		t.Run(tc.runtime.String(), func(t *testing.T) {
 			g := Generator{
-				Project: NewProject("hello"),
-				Runtime: tc.runtime,
-				Inputs:  []string{path},
+				Project:             NewProject("myproject"),
+				Runtime:             tc.runtime,
+				Inputs:              []string{path},
+				NoCreateRootService: true,
 			}
 			c, err := g.Run(ctx)
 			if err != nil {

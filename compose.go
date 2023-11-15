@@ -156,6 +156,15 @@ func (g *Generator) postProcessContainers(containers []*NixContainer, volumes []
 			}
 		}
 
+		// Add systemd dependencies on volume(s).
+		for _, v := range volumes {
+			if _, ok := c.Volumes[v.Name]; !ok {
+				continue
+			}
+			c.SystemdConfig.Unit.After = append(c.SystemdConfig.Unit.After, g.volumeNameToService(v.Name))
+			c.SystemdConfig.Unit.Requires = append(c.SystemdConfig.Unit.Requires, g.volumeNameToService(v.Name))
+		}
+
 		// Add dependencies on systemd mounts for volumes used by this container, if any.
 		if g.CheckSystemdMounts {
 			if g.SystemdProvider == nil {
@@ -256,7 +265,7 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 
 	for name, net := range service.Networks {
 		networkName := g.Project.With(name)
-		c.Networks = append(c.Networks, name)
+		c.Networks = append(c.Networks, networkName)
 
 		// Network-scoped aliases.
 		var aliases []string
@@ -373,6 +382,17 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 		c.ExtraOptions = append(c.ExtraOptions, mapToRepeatedKeyValFlag("--log-opt", logging.Options)...)
 	}
 
+	// Add systemd dependencies on network(s).
+	for _, networkName := range c.Networks {
+		c.SystemdConfig.Unit.After = append(c.SystemdConfig.Unit.After, g.networkNameToService(networkName))
+		c.SystemdConfig.Unit.Requires = append(c.SystemdConfig.Unit.Requires, g.networkNameToService(networkName))
+	}
+	// Add systemd dependency on root service.
+	if !g.NoCreateRootService {
+		c.SystemdConfig.Unit.PartOf = append(c.SystemdConfig.Unit.PartOf, fmt.Sprintf("%s.target", rootTarget(g.Runtime, g.Project)))
+		c.SystemdConfig.Unit.WantedBy = append(c.SystemdConfig.Unit.WantedBy, fmt.Sprintf("%s.target", rootTarget(g.Runtime, g.Project)))
+	}
+
 	// Sort slices now that we're done processing the container.
 	slices.Sort(c.DependsOn)
 	slices.Sort(c.ExtraOptions)
@@ -400,8 +420,12 @@ func (g *Generator) buildNixContainers(composeProject *types.Project) ([]*NixCon
 	return containers, nil
 }
 
-func (g *Generator) containerNameToService(name string) string {
-	return fmt.Sprintf("%s-%s.service", g.Runtime, name)
+func (g *Generator) networkNameToService(name string) string {
+	return fmt.Sprintf("%s-network-%s.service", g.Runtime, name)
+}
+
+func (g *Generator) volumeNameToService(name string) string {
+	return fmt.Sprintf("%s-volume-%s.service", g.Runtime, name)
 }
 
 func (g *Generator) buildNixNetworks(composeProject *types.Project, containers []*NixContainer) []*NixNetwork {
@@ -415,9 +439,9 @@ func (g *Generator) buildNixNetworks(composeProject *types.Project, containers [
 		// Keep track of all container services that are in this network.
 		used := false
 		for _, c := range containers {
-			if slices.Contains(c.Networks, name) {
+			if slices.Contains(c.Networks, n.Name) {
 				used = true
-				n.Containers = append(n.Containers, g.containerNameToService(c.Name))
+				break
 			}
 		}
 		// If a network is unused, we don't need to generate it.
@@ -465,15 +489,14 @@ func (g *Generator) buildNixVolumes(composeProject *types.Project, containers []
 			continue
 		}
 
-		// Keep track of all container services that use this named volume.
+		// If a volume is unused, we don't need to generate it.
 		used := false
 		for _, c := range containers {
 			if _, ok := c.Volumes[name]; ok {
 				used = true
-				v.Containers = append(v.Containers, g.containerNameToService(c.Name))
+				break
 			}
 		}
-		// If a volume is unused, we don't need to generate it.
 		if !used && !g.GenerateUnusedResoures {
 			continue
 		}
