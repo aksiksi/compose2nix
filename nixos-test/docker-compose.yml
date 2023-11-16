@@ -1,16 +1,16 @@
 version: "3.7"
 name: "myproject"
 services:
-  alpine:
-    image: docker.io/alpine:latest
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd:latest
     environment:
       TZ: ${TIMEZONE}
     volumes:
-      - /var/volumes/alpine:/config
+      - /var/volumes/sabnzbd:/config
       - storage:/storage
     labels:
       - "compose2nix.systemd.service.RuntimeMaxSec=360"
-      - "compose2nix.systemd.unit.Description=This is the alpine container!"
+      - "compose2nix.systemd.unit.Description=This is the sabnzbd container!"
     restart: unless-stopped
 
 networks:

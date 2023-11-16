@@ -15,28 +15,28 @@
   virtualisation.oci-containers.backend = "podman";
 
   # Containers
-  virtualisation.oci-containers.containers."myproject-alpine" = {
-    image = "docker.io/alpine:latest";
+  virtualisation.oci-containers.containers."myproject-sabnzbd" = {
+    image = "lscr.io/linuxserver/sabnzbd:latest";
     environment = {
       TZ = "America/New_York";
     };
     volumes = [
       "/mnt/media:/storage:rw"
-      "/var/volumes/alpine:/config:rw"
+      "/var/volumes/sabnzbd:/config:rw"
     ];
     log-driver = "journald";
     extraOptions = [
-      "--network-alias=alpine"
+      "--network-alias=sabnzbd"
       "--network=myproject-default"
     ];
   };
-  systemd.services."podman-myproject-alpine" = {
+  systemd.services."podman-myproject-sabnzbd" = {
     serviceConfig = {
       Restart = lib.mkOverride 500 "always";
       RuntimeMaxSec = lib.mkOverride 500 360;
     };
     unitConfig = {
-      Description = lib.mkOverride 500 "This is the alpine container!";
+      Description = lib.mkOverride 500 "This is the sabnzbd container!";
     };
     after = [
       "podman-network-myproject-default.service"

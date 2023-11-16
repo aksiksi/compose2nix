@@ -10,28 +10,28 @@
   virtualisation.oci-containers.backend = "docker";
 
   # Containers
-  virtualisation.oci-containers.containers."myproject-alpine" = {
-    image = "docker.io/alpine:latest";
+  virtualisation.oci-containers.containers."myproject-sabnzbd" = {
+    image = "lscr.io/linuxserver/sabnzbd:latest";
     environment = {
       TZ = "America/New_York";
     };
     volumes = [
-      "/var/volumes/alpine:/config:rw"
+      "/var/volumes/sabnzbd:/config:rw"
       "storage:/storage:rw"
     ];
     log-driver = "journald";
     extraOptions = [
-      "--network-alias=alpine"
+      "--network-alias=sabnzbd"
       "--network=myproject-default"
     ];
   };
-  systemd.services."docker-myproject-alpine" = {
+  systemd.services."docker-myproject-sabnzbd" = {
     serviceConfig = {
       Restart = lib.mkOverride 500 "always";
       RuntimeMaxSec = lib.mkOverride 500 360;
     };
     unitConfig = {
-      Description = lib.mkOverride 500 "This is the alpine container!";
+      Description = lib.mkOverride 500 "This is the sabnzbd container!";
     };
     after = [
       "docker-network-myproject-default.service"
