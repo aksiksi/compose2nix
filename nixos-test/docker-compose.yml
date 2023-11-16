@@ -1,0 +1,33 @@
+version: "3.7"
+name: "myproject"
+services:
+  alpine:
+    image: docker.io/alpine:latest
+    environment:
+      TZ: ${TIMEZONE}
+    volumes:
+      - /var/volumes/alpine:/config
+      - storage:/storage
+    labels:
+      - "compose2nix.systemd.service.RuntimeMaxSec=360"
+      - "compose2nix.systemd.unit.Description=This is the alpine container!"
+    restart: unless-stopped
+
+networks:
+  something:
+    labels:
+      - "test-label=okay"
+
+volumes:
+  storage:
+    name: storage
+    driver_opts:
+      type: none
+      device: /mnt/media
+      o: bind
+  books:
+    name: books
+    driver_opts:
+      type: none
+      device: /mnt/media/Books
+      o: bind

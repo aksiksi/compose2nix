@@ -1,6 +1,6 @@
 bin/
-docker-compose.yml
-docker-compose.nix
+/docker-compose.yml
+/docker-compose.nix
 out.nix*
 *.env
 result
