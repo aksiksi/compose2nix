@@ -48,6 +48,40 @@
       "docker-compose-myproject-root.target"
     ];
   };
+  virtualisation.oci-containers.containers."radarr" = {
+    image = "lscr.io/linuxserver/radarr:develop";
+    environment = {
+      TZ = "America/New_York";
+    };
+    volumes = [
+      "/var/volumes/radarr:/config:rw"
+      "storage:/storage:rw"
+    ];
+    log-driver = "journald";
+    extraOptions = [
+      "--network-alias=radarr"
+      "--network=myproject-default"
+    ];
+  };
+  systemd.services."docker-radarr" = {
+    serviceConfig = {
+      Restart = lib.mkOverride 500 "always";
+    };
+    after = [
+      "docker-network-myproject-default.service"
+      "docker-volume-storage.service"
+    ];
+    requires = [
+      "docker-network-myproject-default.service"
+      "docker-volume-storage.service"
+    ];
+    partOf = [
+      "docker-compose-myproject-root.target"
+    ];
+    wantedBy = [
+      "docker-compose-myproject-root.target"
+    ];
+  };
 
   # Networks
   systemd.services."docker-network-myproject-default" = {

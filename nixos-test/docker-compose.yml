@@ -12,6 +12,15 @@ services:
       - "compose2nix.systemd.service.RuntimeMaxSec=360"
       - "compose2nix.systemd.unit.Description=This is the sabnzbd container!"
     restart: unless-stopped
+  radarr:
+    image: lscr.io/linuxserver/radarr:develop
+    container_name: radarr
+    environment:
+      TZ: ${TIMEZONE}
+    volumes:
+      - /var/volumes/radarr:/config
+      - storage:/storage
+    restart: unless-stopped
 
 networks:
   something:

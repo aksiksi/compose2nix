@@ -1,7 +1,8 @@
 # compose2nix
 
+[![Test](https://github.com/aksiksi/compose2nix/actions/workflows/test.yml/badge.svg)](https://github.com/aksiksi/compose2nix/actions/workflows/test.yml)
+[![NixOS](https://github.com/aksiksi/compose2nix/actions/workflows/nixos.yml/badge.svg)](https://github.com/aksiksi/compose2nix/actions/workflows/nixos.yml)
 [![codecov](https://codecov.io/gh/aksiksi/compose2nix/graph/badge.svg)](https://codecov.io/gh/aksiksi/compose2nix)
-[![test](https://github.com/aksiksi/compose2nix/actions/workflows/test.yml/badge.svg)](https://github.com/aksiksi/compose2nix/actions/workflows/test.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/aksiksi/compose2nix.svg)](https://pkg.go.dev/github.com/aksiksi/compose2nix)
 
 A tool to automatically generate a NixOS config from a Docker Compose project.

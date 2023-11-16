@@ -51,6 +51,38 @@
       "podman-compose-myproject-root.target"
     ];
   };
+  virtualisation.oci-containers.containers."radarr" = {
+    image = "lscr.io/linuxserver/radarr:develop";
+    environment = {
+      TZ = "America/New_York";
+    };
+    volumes = [
+      "/mnt/media:/storage:rw"
+      "/var/volumes/radarr:/config:rw"
+    ];
+    log-driver = "journald";
+    extraOptions = [
+      "--network-alias=radarr"
+      "--network=myproject-default"
+    ];
+  };
+  systemd.services."podman-radarr" = {
+    serviceConfig = {
+      Restart = lib.mkOverride 500 "always";
+    };
+    after = [
+      "podman-network-myproject-default.service"
+    ];
+    requires = [
+      "podman-network-myproject-default.service"
+    ];
+    partOf = [
+      "podman-compose-myproject-root.target"
+    ];
+    wantedBy = [
+      "podman-compose-myproject-root.target"
+    ];
+  };
 
   # Networks
   systemd.services."podman-network-myproject-default" = {
