@@ -15,7 +15,9 @@
     forAllSystems = function: nixpkgs.lib.genAttrs supportedSystems (system: function nixpkgs.legacyPackages.${system});
     pname = "compose2nix";
     owner = "aksiksi";
+    # LINT.OnChange(version)
     version = "0.1.4";
+    # LINT.ThenChange(main.go:version, README.md:version)
   in {
     # Nix package
     packages = forAllSystems (pkgs: {

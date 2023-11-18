@@ -33,10 +33,12 @@ To top it all off, using Docker Compose on NixOS is fairly redundant as the feat
 
 Install the `compose2nix` CLI via one of the following methods:
 
+<!-- LINT.OnChange(version) -->
 1. Install the command using `go`:
     ```
     go install github.com/aksiksi/compose2nix@v0.1.4
     ```
+<!-- LINT.ThenChange(flake.nix:version, main.go:version) -->
 2. Clone this repo and run `make build`.
 3. Install the Flake and add the following to your NixOS config:
     ```nix
