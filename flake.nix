@@ -12,7 +12,8 @@
 
   outputs = { self, nixpkgs, ... }: let
     supportedSystems = [ "x86_64-linux" "x86_64-darwin" "aarch64-linux" "aarch64-darwin" ];
-    forAllSystems = function: nixpkgs.lib.genAttrs supportedSystems (system: function nixpkgs.legacyPackages.${system});
+    forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
+    pkgsFor = system: nixpkgs.legacyPackages.${system};
     pname = "compose2nix";
     owner = "aksiksi";
     # LINT.OnChange(version)
@@ -20,22 +21,29 @@
     # LINT.ThenChange(main.go:version, README.md:version)
   in {
     # Nix package
-    packages = forAllSystems (pkgs: {
-      # TODO(aksiksi): Pull from GitHub.
-      default = pkgs.buildGoModule {
-        inherit pname;
-        inherit version;
-        src = ./.;
-        vendorSha256 = "sha256-9D6qmTs2aw6oAQdHbmlWV2JnkIyBjKSd8XfW+rRJVM0=";
-      };
-    });
+    packages = forAllSystems (system:
+      let pkgs = pkgsFor system; in {
+        # TODO(aksiksi): Pull from GitHub.
+        default = pkgs.buildGoModule {
+          inherit pname;
+          inherit version;
+          src = ./.;
+          vendorSha256 = "sha256-9D6qmTs2aw6oAQdHbmlWV2JnkIyBjKSd8XfW+rRJVM0=";
+        };
+      }
+    );
 
     # Development shell
-    devShells = forAllSystems (pkgs: {
-      default = pkgs.mkShell {
-        buildInputs = [ pkgs.go pkgs.gopls ];
-      };
-    });
+    devShells = forAllSystems (system:
+      let pkgs = pkgsFor system; in {
+        default = pkgs.mkShell {
+          buildInputs = [ pkgs.go pkgs.gopls ];
+        };
+        shell = pkgs.mkShell {
+          buildInputs = [ self.packages.${system}.default ];
+        };
+      }
+    );
 
     # Run:
     # nix build .#checks.x86_64-linux.integrationTest
