@@ -39,13 +39,21 @@ Install the `compose2nix` CLI via one of the following methods:
     go install github.com/aksiksi/compose2nix@v0.1.5
     ```
 <!-- LINT.ThenChange(flake.nix:version, main.go:version) -->
-2. Clone this repo and run `make build`.
-3. Install the Flake and add the following to your NixOS config:
+2. Run the command in a Flake shell:
+    ```bash
+    nix develop github:aksiksi/compose2nix#shell
+    ```
+3. Run via `nix run`:
+    ```
+    nix run github:aksiksi/compose2nix
+    ```
+4. Install the Flake and add the following to your NixOS config:
     ```nix
     environment.systemPackages = with pkgs; [
       compose2nix.packages.x86_64-linux.default
     ];
     ```
+5. Clone this repo and run `make build`.
 
 Run `compose2nix`. Note that project must either be passed in **or** set in the Compose file's top-level "name".
 
