@@ -56,6 +56,7 @@ services:
       - "abc:93.184.216.34"
     depends_on:
       - sabnzbd
+    shm_size: 64m
     environment:
       TZ: ${TIMEZONE}
       PUID: ${PUID}

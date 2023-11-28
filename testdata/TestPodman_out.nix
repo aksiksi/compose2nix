@@ -192,6 +192,7 @@
       "--network-alias=transmission"
       "--network=myproject-something:alias=my-torrent-client"
       "--privileged"
+      "--shm-size=67108864"
       "--sysctl=net.ipv6.conf.all.disable_ipv6=0"
     ];
   };

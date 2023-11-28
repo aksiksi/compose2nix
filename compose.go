@@ -373,6 +373,10 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 		c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--sysctl=%s=%s", name, value))
 	}
 
+	if service.ShmSize != 0 {
+		c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--shm-size=%d", service.ShmSize))
+	}
+
 	// Compose defaults to "json-file", so we'll treat _any_ "json-file" setting as a default.
 	// Users can override this behavior via CLI.
 	//

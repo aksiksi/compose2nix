@@ -189,6 +189,7 @@ If a feature is missing, please feel free to [create an issue](https://github.co
 | [`privileged`](https://docs.docker.com/compose/compose-file/05-services/#privileged) | ✅ |
 | [`extra_hosts`](https://docs.docker.com/compose/compose-file/05-services/#extra_hosts) | ✅ |
 | [`sysctls`](https://docs.docker.com/compose/compose-file/05-services/#sysctls) | ✅ |
+| [`shm_size`](https://docs.docker.com/compose/compose-file/05-services/#shm_size) | ✅ |
 
 #### [`networks`](https://docs.docker.com/compose/compose-file/06-networks/)
 
