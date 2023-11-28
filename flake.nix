@@ -39,9 +39,6 @@
         default = pkgs.mkShell {
           buildInputs = [ pkgs.go pkgs.gopls ];
         };
-        shell = pkgs.mkShell {
-          buildInputs = [ self.packages.${system}.default ];
-        };
       }
     );
 
