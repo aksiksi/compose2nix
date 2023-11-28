@@ -144,6 +144,8 @@ Usage of compose2nix:
         only use env file(s) in the NixOS container definitions.
   -generate_unused_resources
         if set, unused resources (e.g., networks) will be generated even if no containers use them.
+  -include_env_files
+        include env files in the NixOS container definition.
   -inputs string
         one or more comma-separated path(s) to Compose file(s). (default "docker-compose.yml")
   -output string

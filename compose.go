@@ -53,9 +53,10 @@ type Generator struct {
 	Runtime                ContainerRuntime
 	Inputs                 []string
 	EnvFiles               []string
+	IncludeEnvFiles        bool
+	EnvFilesOnly           bool
 	ServiceInclude         *regexp.Regexp
 	AutoStart              bool
-	EnvFilesOnly           bool
 	UseComposeLogDriver    bool
 	GenerateUnusedResoures bool
 	SystemdProvider        SystemdProvider
@@ -229,10 +230,11 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 		LogDriver:     "journald", // This is the NixOS default
 	}
 
+	if g.IncludeEnvFiles {
+		c.EnvFiles = g.EnvFiles
+	}
 	if !g.EnvFilesOnly {
 		c.Environment = composeEnvironmentToMap(service.Environment)
-	} else {
-		c.EnvFiles = g.EnvFiles
 	}
 
 	for _, v := range service.Volumes {

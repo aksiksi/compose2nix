@@ -21,6 +21,7 @@ const (
 // TODO(aksiksi): Investigate parsing flags into structs using the *Val functions.
 var inputs = flag.String("inputs", "docker-compose.yml", "one or more comma-separated path(s) to Compose file(s).")
 var envFiles = flag.String("env_files", "", "one or more comma-separated paths to .env file(s).")
+var includeEnvFiles = flag.Bool("include_env_files", false, "include env files in the NixOS container definition.")
 var envFilesOnly = flag.Bool("env_files_only", false, "only use env file(s) in the NixOS container definitions.")
 var output = flag.String("output", "docker-compose.nix", "path to output Nix file.")
 var project = flag.String("project", "", "project name used as a prefix for generated resources. this overrides any top-level \"name\" set in the Compose file(s).")
@@ -75,6 +76,7 @@ func main() {
 		Runtime:                containerRuntime,
 		Inputs:                 inputs,
 		EnvFiles:               envFiles,
+		IncludeEnvFiles:        *includeEnvFiles,
 		EnvFilesOnly:           *envFilesOnly,
 		ServiceInclude:         serviceIncludeRegexp,
 		AutoStart:              *autoStart,
