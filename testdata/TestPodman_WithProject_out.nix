@@ -41,7 +41,6 @@
       "--log-opt=compress=true"
       "--log-opt=max-file=3"
       "--log-opt=max-size=10m"
-      "--network-alias=jellyseerr"
       "--network=container:myproject-sabnzbd"
     ];
   };
@@ -132,7 +131,6 @@
       "--log-opt=compress=true"
       "--log-opt=max-file=3"
       "--log-opt=max-size=10m"
-      "--network-alias=photoprism-mariadb"
       "--network=host"
     ];
   };
@@ -251,7 +249,6 @@
       "--log-opt=compress=true"
       "--log-opt=max-file=3"
       "--log-opt=max-size=10m"
-      "--network-alias=traefik"
       "--network=container:sabnzbd"
     ];
   };

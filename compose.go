@@ -252,18 +252,14 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 		}
 	}
 
-	// Allow other containers to use service name as an alias.
-	//
-	// In the case of Podman, this alias applies to all networks the container is a part of.
-	// Network-scoped aliases are handled below.
-	//
-	// See: https://docs.podman.io/en/latest/markdown/podman-run.1.html#network-alias-alias
-	c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--network-alias=%s", service.Name))
-
 	// https://docs.docker.com/network/#ip-address-and-hostname
 	if g.Runtime == ContainerRuntimeDocker && len(service.Networks) > 1 {
 		return nil, fmt.Errorf("only a single network is supported for each Docker service")
 	}
+
+	// If the container is connected to a network, it's counted as being in a bridge network.
+	// We need to know this to be able to determine if we can configure a network alias.
+	inBridgeNetwork := len(service.Networks) > 0
 
 	for name, net := range service.Networks {
 		networkName := g.Project.With(name)
@@ -305,6 +301,11 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 			c.ExtraOptions = append(c.ExtraOptions, "--network=none")
 		case networkMode == "host":
 			c.ExtraOptions = append(c.ExtraOptions, "--network=host")
+		// https://docs.podman.io/en/latest/markdown/podman-run.1.html#network-mode-net
+		case strings.HasPrefix(networkMode, "bridge") && g.Runtime == ContainerRuntimePodman:
+			// TODO(aksiksi): Can we even do anything for Docker?
+			c.ExtraOptions = append(c.ExtraOptions, "--network="+networkMode)
+			inBridgeNetwork = true
 		case strings.HasPrefix(networkMode, "service:"):
 			// Convert the Compose "service" network mode to a "container" network mode.
 			targetService := strings.Split(networkMode, ":")[1]
@@ -328,6 +329,16 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 		default:
 			return nil, fmt.Errorf("unsupported network_mode: %s", networkMode)
 		}
+	}
+
+	if inBridgeNetwork {
+		// Allow other containers to use service name as an alias.
+		//
+		// In the case of Podman, this alias applies to all networks the container is a part of.
+		// Network-scoped aliases are handled below.
+		//
+		// See: https://docs.podman.io/en/latest/markdown/podman-run.1.html#network-alias-alias
+		c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--network-alias=%s", service.Name))
 	}
 
 	for _, ip := range service.DNS {
