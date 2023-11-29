@@ -358,6 +358,12 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 	for _, device := range service.Devices {
 		c.ExtraOptions = append(c.ExtraOptions, "--device="+device)
 	}
+	if service.Runtime != "" {
+		c.ExtraOptions = append(c.ExtraOptions, "--runtime="+service.Runtime)
+	}
+	for _, opt := range service.SecurityOpt {
+		c.ExtraOptions = append(c.ExtraOptions, "--security-opt="+opt)
+	}
 
 	// https://docs.docker.com/compose/compose-file/05-services/#extra_hosts
 	// https://docs.docker.com/engine/reference/commandline/run/#add-host

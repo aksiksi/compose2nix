@@ -106,6 +106,20 @@ Note: if the Compose service has a `container_name` set, then the systemd servic
 sudo systemctl restart podman-myproject-myservice.service
 ```
 
+#### Update a Container
+
+1. Pull the latest image:
+
+```
+podman pull image
+```
+
+2. Restart the service:
+
+```
+sudo systemctl restart podman-myproject-myservice.service
+```
+
 #### `docker compose down`
 
 By default, this will only remove networks.
@@ -190,6 +204,8 @@ If a feature is missing, please feel free to [create an issue](https://github.co
 | [`extra_hosts`](https://docs.docker.com/compose/compose-file/05-services/#extra_hosts) | ✅ |
 | [`sysctls`](https://docs.docker.com/compose/compose-file/05-services/#sysctls) | ✅ |
 | [`shm_size`](https://docs.docker.com/compose/compose-file/05-services/#shm_size) | ✅ |
+| [`runtime`](https://docs.docker.com/compose/compose-file/05-services/#runtime) | ✅ |
+| [`security_opt`](https://docs.docker.com/compose/compose-file/05-services/#security_opt) | ✅ |
 
 #### [`networks`](https://docs.docker.com/compose/compose-file/06-networks/)
 
