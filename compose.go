@@ -228,7 +228,6 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 		Volumes:       make(map[string]string),
 		SystemdConfig: systemdConfig,
 		LogDriver:     "journald", // This is the NixOS default
-		Command:       service.Command,
 	}
 
 	if g.IncludeEnvFiles {
@@ -240,6 +239,10 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 
 	for _, v := range service.Volumes {
 		c.Volumes[v.Source] = v.String()
+	}
+
+	if !service.Command.IsZero() {
+		c.Command = service.Command
 	}
 
 	// Figure out explicit dependencies for this container.
