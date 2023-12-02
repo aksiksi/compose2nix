@@ -33,6 +33,10 @@ virtualisation.oci-containers.containers."{{.Name}}" = {
   ];
   {{- end}}
 
+  {{- if .Command}}
+  cmd = {{toNixList .Command}};
+  {{- end}}
+
   {{- if .Labels}}
   labels = {
     {{- range $k, $v := .Labels}}

@@ -18,6 +18,7 @@
       "/var/volumes/jellyseerr:/app/config:rw"
       "books:/books:rw"
     ];
+    cmd = [ "ls" "-la" "/" ];
     labels = {
       "traefik.enable" = "true";
       "traefik.http.routers.jellyseerr.middlewares" = "chain-authelia@file";

@@ -206,6 +206,7 @@ If a feature is missing, please feel free to [create an issue](https://github.co
 | [`shm_size`](https://docs.docker.com/compose/compose-file/05-services/#shm_size) | ✅ |
 | [`runtime`](https://docs.docker.com/compose/compose-file/05-services/#runtime) | ✅ |
 | [`security_opt`](https://docs.docker.com/compose/compose-file/05-services/#security_opt) | ✅ |
+| [`command`](https://docs.docker.com/compose/compose-file/05-services/#command) | ✅ |
 
 #### [`networks`](https://docs.docker.com/compose/compose-file/06-networks/)
 

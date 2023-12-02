@@ -34,10 +34,22 @@ func toNixValue(v any) any {
 	}
 }
 
+func toNixList(s []string) string {
+	b := strings.Builder{}
+	for i, e := range s {
+		b.WriteString(fmt.Sprintf("%q", e))
+		if i < len(s)-1 {
+			b.WriteString(" ")
+		}
+	}
+	return fmt.Sprintf("[ %s ]", b.String())
+}
+
 var funcMap template.FuncMap = template.FuncMap{
 	"derefInt":                derefInt,
 	"mapToKeyValArray":        mapToKeyValArray,
 	"mapToRepeatedFlag":       mapToRepeatedFlag,
 	"mapToRepeatedKeyValFlag": mapToRepeatedKeyValFlag,
 	"toNixValue":              toNixValue,
+	"toNixList":               toNixList,
 }

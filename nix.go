@@ -117,6 +117,7 @@ type NixContainer struct {
 	ExtraOptions  []string
 	SystemdConfig *NixContainerSystemdConfig
 	User          string
+	Command       []string
 }
 
 func (c *NixContainer) Unit() string {
