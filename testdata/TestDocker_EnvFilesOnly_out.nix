@@ -32,6 +32,7 @@
     autoStart = false;
     extraOptions = [
       "--dns=1.1.1.1"
+      "--health-cmd='curl -f http://localhost/\${POTATO}'"
       "--log-opt=compress=true"
       "--log-opt=max-file=3"
       "--log-opt=max-size=10m"
@@ -76,6 +77,7 @@
     log-driver = "journald";
     autoStart = false;
     extraOptions = [
+      "--health-cmd='curl -f http://localhost/'"
       "--log-opt=compress=true"
       "--log-opt=max-file=3"
       "--log-opt=max-size=10m"
@@ -119,6 +121,11 @@
     log-driver = "journald";
     autoStart = false;
     extraOptions = [
+      "--health-cmd='[\"curl\",\"-f\",\"http://localhost\"]'"
+      "--health-interval=1m30s"
+      "--health-retries=3"
+      "--health-start-period=40s"
+      "--health-timeout=10s"
       "--log-opt=compress=true"
       "--log-opt=max-file=3"
       "--log-opt=max-size=10m"
@@ -181,6 +188,7 @@
       "--network-alias=my-torrent-client"
       "--network-alias=transmission"
       "--network=myproject-something"
+      "--no-healthcheck"
       "--privileged"
       "--shm-size=67108864"
       "--sysctl=net.ipv6.conf.all.disable_ipv6=0"

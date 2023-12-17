@@ -27,6 +27,8 @@ services:
         max-size: 10m
         max-file: "3"
         compress: "true"
+    healthcheck:
+      test: "curl -f http://localhost/"
     restart: unless-stopped
   transmission:
     image: docker.io/haugene/transmission-openvpn
@@ -89,6 +91,8 @@ services:
       - "traefik.http.routers.transmission.tls.certresolver=htpc"
       - "traefik.http.routers.transmission.middlewares=chain-authelia@file"
       - "autoheal=true"
+    healthcheck:
+      disable: true
     # Restart 3 times on failure. This can happen when the VPN sub expires.
     restart: on-failure:3
   jellyseerr:
@@ -122,6 +126,9 @@ services:
         max-file: "3"
         compress: "true"
     command: ls -la /
+    healthcheck:
+      # Double-$ is used to escape Compose env variable evaluation.
+      test: ["CMD-SHELL", "curl -f http://localhost/$${POTATO}"]
     restart: unless-stopped
   photoprism-mariadb:
     image: docker.io/library/mariadb:10.9
@@ -149,6 +156,13 @@ services:
         max-size: 10m
         max-file: "3"
         compress: "true"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+      start_interval: 5s
     restart: unless-stopped
   traefik:
     container_name: traefik

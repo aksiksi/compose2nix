@@ -1,4 +1,4 @@
-# Auto-generated using compose2nix v0.1.5.
+# Auto-generated using compose2nix v0.1.6.
 { pkgs, lib, ... }:
 
 {

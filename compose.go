@@ -3,6 +3,7 @@ package main
 import (
 	"cmp"
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -204,6 +205,25 @@ func (g *Generator) postProcessContainers(containers []*NixContainer, volumes []
 	}
 
 	return nil
+}
+
+func healthCheckCommandToString(cmd []string) (string, error) {
+	if len(cmd) == 0 {
+		return "", fmt.Errorf("empty cmd")
+	}
+	switch cmd[0] {
+	case "NONE":
+		return "", fmt.Errorf("cmd starts with NONE")
+	case "CMD-SHELL":
+		return cmd[1], nil
+	case "CMD":
+		j, err := json.Marshal(cmd[1:])
+		if err != nil {
+			return "", fmt.Errorf("failed to convert %v to JSON: %w", cmd[1:], err)
+		}
+		return string(j), nil
+	}
+	panic("unreachable")
 }
 
 func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContainer, error) {
@@ -418,6 +438,50 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 	if !g.NoCreateRootTarget {
 		c.SystemdConfig.Unit.PartOf = append(c.SystemdConfig.Unit.PartOf, fmt.Sprintf("%s.target", rootTarget(g.Runtime, g.Project)))
 		c.SystemdConfig.Unit.WantedBy = append(c.SystemdConfig.Unit.WantedBy, fmt.Sprintf("%s.target", rootTarget(g.Runtime, g.Project)))
+	}
+
+	// Health check.
+	// https://docs.docker.com/compose/compose-file/05-services/#healthcheck
+	if healthCheck := service.HealthCheck; healthCheck != nil {
+		// Figure out if the Dockerfile health check is disabled.
+		disable := healthCheck.Disable || (len(healthCheck.Test) > 0 && healthCheck.Test[0] == "NONE")
+		if disable {
+			c.ExtraOptions = append(c.ExtraOptions, "--no-healthcheck")
+		} else {
+			if len(healthCheck.Test) > 0 {
+				cmd, err := healthCheckCommandToString(healthCheck.Test)
+				if err != nil {
+					return nil, fmt.Errorf("failed to convert healthcheck command: %w", err)
+				}
+
+				// We need to escape double-quotes for Nix.
+				//
+				// We also need to escape the special "${" sequence as it is possible that this is
+				// passed in to evaluate a Bash env variable as part of the command.
+				//
+				// See: https://nixos.org/manual/nix/stable/language/values
+				cmd = strings.ReplaceAll(cmd, `"`, `\"`)
+				cmd = strings.ReplaceAll(cmd, "${", `\${`)
+
+				c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--health-cmd='%s'", cmd))
+			}
+			if timeout := healthCheck.Timeout; timeout != nil {
+				c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--health-timeout=%v", *timeout))
+			}
+			if interval := healthCheck.Interval; interval != nil {
+				c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--health-interval=%v", *interval))
+			}
+			if retries := healthCheck.Retries; retries != nil {
+				c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--health-retries=%d", *retries))
+			}
+			if startPeriod := healthCheck.StartPeriod; startPeriod != nil {
+				c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--health-start-period=%v", *startPeriod))
+			}
+			// Not supported by Docker.
+			if startInterval := healthCheck.StartInterval; startInterval != nil && g.Runtime == ContainerRuntimePodman {
+				c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--health-start-interval=%v", *startInterval))
+			}
+		}
 	}
 
 	// Sort slices now that we're done processing the container.
