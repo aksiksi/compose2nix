@@ -116,6 +116,13 @@ systemd.services."{{.Runtime}}-{{.Name}}" = {
     {{- end}}
   ];
   {{- end}}
+  {{- if .SystemdConfig.Unit.UpheldBy}}
+  unitConfig.UpheldBy = [
+    {{- range .SystemdConfig.Unit.UpheldBy}}
+    "{{.}}"
+    {{- end}}
+  ];
+  {{- end}}
   {{- if .SystemdConfig.Unit.WantedBy}}
   wantedBy = [
     {{- range .SystemdConfig.Unit.WantedBy}}

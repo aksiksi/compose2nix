@@ -57,6 +57,9 @@
       "/var/volumes/radarr:/config:rw"
       "storage:/storage:rw"
     ];
+    dependsOn = [
+      "myproject-sabnzbd"
+    ];
     log-driver = "journald";
     extraOptions = [
       "--network-alias=radarr"
@@ -77,6 +80,9 @@
     ];
     partOf = [
       "docker-compose-myproject-root.target"
+    ];
+    unitConfig.UpheldBy = [
+      "docker-myproject-sabnzbd.service"
     ];
     wantedBy = [
       "docker-compose-myproject-root.target"

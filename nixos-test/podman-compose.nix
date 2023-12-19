@@ -60,6 +60,9 @@
       "/mnt/media:/storage:rw"
       "/var/volumes/radarr:/config:rw"
     ];
+    dependsOn = [
+      "myproject-sabnzbd"
+    ];
     log-driver = "journald";
     extraOptions = [
       "--network-alias=radarr"
@@ -78,6 +81,9 @@
     ];
     partOf = [
       "podman-compose-myproject-root.target"
+    ];
+    unitConfig.UpheldBy = [
+      "podman-myproject-sabnzbd.service"
     ];
     wantedBy = [
       "podman-compose-myproject-root.target"

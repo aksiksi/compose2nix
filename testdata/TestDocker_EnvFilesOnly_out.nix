@@ -55,6 +55,9 @@
     partOf = [
       "docker-compose-myproject-root.target"
     ];
+    unitConfig.UpheldBy = [
+      "docker-myproject-sabnzbd.service"
+    ];
     wantedBy = [
       "docker-compose-myproject-root.target"
     ];
@@ -211,6 +214,9 @@
     partOf = [
       "docker-compose-myproject-root.target"
     ];
+    unitConfig.UpheldBy = [
+      "docker-myproject-sabnzbd.service"
+    ];
     wantedBy = [
       "docker-compose-myproject-root.target"
     ];
@@ -259,6 +265,9 @@
     };
     partOf = [
       "docker-compose-myproject-root.target"
+    ];
+    unitConfig.UpheldBy = [
+      "docker-sabnzbd.service"
     ];
     wantedBy = [
       "docker-compose-myproject-root.target"

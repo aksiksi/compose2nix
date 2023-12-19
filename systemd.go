@@ -70,6 +70,7 @@ type UnitConfig struct {
 	After    []string
 	Requires []string
 	PartOf   []string
+	UpheldBy []string
 	WantedBy []string
 	// Map for generic options.
 	Options map[string]any
@@ -86,6 +87,8 @@ func (u *UnitConfig) Set(key string, value any) {
 		u.Requires = append(u.Requires, value.(string))
 	case "PartOf":
 		u.PartOf = append(u.PartOf, value.(string))
+	case "UpheldBy":
+		u.UpheldBy = append(u.UpheldBy, value.(string))
 	case "WantedBy":
 		u.WantedBy = append(u.WantedBy, value.(string))
 	default:

@@ -20,6 +20,8 @@ services:
     volumes:
       - /var/volumes/radarr:/config
       - storage:/storage
+    depends_on:
+      - sabnzbd
     restart: unless-stopped
 
 networks:

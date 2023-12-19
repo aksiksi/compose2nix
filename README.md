@@ -184,30 +184,31 @@ If a feature is missing, please feel free to [create an issue](https://github.co
 
 #### [`services`](https://docs.docker.com/compose/compose-file/05-services/)
 
-|   |     |
-|---|:---:|
-| [`image`](https://docs.docker.com/compose/compose-file/05-services/#image) | ✅ |
-| [`container_name`](https://docs.docker.com/compose/compose-file/05-services/#container_name) | ✅ |
-| [`environment`](https://docs.docker.com/compose/compose-file/05-services/#environment) | ✅ |
-| [`volumes`](https://docs.docker.com/compose/compose-file/05-services/#volumes) | ✅ |
-| [`labels`](https://docs.docker.com/compose/compose-file/05-services/#labels) | ✅ |
-| [`ports`](https://docs.docker.com/compose/compose-file/05-services/#ports) | ✅ |
-| [`dns`](https://docs.docker.com/compose/compose-file/05-services/#dns) | ✅ |
-| [`cap_add/cap_drop`](https://docs.docker.com/compose/compose-file/05-services/#cap_add) | ✅ |
-| [`logging`](https://docs.docker.com/compose/compose-file/05-services/#logging) | ✅ |
-| [`restart`](https://docs.docker.com/compose/compose-file/05-services/#restart) | ✅ |
-| [`deploy.restart_policy`](https://docs.docker.com/compose/compose-file/deploy/#restart_policy) | ✅ |
-| [`devices`](https://docs.docker.com/compose/compose-file/05-services/#devices) | ✅ |
-| [`networks.aliases`](https://docs.docker.com/compose/compose-file/05-services/#aliases) | ✅ |
-| [`network_mode`](https://docs.docker.com/compose/compose-file/05-services/#network_mode) | ✅ |
-| [`privileged`](https://docs.docker.com/compose/compose-file/05-services/#privileged) | ✅ |
-| [`extra_hosts`](https://docs.docker.com/compose/compose-file/05-services/#extra_hosts) | ✅ |
-| [`sysctls`](https://docs.docker.com/compose/compose-file/05-services/#sysctls) | ✅ |
-| [`shm_size`](https://docs.docker.com/compose/compose-file/05-services/#shm_size) | ✅ |
-| [`runtime`](https://docs.docker.com/compose/compose-file/05-services/#runtime) | ✅ |
-| [`security_opt`](https://docs.docker.com/compose/compose-file/05-services/#security_opt) | ✅ |
-| [`command`](https://docs.docker.com/compose/compose-file/05-services/#command) | ✅ |
-| [`healthcheck`](https://docs.docker.com/compose/compose-file/05-services/#healthcheck) | ✅ |
+|   |     | Notes |
+|---|:---:|-------|
+| [`image`](https://docs.docker.com/compose/compose-file/05-services/#image) | ✅ | |
+| [`container_name`](https://docs.docker.com/compose/compose-file/05-services/#container_name) | ✅ | |
+| [`environment`](https://docs.docker.com/compose/compose-file/05-services/#environment) | ✅ | |
+| [`volumes`](https://docs.docker.com/compose/compose-file/05-services/#volumes) | ✅ | |
+| [`labels`](https://docs.docker.com/compose/compose-file/05-services/#labels) | ✅ | |
+| [`ports`](https://docs.docker.com/compose/compose-file/05-services/#ports) | ✅ | |
+| [`dns`](https://docs.docker.com/compose/compose-file/05-services/#dns) | ✅ | |
+| [`cap_add/cap_drop`](https://docs.docker.com/compose/compose-file/05-services/#cap_add) | ✅ | |
+| [`logging`](https://docs.docker.com/compose/compose-file/05-services/#logging) | ✅ | |
+| [`depends_on`](https://docs.docker.com/compose/compose-file/05-services/#depends_on) | ⚠️ | Only short syntax is supported. |
+| [`restart`](https://docs.docker.com/compose/compose-file/05-services/#restart) | ✅ | |
+| [`deploy.restart_policy`](https://docs.docker.com/compose/compose-file/deploy/#restart_policy) | ✅ | |
+| [`devices`](https://docs.docker.com/compose/compose-file/05-services/#devices) | ✅ | |
+| [`networks.aliases`](https://docs.docker.com/compose/compose-file/05-services/#aliases) | ✅ | |
+| [`network_mode`](https://docs.docker.com/compose/compose-file/05-services/#network_mode) | ✅ | |
+| [`privileged`](https://docs.docker.com/compose/compose-file/05-services/#privileged) | ✅ | |
+| [`extra_hosts`](https://docs.docker.com/compose/compose-file/05-services/#extra_hosts) | ✅ | |
+| [`sysctls`](https://docs.docker.com/compose/compose-file/05-services/#sysctls) | ✅ | |
+| [`shm_size`](https://docs.docker.com/compose/compose-file/05-services/#shm_size) | ✅ | |
+| [`runtime`](https://docs.docker.com/compose/compose-file/05-services/#runtime) | ✅ | |
+| [`security_opt`](https://docs.docker.com/compose/compose-file/05-services/#security_opt) | ✅ | |
+| [`command`](https://docs.docker.com/compose/compose-file/05-services/#command) | ✅ | |
+| [`healthcheck`](https://docs.docker.com/compose/compose-file/05-services/#healthcheck) | ✅ | |
 
 #### [`networks`](https://docs.docker.com/compose/compose-file/06-networks/)
 
