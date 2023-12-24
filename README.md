@@ -71,8 +71,7 @@ By default, the tool looks for `docker-compose.yml` in the **current directory**
 
 - [x] Basic implementation
 - [x] Support for most common Docker Compose features
-- [ ] Support for using secret environment files
-- [ ] ???
+- [x] Support for using secret environment files
 
 ## Docs
 
@@ -81,6 +80,23 @@ By default, the tool looks for `docker-compose.yml` in the **current directory**
 * Input: https://github.com/aksiksi/compose2nix/blob/main/testdata/docker-compose.yml
 * Output (Docker): https://github.com/aksiksi/compose2nix/blob/main/testdata/TestDocker_out.nix
 * Output (Podman): https://github.com/aksiksi/compose2nix/blob/main/testdata/TestPodman_out.nix
+
+### Working with Secrets
+
+#### [agenix](https://github.com/ryantm/agenix)
+
+`agenix` works by decrypting secrets and placing them in `/run/agenix/`. To feed this into your Nix config:
+
+1. Place all secret env variables in the encrypted env file (e.g., `my-env-file.env`).
+2. Mark the decrypted env file as readable by the user running `compose2nix`.
+3. Run `compose2nix` with the env file path(s) and set `-include_env_files=true`:
+
+   ```
+   compose2nix --env_files=/run/agenix/my-env-file.env --include_env_files=true
+   ```
+
+> [!NOTE]
+> If you also want to ensure that you only include env files in the output Nix config, set `-env_files_only=true`.
 
 ### Patterns
 
@@ -108,10 +124,10 @@ sudo systemctl restart podman-myproject-myservice.service
 
 #### Update a Container
 
-1. Pull the latest image:
+1. Pull the latest image for the container (requires [`jq`](https://jqlang.github.io/jq/)):
 
 ```
-podman pull image
+sudo podman pull $(sudo podman inspect myproject-myservice | jq -r .[0].ImageName)
 ```
 
 2. Restart the service:
@@ -130,10 +146,10 @@ sudo systemctl stop podman-compose-myservice-root.target
 
 ##### Remove volumes
 
-Either:
+You can do one of the following:
 
 1. Re-generate your NixOS config with: `-remove_volumes=true`
-2. Run `sudo podman volume prune`
+2. Run `sudo podman volume prune` to manually cleanup unreferenced volumes
 
 #### `docker compose up`
 
