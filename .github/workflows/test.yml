@@ -35,4 +35,4 @@ jobs:
         github_access_token: ${{ secrets.GITHUB_TOKEN }}
         nix_path: nixpkgs=channel:nixos-unstable
     - uses: DeterminateSystems/magic-nix-cache-action@main
-    - run: nix build -L .#packages.x86_64-linux.default
+    - run: make flake
