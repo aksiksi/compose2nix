@@ -225,6 +225,7 @@ If a feature is missing, please feel free to [create an issue](https://github.co
 | [`security_opt`](https://docs.docker.com/compose/compose-file/05-services/#security_opt) | ✅ | |
 | [`command`](https://docs.docker.com/compose/compose-file/05-services/#command) | ✅ | |
 | [`healthcheck`](https://docs.docker.com/compose/compose-file/05-services/#healthcheck) | ✅ | |
+| [`hostname`](https://docs.docker.com/compose/compose-file/05-services/#hostname) | ✅ | |
 
 #### [`networks`](https://docs.docker.com/compose/compose-file/06-networks/)
 
