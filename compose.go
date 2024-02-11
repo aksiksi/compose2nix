@@ -399,6 +399,10 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 		c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--add-host=%s:%s", hostname, ip))
 	}
 
+	if service.Hostname != "" {
+		c.ExtraOptions = append(c.ExtraOptions, "--hostname="+service.Hostname)
+	}
+
 	// https://docs.docker.com/compose/compose-file/05-services/#sysctls
 	// https://docs.docker.com/engine/reference/commandline/run/#sysctl
 	// https://docs.podman.io/en/latest/markdown/podman-run.1.html#sysctl-name-value

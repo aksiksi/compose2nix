@@ -3,6 +3,7 @@ name: "myproject"
 services:
   sabnzbd:
     image: lscr.io/linuxserver/sabnzbd
+    hostname: sabnzbd
     environment:
       PUID: ${PUID}
       PGID: ${PGID}
