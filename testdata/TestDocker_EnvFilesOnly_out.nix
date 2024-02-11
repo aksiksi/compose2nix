@@ -81,6 +81,7 @@
     autoStart = false;
     extraOptions = [
       "--health-cmd='curl -f http://localhost/'"
+      "--hostname=sabnzbd"
       "--log-opt=compress=true"
       "--log-opt=max-file=3"
       "--log-opt=max-size=10m"
