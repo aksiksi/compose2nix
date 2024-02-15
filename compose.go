@@ -56,6 +56,7 @@ type Generator struct {
 	EnvFiles               []string
 	IncludeEnvFiles        bool
 	EnvFilesOnly           bool
+	IgnoreMissingEnvFiles  bool
 	ServiceInclude         *regexp.Regexp
 	AutoStart              bool
 	UseComposeLogDriver    bool
@@ -70,7 +71,7 @@ type Generator struct {
 }
 
 func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
-	env, err := ReadEnvFiles(g.EnvFiles, !g.EnvFilesOnly)
+	env, err := ReadEnvFiles(g.EnvFiles, !g.EnvFilesOnly, g.IgnoreMissingEnvFiles)
 	if err != nil {
 		return nil, err
 	}

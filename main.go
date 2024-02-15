@@ -23,6 +23,7 @@ var inputs = flag.String("inputs", "docker-compose.yml", "one or more comma-sepa
 var envFiles = flag.String("env_files", "", "one or more comma-separated paths to .env file(s).")
 var includeEnvFiles = flag.Bool("include_env_files", false, "include env files in the NixOS container definition.")
 var envFilesOnly = flag.Bool("env_files_only", false, "only use env file(s) in the NixOS container definitions.")
+var ignoreMissingEnvFiles = flag.Bool("ignore_missing_env_files", false, "if set, missing env files will be ignored.")
 var output = flag.String("output", "docker-compose.nix", "path to output Nix file.")
 var project = flag.String("project", "", "project name used as a prefix for generated resources. this overrides any top-level \"name\" set in the Compose file(s).")
 var serviceInclude = flag.String("service_include", "", "regex pattern for services to include.")
@@ -78,6 +79,7 @@ func main() {
 		EnvFiles:               envFiles,
 		IncludeEnvFiles:        *includeEnvFiles,
 		EnvFilesOnly:           *envFilesOnly,
+		IgnoreMissingEnvFiles:  *ignoreMissingEnvFiles,
 		ServiceInclude:         serviceIncludeRegexp,
 		AutoStart:              *autoStart,
 		UseComposeLogDriver:    *useComposeLogDriver,

@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 	"slices"
 	"strings"
@@ -35,13 +36,24 @@ func mapToRepeatedFlag(flagName string, m map[string]string) []string {
 	return flags
 }
 
-func ReadEnvFiles(envFiles []string, mergeWithEnv bool) (env []string, _ error) {
+// ReadEnvFiles reads the given set of env files into a list of KEY=VAL entries.
+//
+// If mergeWithEnv is set, the running env is merged with the provided env files. Any
+// duplicate variables will be overridden by the running env.
+//
+// If ignoreMissing is set, any missing env files will be ignored. This is useful for cases
+// where an env file is not available during conversion to Nix.
+func ReadEnvFiles(envFiles []string, mergeWithEnv, ignoreMissing bool) (env []string, _ error) {
 	for _, p := range envFiles {
 		if strings.TrimSpace(p) == "" {
 			continue
 		}
 		f, err := os.Open(p)
 		if err != nil {
+			if ignoreMissing {
+				log.Printf("Ignoring mising env file %s...", p)
+				continue
+			}
 			return nil, fmt.Errorf("failed to open file %s: %w", p, err)
 		}
 		defer f.Close()
