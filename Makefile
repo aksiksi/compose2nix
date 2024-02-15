@@ -4,6 +4,9 @@ build:
 test:
 	go test -v
 
+coverage:
+	go test -v -covermode=count
+
 flake:
 	nix build -L .#packages.x86_64-linux.default
 
@@ -13,4 +16,4 @@ nixos-test:
 	./nixos-test/update.sh
 	nix build -L .#checks.x86_64-linux.integrationTest
 
-.PHONY: build flake nixos-test test
+.PHONY: build coverage flake nixos-test test
