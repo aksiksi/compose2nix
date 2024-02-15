@@ -174,6 +174,8 @@ Usage of compose2nix:
         only use env file(s) in the NixOS container definitions.
   -generate_unused_resources
         if set, unused resources (e.g., networks) will be generated even if no containers use them.
+  -ignore_missing_env_files
+        if set, missing env files will be ignored.
   -include_env_files
         include env files in the NixOS container definition.
   -inputs string
