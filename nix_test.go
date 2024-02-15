@@ -299,3 +299,19 @@ func TestDocker_EnvFilesOnly(t *testing.T) {
 		t.Errorf("output diff: %s\n", diff)
 	}
 }
+
+func TestDocker_IgnoreMissingEnvFiles(t *testing.T) {
+	ctx := context.Background()
+	composePath, envFilePath, _ := getPaths(t)
+	g := Generator{
+		Runtime:               ContainerRuntimeDocker,
+		Inputs:                []string{composePath},
+		EnvFiles:              []string{path.Join(t.TempDir(), "bad-path"), envFilePath},
+		IncludeEnvFiles:       true,
+		EnvFilesOnly:          true,
+		IgnoreMissingEnvFiles: true,
+	}
+	if _, err := g.Run(ctx); err != nil {
+		t.Fatal(err)
+	}
+}
