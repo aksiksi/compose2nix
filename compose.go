@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/compose-spec/compose-go/loader"
 	"github.com/compose-spec/compose-go/types"
@@ -66,6 +67,7 @@ type Generator struct {
 	RemoveVolumes          bool
 	NoCreateRootTarget     bool
 	WriteHeader            bool
+	DefaultStopTimeout     time.Duration
 
 	serviceToContainerName map[string]string
 }
@@ -230,15 +232,6 @@ func healthCheckCommandToString(cmd []string) (string, error) {
 func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContainer, error) {
 	name := g.serviceToContainerName[service.Name]
 
-	systemdConfig := NewNixContainerSystemdConfig()
-	if err := systemdConfig.ParseRestartPolicy(&service); err != nil {
-		return nil, err
-	}
-	// Restart configs provided via labels will always override Compose restart settings.
-	if err := systemdConfig.ParseSystemdLabels(&service); err != nil {
-		return nil, err
-	}
-
 	c := &NixContainer{
 		Runtime:       g.Runtime,
 		Name:          name,
@@ -247,7 +240,7 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 		Ports:         portConfigsToPortStrings(service.Ports),
 		User:          service.User,
 		Volumes:       make(map[string]string),
-		SystemdConfig: systemdConfig,
+		SystemdConfig: NewNixContainerSystemdConfig(),
 		LogDriver:     "journald", // This is the NixOS default
 	}
 
@@ -481,6 +474,21 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 		}
 	}
 
+	// Restart policy.
+	if err := c.SystemdConfig.ParseRestartPolicy(&service); err != nil {
+		return nil, err
+	}
+
+	// Override systemd stop timeout to match Docker/Podman default of 10 seconds.
+	// https://docs.podman.io/en/latest/markdown/podman-stop.1.html
+	//
+	// Users can always override this by setting per-service Compose labels, or by passing in a CLI
+	// flag.
+	if g.DefaultStopTimeout == 0 {
+		g.DefaultStopTimeout = defaultSystemdStopTimeout
+	}
+	c.SystemdConfig.Service.Set("TimeoutStopSec", int(g.DefaultStopTimeout.Seconds()))
+
 	// Sort slices now that we're done processing the container.
 	slices.Sort(c.DependsOn)
 	slices.Sort(c.ExtraOptions)
@@ -508,6 +516,11 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 	// See: https://github.com/NixOS/nixpkgs/blob/nixos-23.05/pkgs/os-specific/linux/systemd/default.nix#L148.
 	for _, containerName := range c.DependsOn {
 		c.SystemdConfig.Unit.UpheldBy = append(c.SystemdConfig.Unit.UpheldBy, fmt.Sprintf("%s-%s.service", g.Runtime, containerName))
+	}
+
+	// systemd configs provided via labels always override everything else.
+	if err := c.SystemdConfig.ParseSystemdLabels(&service); err != nil {
+		return nil, err
 	}
 
 	return c, nil
