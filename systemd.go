@@ -15,7 +15,8 @@ import (
 )
 
 const (
-	composeLabelPrefix = "compose2nix"
+	composeLabelPrefix        = "compose2nix"
+	defaultSystemdStopTimeout = 10 * time.Second
 )
 
 var (
