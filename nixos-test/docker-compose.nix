@@ -1,4 +1,4 @@
-# Auto-generated using compose2nix v0.1.6.
+# Auto-generated using compose2nix v0.1.7.
 { pkgs, lib, ... }:
 
 {
@@ -29,6 +29,7 @@
     serviceConfig = {
       Restart = lib.mkOverride 500 "always";
       RuntimeMaxSec = lib.mkOverride 500 360;
+      TimeoutStopSec = lib.mkOverride 500 10;
     };
     unitConfig = {
       Description = lib.mkOverride 500 "This is the sabnzbd container!";
@@ -69,6 +70,7 @@
   systemd.services."docker-radarr" = {
     serviceConfig = {
       Restart = lib.mkOverride 500 "always";
+      TimeoutStopSec = lib.mkOverride 500 10;
     };
     after = [
       "docker-network-myproject-default.service"
