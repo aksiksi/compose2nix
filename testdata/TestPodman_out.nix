@@ -49,7 +49,6 @@
     serviceConfig = {
       Restart = lib.mkOverride 500 "on-failure";
       RestartSec = lib.mkOverride 500 "5s";
-      TimeoutStopSec = lib.mkOverride 500 10;
     };
     startLimitBurst = 3;
     startLimitIntervalSec = 120;
@@ -99,7 +98,6 @@
     serviceConfig = {
       Restart = lib.mkOverride 500 "always";
       RuntimeMaxSec = lib.mkOverride 500 10;
-      TimeoutStopSec = lib.mkOverride 500 10;
     };
     unitConfig = {
       Description = lib.mkOverride 500 "This is the sabnzbd container!";
@@ -150,7 +148,6 @@
     serviceConfig = {
       Restart = lib.mkOverride 500 "always";
       RestartSec = lib.mkOverride 500 "3m0s";
-      TimeoutStopSec = lib.mkOverride 500 10;
     };
     startLimitBurst = 10;
     startLimitIntervalSec = 86400;
@@ -216,7 +213,6 @@
   systemd.services."podman-torrent-client" = {
     serviceConfig = {
       Restart = lib.mkOverride 500 "on-failure";
-      TimeoutStopSec = lib.mkOverride 500 10;
     };
     startLimitBurst = 3;
     startLimitIntervalSec = 86400;
@@ -274,7 +270,6 @@
   systemd.services."podman-traefik" = {
     serviceConfig = {
       Restart = lib.mkOverride 500 "none";
-      TimeoutStopSec = lib.mkOverride 500 10;
     };
     unitConfig = {
       AllowIsolate = lib.mkOverride 500 true;
