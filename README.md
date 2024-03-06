@@ -168,6 +168,8 @@ Usage of compose2nix:
         if set, volume paths will be checked against systemd mount paths on the current machine and marked as container dependencies.
   -create_root_target
         if set, a root systemd target will be created, which when stopped tears down all resources. (default true)
+  -default_stop_timeout duration
+        default stop timeout for generated container services. (default 1m30s)
   -env_files string
         one or more comma-separated paths to .env file(s).
   -env_files_only

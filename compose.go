@@ -487,7 +487,10 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 	if g.DefaultStopTimeout == 0 {
 		g.DefaultStopTimeout = defaultSystemdStopTimeout
 	}
-	c.SystemdConfig.Service.Set("TimeoutStopSec", int(g.DefaultStopTimeout.Seconds()))
+	if g.DefaultStopTimeout != defaultSystemdStopTimeout {
+		// We only set a timeout if it's not the same as the systemd default.
+		c.SystemdConfig.Service.Set("TimeoutStopSec", int(g.DefaultStopTimeout.Seconds()))
+	}
 
 	// Sort slices now that we're done processing the container.
 	slices.Sort(c.DependsOn)

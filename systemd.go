@@ -15,8 +15,10 @@ import (
 )
 
 const (
-	composeLabelPrefix        = "compose2nix"
-	defaultSystemdStopTimeout = 10 * time.Second
+	composeLabelPrefix = "compose2nix"
+
+	// https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html#DefaultTimeoutStartSec=
+	defaultSystemdStopTimeout = 90 * time.Second
 )
 
 var (
