@@ -9,6 +9,7 @@ services:
       - /var/volumes/sabnzbd:/config
       - storage:/storage
     labels:
+      - 'compose2nix.systemd.service.Restart="no"'
       - "compose2nix.systemd.service.RuntimeMaxSec=360"
       - "compose2nix.systemd.unit.Description=This is the sabnzbd container!"
     restart: unless-stopped
@@ -20,6 +21,9 @@ services:
     volumes:
       - /var/volumes/radarr:/config
       - storage:/storage
+    labels:
+      - 'compose2nix.systemd.unit.AllowIsolate=no'
+      - "compose2nix.systemd.service.RuntimeMaxSec=360"
     depends_on:
       - sabnzbd
     restart: unless-stopped

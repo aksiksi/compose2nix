@@ -184,7 +184,7 @@ services:
       - "traefik.http.routers.traefik.service=api@internal"
       - "traefik.http.routers.traefik.tls.certresolver=htpc"
       - "traefik.http.routers.traefik.middlewares=chain-authelia@file"
-      - "compose2nix.systemd.service.Restart=none"
+      - "compose2nix.systemd.service.Restart='no'"
       - "compose2nix.systemd.unit.AllowIsolate=true"
     network_mode: "container:sabnzbd"
     runtime: nvidia
