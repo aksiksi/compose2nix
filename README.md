@@ -139,10 +139,10 @@ sudo systemctl restart podman-myproject-myservice.service
 #### **Podman**: Auto-update containers
 
 1. Add a `io.containers.autoupdate=registry` label to each Compose service you want to have auto-updated.
-    * Make sure to use a **fully-qualified** image path (e.g., `docker.io/image`). Otherwise, Podman will fail to start the container.
-2. **Manual**: Run `sudo podman auto-update --dry-run` to see what would get updated.
-3. On every service restart, Podman will automatically check for updates, and pull them if applicable.
-4. You can also enable a Podman-provided timer that runs once per day at midnight (by default): `sudo systemctl enable podman-auto-update.timer`.
+    * Make sure to use a **fully-qualified** image path (e.g., `docker.io/repo/image`). Otherwise, Podman will fail to start the container.
+2. Run `sudo podman auto-update --dry-run` to see which containers would get updated. Omit `--dry-run` to update & restart services.
+
+You can optionally enable a Podman-provided timer that runs the command above once per day at midnight (by default): `sudo systemctl enable podman-auto-update.timer`.
 
 See this page for details: https://docs.podman.io/en/latest/markdown/podman-auto-update.1.html
 
