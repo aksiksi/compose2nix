@@ -142,7 +142,12 @@ sudo systemctl restart podman-myproject-myservice.service
     * Make sure to use a **fully-qualified** image path (e.g., `docker.io/repo/image`). Otherwise, Podman will fail to start the container.
 2. Run `sudo podman auto-update --dry-run` to see which containers would get updated. Omit `--dry-run` to update & restart services.
 
-You can optionally enable a Podman-provided timer that runs the command above once per day at midnight (by default): `sudo systemctl enable podman-auto-update.timer`.
+You can optionally enable a Podman-provided timer that runs the command above once per day at midnight (by default):
+
+```nix
+# Enable the existing timer unit.
+systemd.timers."podman-auto-update".wantedBy = [ "timers.target" ];
+```
 
 See this page for details: https://docs.podman.io/en/latest/markdown/podman-auto-update.1.html
 
