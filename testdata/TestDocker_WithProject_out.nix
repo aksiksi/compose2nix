@@ -44,7 +44,9 @@
   systemd.services."docker-jellyseerr" = {
     serviceConfig = {
       Restart = lib.mkOverride 500 "on-failure";
-      RestartSec = lib.mkOverride 500 "5s";
+      RestartMaxDelaySec = lib.mkOverride 500 "1m";
+      RestartSec = lib.mkOverride 500 "100ms";
+      RestartSteps = lib.mkOverride 500 9;
     };
     startLimitBurst = 3;
     startLimitIntervalSec = 120;
@@ -100,8 +102,12 @@
   systemd.services."docker-myproject-sabnzbd" = {
     serviceConfig = {
       Restart = lib.mkOverride 500 "always";
+      RestartMaxDelaySec = lib.mkOverride 500 "1m";
+      RestartSec = lib.mkOverride 500 "100ms";
+      RestartSteps = lib.mkOverride 500 9;
       RuntimeMaxSec = lib.mkOverride 500 10;
     };
+    startLimitIntervalSec = 0;
     unitConfig = {
       Description = lib.mkOverride 500 "This is the sabnzbd container!";
     };
@@ -152,7 +158,9 @@
   systemd.services."docker-photoprism-mariadb" = {
     serviceConfig = {
       Restart = lib.mkOverride 500 "always";
-      RestartSec = lib.mkOverride 500 "3m0s";
+      RestartMaxDelaySec = lib.mkOverride 500 "1m";
+      RestartSec = lib.mkOverride 500 "100ms";
+      RestartSteps = lib.mkOverride 500 9;
     };
     startLimitBurst = 10;
     startLimitIntervalSec = 86400;
@@ -285,8 +293,12 @@
   };
   systemd.services."docker-traefik" = {
     serviceConfig = {
-      Restart = lib.mkOverride 500 "none";
+      Restart = lib.mkOverride 500 "no";
+      RestartMaxDelaySec = lib.mkOverride 500 "1m";
+      RestartSec = lib.mkOverride 500 "100ms";
+      RestartSteps = lib.mkOverride 500 9;
     };
+    startLimitIntervalSec = 0;
     unitConfig = {
       AllowIsolate = lib.mkOverride 500 true;
     };
