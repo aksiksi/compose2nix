@@ -32,9 +32,10 @@
   };
   systemd.services."podman-myproject-sabnzbd" = {
     serviceConfig = {
-      Restart = lib.mkOverride 500 "always";
+      Restart = lib.mkOverride 500 "no";
       RuntimeMaxSec = lib.mkOverride 500 360;
     };
+    startLimitIntervalSec = 0;
     unitConfig = {
       Description = lib.mkOverride 500 "This is the sabnzbd container!";
     };
@@ -72,6 +73,11 @@
   systemd.services."podman-radarr" = {
     serviceConfig = {
       Restart = lib.mkOverride 500 "always";
+      RuntimeMaxSec = lib.mkOverride 500 360;
+    };
+    startLimitIntervalSec = 0;
+    unitConfig = {
+      AllowIsolate = lib.mkOverride 500 false;
     };
     after = [
       "podman-network-myproject-default.service"

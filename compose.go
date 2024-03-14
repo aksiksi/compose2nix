@@ -475,7 +475,7 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 	}
 
 	// Restart policy.
-	if err := c.SystemdConfig.ParseRestartPolicy(&service); err != nil {
+	if err := c.SystemdConfig.ParseRestartPolicy(&service, g.Runtime); err != nil {
 		return nil, err
 	}
 

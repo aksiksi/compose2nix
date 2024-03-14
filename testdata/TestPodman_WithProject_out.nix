@@ -101,6 +101,7 @@
       Restart = lib.mkOverride 500 "always";
       RuntimeMaxSec = lib.mkOverride 500 10;
     };
+    startLimitIntervalSec = 0;
     unitConfig = {
       Description = lib.mkOverride 500 "This is the sabnzbd container!";
     };
@@ -274,8 +275,9 @@
   };
   systemd.services."podman-traefik" = {
     serviceConfig = {
-      Restart = lib.mkOverride 500 "none";
+      Restart = lib.mkOverride 500 "no";
     };
+    startLimitIntervalSec = 0;
     unitConfig = {
       AllowIsolate = lib.mkOverride 500 true;
     };
