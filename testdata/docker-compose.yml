@@ -120,6 +120,13 @@ services:
         delay: 5s
         max_attempts: 3
         window: 120s
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 1000M
+        reservations:
+          cpus: "1.0"
+          memory: 500M
     logging:
       driver: "json-file"
       options:

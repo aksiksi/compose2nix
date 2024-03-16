@@ -21,6 +21,7 @@
     ];
     log-driver = "journald";
     extraOptions = [
+      "--cpus=1.0"
       "--network-alias=sabnzbd"
       "--network=myproject-default"
     ];

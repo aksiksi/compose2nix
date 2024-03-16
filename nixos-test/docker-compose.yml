@@ -8,6 +8,10 @@ services:
     volumes:
       - /var/volumes/sabnzbd:/config
       - storage:/storage
+    deploy:
+      resources:
+        reservations:
+          cpus: "1.0"
     labels:
       - 'compose2nix.systemd.service.Restart="no"'
       - "compose2nix.systemd.service.RuntimeMaxSec=360"

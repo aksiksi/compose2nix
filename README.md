@@ -233,6 +233,7 @@ If a feature is missing, please feel free to [create an issue](https://github.co
 | [`depends_on`](https://docs.docker.com/compose/compose-file/05-services/#depends_on) | ⚠️ | Only short syntax is supported. |
 | [`restart`](https://docs.docker.com/compose/compose-file/05-services/#restart) | ✅ | |
 | [`deploy.restart_policy`](https://docs.docker.com/compose/compose-file/deploy/#restart_policy) | ✅ | |
+| [`deploy.resources`](https://docs.docker.com/compose/compose-file/deploy/#resources) | ✅ | |
 | [`devices`](https://docs.docker.com/compose/compose-file/05-services/#devices) | ✅ | |
 | [`networks.aliases`](https://docs.docker.com/compose/compose-file/05-services/#aliases) | ✅ | |
 | [`network_mode`](https://docs.docker.com/compose/compose-file/05-services/#network_mode) | ✅ | |

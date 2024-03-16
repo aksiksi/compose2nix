@@ -462,6 +462,29 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 		}
 	}
 
+	// Deploy resources configuration.
+	// https://docs.docker.com/compose/compose-file/deploy/#resources
+	if deploy := service.Deploy; deploy != nil {
+		if limits := deploy.Resources.Limits; limits != nil {
+			if limits.MemoryBytes != 0 {
+				c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--memory=%db", limits.MemoryBytes))
+			}
+			// Name is misleading - this actually is the exact number passed in with "cpus".
+			if limits.NanoCPUs != "" {
+				c.ExtraOptions = append(c.ExtraOptions, "--cpu-quota="+limits.NanoCPUs)
+			}
+		}
+		if reservations := deploy.Resources.Reservations; reservations != nil {
+			if reservations.MemoryBytes != 0 {
+				c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--memory-reservation=%db", reservations.MemoryBytes))
+			}
+			// Name is misleading - this actually is the exact number passed in with "cpus".
+			if reservations.NanoCPUs != "" {
+				c.ExtraOptions = append(c.ExtraOptions, "--cpus="+reservations.NanoCPUs)
+			}
+		}
+	}
+
 	// Restart policy.
 	if err := c.SystemdConfig.ParseRestartPolicy(&service, g.Runtime); err != nil {
 		return nil, err
