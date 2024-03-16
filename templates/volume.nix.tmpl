@@ -9,6 +9,13 @@ systemd.services."{{.Runtime}}-volume-{{.Name}}" = {
     ExecStop = "${pkgs.{{.Runtime}}}/bin/{{.Runtime}} volume rm -f {{.Name}}";
     {{- end}}
   };
+  {{- if .RequiresMountsFor}}
+  unitConfig.RequiresMountsFor = [
+    {{- range .RequiresMountsFor}}
+    "{{.}}"
+    {{- end}}
+  ];
+  {{- end}}
   script = ''
     {{- if eq .Driver ""}}
     {{.Runtime}} volume inspect {{.Name}} || {{.Runtime}} volume create {{.Name}}{{- if $driverOpts}} {{$driverOpts}}{{- end}}{{- if $labels}} {{ $labels | join " "}}{{- end}}

@@ -68,7 +68,6 @@
       "docker-compose-myproject-root.target"
     ];
     unitConfig.RequiresMountsFor = [
-      "/mnt/media/Books"
       "/var/volumes/jellyseerr"
     ];
   };
@@ -131,7 +130,6 @@
       "docker-compose-myproject-root.target"
     ];
     unitConfig.RequiresMountsFor = [
-      "/mnt/media"
       "/var/volumes/sabnzbd"
     ];
   };
@@ -188,7 +186,6 @@
       "docker-compose-myproject-root.target"
     ];
     unitConfig.RequiresMountsFor = [
-      "/mnt/photos"
       "/var/volumes/photoprism-mariadb"
     ];
   };
@@ -273,7 +270,6 @@
     ];
     unitConfig.RequiresMountsFor = [
       "/etc/localtime"
-      "/mnt/media"
       "/var/volumes/transmission/config"
       "/var/volumes/transmission/scripts"
     ];
@@ -374,6 +370,9 @@
       Type = "oneshot";
       RemainAfterExit = true;
     };
+    unitConfig.RequiresMountsFor = [
+      "/mnt/media/Books"
+    ];
     script = ''
       docker volume inspect books || docker volume create books --opt=device=/mnt/media/Books --opt=o=bind --opt=type=none
     '';
@@ -386,6 +385,9 @@
       Type = "oneshot";
       RemainAfterExit = true;
     };
+    unitConfig.RequiresMountsFor = [
+      "/mnt/photos"
+    ];
     script = ''
       docker volume inspect photos || docker volume create photos --opt=device=/mnt/photos --opt=o=bind --opt=type=none --label=test-label=okay
     '';
@@ -398,6 +400,9 @@
       Type = "oneshot";
       RemainAfterExit = true;
     };
+    unitConfig.RequiresMountsFor = [
+      "/mnt/media"
+    ];
     script = ''
       docker volume inspect storage || docker volume create storage --opt=device=/mnt/media --opt=o=bind --opt=type=none
     '';

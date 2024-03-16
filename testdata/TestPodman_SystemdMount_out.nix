@@ -71,7 +71,6 @@
       "podman-compose-myproject-root.target"
     ];
     unitConfig.RequiresMountsFor = [
-      "/mnt/media/Books"
       "/var/volumes/jellyseerr"
     ];
   };
@@ -131,7 +130,6 @@
       "podman-compose-myproject-root.target"
     ];
     unitConfig.RequiresMountsFor = [
-      "/mnt/media"
       "/var/volumes/sabnzbd"
     ];
   };
@@ -187,7 +185,6 @@
       "podman-compose-myproject-root.target"
     ];
     unitConfig.RequiresMountsFor = [
-      "/mnt/photos"
       "/var/volumes/photoprism-mariadb"
     ];
   };
@@ -271,7 +268,6 @@
     ];
     unitConfig.RequiresMountsFor = [
       "/etc/localtime"
-      "/mnt/media"
       "/var/volumes/transmission/config"
       "/var/volumes/transmission/scripts"
     ];
@@ -369,6 +365,9 @@
       Type = "oneshot";
       RemainAfterExit = true;
     };
+    unitConfig.RequiresMountsFor = [
+      "/mnt/media/Books"
+    ];
     script = ''
       podman volume inspect books || podman volume create books --opt=device=/mnt/media/Books --opt=o=bind --opt=type=none
     '';
@@ -381,6 +380,9 @@
       Type = "oneshot";
       RemainAfterExit = true;
     };
+    unitConfig.RequiresMountsFor = [
+      "/mnt/photos"
+    ];
     script = ''
       podman volume inspect photos || podman volume create photos --opt=device=/mnt/photos --opt=o=bind --opt=type=none --label=test-label=okay
     '';
@@ -393,6 +395,9 @@
       Type = "oneshot";
       RemainAfterExit = true;
     };
+    unitConfig.RequiresMountsFor = [
+      "/mnt/media"
+    ];
     script = ''
       podman volume inspect storage || podman volume create storage --opt=device=/mnt/media --opt=o=bind --opt=type=none
     '';
