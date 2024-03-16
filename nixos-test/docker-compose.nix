@@ -1,4 +1,4 @@
-# Auto-generated using compose2nix v0.1.7.
+# Auto-generated using compose2nix v0.1.8.
 { pkgs, lib, ... }:
 
 {
@@ -35,7 +35,6 @@
     };
     unitConfig = {
       Description = lib.mkOverride 500 "This is the sabnzbd container!";
-      StartLimitIntervalSec = lib.mkOverride 500 0;
     };
     after = [
       "docker-network-myproject-default.service"

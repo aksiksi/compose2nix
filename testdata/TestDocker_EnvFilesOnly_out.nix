@@ -103,7 +103,6 @@
     };
     unitConfig = {
       Description = lib.mkOverride 500 "This is the sabnzbd container!";
-      StartLimitIntervalSec = lib.mkOverride 500 0;
     };
     after = [
       "docker-network-myproject-default.service"
@@ -280,7 +279,6 @@
     };
     unitConfig = {
       AllowIsolate = lib.mkOverride 500 true;
-      StartLimitIntervalSec = lib.mkOverride 500 0;
     };
     partOf = [
       "docker-compose-myproject-root.target"
