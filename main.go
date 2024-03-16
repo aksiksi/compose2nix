@@ -35,6 +35,7 @@ var checkSystemdMounts = flag.Bool("check_systemd_mounts", false, "if set, volum
 var removeVolumes = flag.Bool("remove_volumes", false, "if set, volumes will be removed on systemd service stop.")
 var createRootTarget = flag.Bool("create_root_target", true, "if set, a root systemd target will be created, which when stopped tears down all resources.")
 var defaultStopTimeout = flag.Duration("default_stop_timeout", defaultSystemdStopTimeout, "default stop timeout for generated container services.")
+var writeNixSetup = flag.Bool("write_nix_setup", true, "if true, Nix setup code is written to output (runtime, DNS, autoprune, etc.)")
 var version = flag.Bool("version", false, "display version and exit")
 
 func main() {
@@ -90,6 +91,7 @@ func main() {
 		RemoveVolumes:          *removeVolumes,
 		NoCreateRootTarget:     !*createRootTarget,
 		WriteHeader:            true,
+		NoWriteNixSetup:        !*writeNixSetup,
 		DefaultStopTimeout:     *defaultStopTimeout,
 	}
 	containerConfig, err := g.Run(ctx)

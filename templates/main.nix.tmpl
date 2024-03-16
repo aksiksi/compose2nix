@@ -6,6 +6,7 @@
 {{- end}}
 
 {
+  {{- if .WriteNixSetup}}
   # Runtime
   virtualisation.{{.Runtime}} = {
     enable = true;
@@ -19,6 +20,7 @@
     {{- end}}
   };
   virtualisation.oci-containers.backend = "{{.Runtime}}";
+  {{- end}}
 
   {{- if .Containers}}
 

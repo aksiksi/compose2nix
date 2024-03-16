@@ -131,6 +131,7 @@ type NixContainerConfig struct {
 	Networks         []*NixNetwork
 	Volumes          []*NixVolume
 	CreateRootTarget bool
+	WriteNixSetup    bool
 	AutoStart        bool
 }
 
