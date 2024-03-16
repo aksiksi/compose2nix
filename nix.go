@@ -90,8 +90,7 @@ type NixContainerSystemdConfig struct {
 	// NixOS treats these differently, probably to fix the rename issue in
 	// earlier systemd versions.
 	// See: https://unix.stackexchange.com/a/464098
-	StartLimitBurst       *int
-	StartLimitIntervalSec *int
+	StartLimitBurst *int
 }
 
 func NewNixContainerSystemdConfig() *NixContainerSystemdConfig {

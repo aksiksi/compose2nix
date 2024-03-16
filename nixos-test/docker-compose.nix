@@ -33,9 +33,9 @@
       RestartSteps = lib.mkOverride 500 9;
       RuntimeMaxSec = lib.mkOverride 500 360;
     };
-    startLimitIntervalSec = 0;
     unitConfig = {
       Description = lib.mkOverride 500 "This is the sabnzbd container!";
+      StartLimitIntervalSec = lib.mkOverride 500 0;
     };
     after = [
       "docker-network-myproject-default.service"
@@ -72,15 +72,13 @@
   };
   systemd.services."docker-radarr" = {
     serviceConfig = {
-      Restart = lib.mkOverride 500 "always";
-      RestartMaxDelaySec = lib.mkOverride 500 "1m";
-      RestartSec = lib.mkOverride 500 "100ms";
-      RestartSteps = lib.mkOverride 500 9;
+      Restart = lib.mkOverride 500 "on-failure";
       RuntimeMaxSec = lib.mkOverride 500 360;
     };
-    startLimitIntervalSec = 0;
+    startLimitBurst = 3;
     unitConfig = {
       AllowIsolate = lib.mkOverride 500 false;
+      StartLimitIntervalSec = lib.mkOverride 500 "infinity";
     };
     after = [
       "docker-network-myproject-default.service"
