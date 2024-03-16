@@ -84,9 +84,6 @@ systemd.services."{{.Runtime}}-{{.Name}}" = {
   {{- if .SystemdConfig.StartLimitBurst}}
   startLimitBurst = {{derefInt .SystemdConfig.StartLimitBurst}};
   {{- end}}
-  {{- if .SystemdConfig.StartLimitIntervalSec}}
-  startLimitIntervalSec = {{derefInt .SystemdConfig.StartLimitIntervalSec}};
-  {{- end}}
   {{- if .SystemdConfig.Unit}}
   {{- if .SystemdConfig.Unit.Options}}
   unitConfig = {

@@ -51,7 +51,9 @@
       RestartSec = lib.mkOverride 500 "5s";
     };
     startLimitBurst = 3;
-    startLimitIntervalSec = 120;
+    unitConfig = {
+      StartLimitIntervalSec = lib.mkOverride 500 120;
+    };
     partOf = [
       "podman-compose-myproject-root.target"
     ];
@@ -99,9 +101,9 @@
       Restart = lib.mkOverride 500 "always";
       RuntimeMaxSec = lib.mkOverride 500 10;
     };
-    startLimitIntervalSec = 0;
     unitConfig = {
       Description = lib.mkOverride 500 "This is the sabnzbd container!";
+      StartLimitIntervalSec = lib.mkOverride 500 0;
     };
     after = [
       "podman-network-myproject-default.service"
@@ -151,7 +153,9 @@
       RestartSec = lib.mkOverride 500 "3m0s";
     };
     startLimitBurst = 10;
-    startLimitIntervalSec = 86400;
+    unitConfig = {
+      StartLimitIntervalSec = lib.mkOverride 500 "infinity";
+    };
     partOf = [
       "podman-compose-myproject-root.target"
     ];
@@ -216,7 +220,9 @@
       Restart = lib.mkOverride 500 "on-failure";
     };
     startLimitBurst = 3;
-    startLimitIntervalSec = 86400;
+    unitConfig = {
+      StartLimitIntervalSec = lib.mkOverride 500 "infinity";
+    };
     after = [
       "podman-network-myproject-something.service"
     ];
@@ -272,9 +278,9 @@
     serviceConfig = {
       Restart = lib.mkOverride 500 "no";
     };
-    startLimitIntervalSec = 0;
     unitConfig = {
       AllowIsolate = lib.mkOverride 500 true;
+      StartLimitIntervalSec = lib.mkOverride 500 0;
     };
     partOf = [
       "podman-compose-myproject-root.target"

@@ -49,7 +49,9 @@
       RestartSteps = lib.mkOverride 500 9;
     };
     startLimitBurst = 3;
-    startLimitIntervalSec = 120;
+    unitConfig = {
+      StartLimitIntervalSec = lib.mkOverride 500 120;
+    };
     after = [
       "docker-volume-books.service"
       "mnt-media.mount"
@@ -109,9 +111,9 @@
       RestartSteps = lib.mkOverride 500 9;
       RuntimeMaxSec = lib.mkOverride 500 10;
     };
-    startLimitIntervalSec = 0;
     unitConfig = {
       Description = lib.mkOverride 500 "This is the sabnzbd container!";
+      StartLimitIntervalSec = lib.mkOverride 500 0;
     };
     after = [
       "docker-network-myproject-default.service"
@@ -167,7 +169,9 @@
       RestartSteps = lib.mkOverride 500 9;
     };
     startLimitBurst = 10;
-    startLimitIntervalSec = 86400;
+    unitConfig = {
+      StartLimitIntervalSec = lib.mkOverride 500 "infinity";
+    };
     after = [
       "docker-volume-photos.service"
       "mnt-photos.mount"
@@ -242,7 +246,9 @@
       Restart = lib.mkOverride 500 "on-failure";
     };
     startLimitBurst = 3;
-    startLimitIntervalSec = 86400;
+    unitConfig = {
+      StartLimitIntervalSec = lib.mkOverride 500 "infinity";
+    };
     after = [
       "docker-network-myproject-something.service"
       "docker-volume-storage.service"
@@ -306,9 +312,9 @@
       RestartSec = lib.mkOverride 500 "100ms";
       RestartSteps = lib.mkOverride 500 9;
     };
-    startLimitIntervalSec = 0;
     unitConfig = {
       AllowIsolate = lib.mkOverride 500 true;
+      StartLimitIntervalSec = lib.mkOverride 500 0;
     };
     partOf = [
       "docker-compose-myproject-root.target"

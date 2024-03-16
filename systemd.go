@@ -22,8 +22,6 @@ const (
 )
 
 var (
-	defaultStartLimitIntervalSec = int((24 * time.Hour).Seconds())
-
 	// We purposefully do not support 0/1 for false/true.
 	systemdTrue  = []string{"true", "yes", "on"}
 	systemdFalse = []string{"false", "no", "off"}
@@ -165,8 +163,7 @@ func (c *NixContainerSystemdConfig) ParseRestartPolicy(service *types.ServiceCon
 			}
 			burst := int(maxAttempts)
 			c.StartLimitBurst = &burst
-			// Retry limit resets once per day to simulate "giving up" in systemd.
-			c.StartLimitIntervalSec = &defaultStartLimitIntervalSec
+			c.Unit.Set("StartLimitIntervalSec", "infinity")
 		} else {
 			return fmt.Errorf("unsupported restart: %q", restart)
 		}
@@ -200,21 +197,19 @@ func (c *NixContainerSystemdConfig) ParseRestartPolicy(service *types.ServiceCon
 		if window := deploy.RestartPolicy.Window; window != nil {
 			// TODO(aksiksi): Investigate if StartLimitIntervalSec lines up with Compose's "window".
 			windowSecs := int(time.Duration(*window).Seconds())
-			c.StartLimitIntervalSec = &windowSecs
+			c.Unit.Set("StartLimitIntervalSec", windowSecs)
 		} else if c.StartLimitBurst != nil {
-			// Retry limit resets once per day to simulate "giving up" in systemd.
-			c.StartLimitIntervalSec = &defaultStartLimitIntervalSec
+			c.Unit.Set("StartLimitIntervalSec", "infinity")
 		} else {
-			// Defaults to zero (i.e., indefinite).
-			s := 0
-			c.StartLimitIntervalSec = &s
+			// Defaults to zero (i.e., indefinite retry attempts).
+			c.Unit.Set("StartLimitIntervalSec", 0)
 		}
 	}
 
 	if indefiniteRestart {
-		if c.StartLimitIntervalSec == nil {
-			s := 0
-			c.StartLimitIntervalSec = &s
+		if _, ok := c.Unit.Options["StartLimitIntervalSec"]; !ok {
+			// Defaults to zero (i.e., indefinite retry attempts).
+			c.Unit.Set("StartLimitIntervalSec", 0)
 		}
 		if runtime == ContainerRuntimeDocker {
 			// This simulates the default behavior of Docker. Basically, Docker will restart
