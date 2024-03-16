@@ -200,26 +200,17 @@ func (c *NixContainerSystemdConfig) ParseRestartPolicy(service *types.ServiceCon
 			c.Unit.Set("StartLimitIntervalSec", windowSecs)
 		} else if c.StartLimitBurst != nil {
 			c.Unit.Set("StartLimitIntervalSec", "infinity")
-		} else {
-			// Defaults to zero (i.e., indefinite retry attempts).
-			c.Unit.Set("StartLimitIntervalSec", 0)
 		}
 	}
 
-	if indefiniteRestart {
-		if _, ok := c.Unit.Options["StartLimitIntervalSec"]; !ok {
-			// Defaults to zero (i.e., indefinite retry attempts).
-			c.Unit.Set("StartLimitIntervalSec", 0)
-		}
-		if runtime == ContainerRuntimeDocker {
-			// This simulates the default behavior of Docker. Basically, Docker will restart
-			// the container with a sleep period of 100ms. This sleep period is doubled until a
-			// maximum of 1 minute.
-			// See: https://docs.docker.com/reference/cli/docker/container/run/#restart
-			c.Service.Set("RestartSec", "100ms")
-			c.Service.Set("RestartSteps", 9) // 2^(9 attempts) = 512 (* 100ms) ~= 1 minute
-			c.Service.Set("RestartMaxDelaySec", "1m")
-		}
+	if indefiniteRestart && runtime == ContainerRuntimeDocker {
+		// This simulates the default behavior of Docker. Basically, Docker will restart
+		// the container with a sleep period of 100ms. This sleep period is doubled until a
+		// maximum of 1 minute.
+		// See: https://docs.docker.com/reference/cli/docker/container/run/#restart
+		c.Service.Set("RestartSec", "100ms")
+		c.Service.Set("RestartSteps", 9) // 2^(9 attempts) = 512 (* 100ms) ~= 1 minute
+		c.Service.Set("RestartMaxDelaySec", "1m")
 	}
 
 	return nil
