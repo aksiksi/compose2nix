@@ -343,3 +343,30 @@ func TestDocker_OverrideSystemdStopTimeout(t *testing.T) {
 		t.Errorf("output diff: %s\n", diff)
 	}
 }
+
+func TestDocker_NoWriteNixSetup(t *testing.T) {
+	ctx := context.Background()
+	composePath, envFilePath, outFilePath := getPaths(t)
+	g := Generator{
+		Runtime:         ContainerRuntimeDocker,
+		Inputs:          []string{composePath},
+		EnvFiles:        []string{envFilePath},
+		NoWriteNixSetup: true,
+	}
+	c, err := g.Run(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantOutput, err := os.ReadFile(outFilePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, want := c.String(), string(wantOutput)
+	if *update {
+		if err := os.WriteFile(outFilePath, []byte(got), 0644); err != nil {
+			t.Fatal(err)
+		}
+	} else if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("output diff: %s\n", diff)
+	}
+}
