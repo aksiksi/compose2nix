@@ -171,23 +171,22 @@ func (g *Generator) postProcessContainers(containers []*NixContainer, volumes []
 			c.SystemdConfig.Unit.Requires = append(c.SystemdConfig.Unit.Requires, g.volumeNameToService(v.Name))
 		}
 
-		// Add dependencies on systemd mounts for volumes used by this container, if any.
+		// Add dependencies on systemd mounts for bind mounts used by this container, if any.
 		if g.CheckSystemdMounts {
-			for name := range c.Volumes {
-				var path string
+			for path := range c.Volumes {
 				// Check to see if this is a named volume.
+				isBindMount := true
 				for _, v := range volumes {
-					if v.Name == name {
-						path = v.Path()
+					if v.Name == path {
+						isBindMount = false
 						break
 					}
 				}
-				if path == "" {
-					// This is a bind mount.
-					path = name
+				if !isBindMount {
+					continue
 				}
 				if !strings.HasPrefix(path, "/") {
-					log.Printf("Volume path %q is not absolute; skipping systemd mount dependency for service %q", path, serviceName)
+					log.Printf("Bind mount path %q is not absolute; skipping systemd mount dependency for service %q", path, serviceName)
 					continue
 				}
 				c.SystemdConfig.Unit.RequiresMountsFor = append(c.SystemdConfig.Unit.RequiresMountsFor, path)
@@ -602,5 +601,17 @@ func (g *Generator) buildNixVolumes(composeProject *types.Project, containers []
 	slices.SortFunc(volumes, func(n1, n2 *NixVolume) int {
 		return cmp.Compare(n1.Name, n2.Name)
 	})
+
+	if g.CheckSystemdMounts {
+		for name, volume := range volumes {
+			path := volume.Path()
+			if !strings.HasPrefix(path, "/") {
+				log.Printf("Volume path %q is not absolute; skipping systemd mount dependency for volume %q", path, name)
+				continue
+			}
+			volume.RequiresMountsFor = append(volume.RequiresMountsFor, path)
+		}
+	}
+
 	return volumes
 }

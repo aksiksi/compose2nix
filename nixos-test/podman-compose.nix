@@ -53,7 +53,6 @@
       "podman-compose-myproject-root.target"
     ];
     unitConfig.RequiresMountsFor = [
-      "/mnt/media"
       "/var/volumes/sabnzbd"
     ];
   };
@@ -103,7 +102,6 @@
       "podman-compose-myproject-root.target"
     ];
     unitConfig.RequiresMountsFor = [
-      "/mnt/media"
       "/var/volumes/radarr"
     ];
   };
@@ -130,6 +128,9 @@
       Type = "oneshot";
       RemainAfterExit = true;
     };
+    unitConfig.RequiresMountsFor = [
+      "/mnt/media"
+    ];
     script = ''
       podman volume inspect storage || podman volume create storage --opt=device=/mnt/media --opt=o=bind --opt=type=none
     '';

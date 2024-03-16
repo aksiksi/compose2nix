@@ -62,12 +62,13 @@ func (n *NixNetwork) Unit() string {
 }
 
 type NixVolume struct {
-	Runtime      ContainerRuntime
-	Name         string
-	Driver       string
-	DriverOpts   map[string]string
-	Labels       map[string]string
-	RemoveOnStop bool
+	Runtime           ContainerRuntime
+	Name              string
+	Driver            string
+	DriverOpts        map[string]string
+	Labels            map[string]string
+	RemoveOnStop      bool
+	RequiresMountsFor []string
 }
 
 func (v *NixVolume) Path() string {

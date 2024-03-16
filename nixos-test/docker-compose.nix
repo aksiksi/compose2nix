@@ -51,7 +51,6 @@
       "docker-compose-myproject-root.target"
     ];
     unitConfig.RequiresMountsFor = [
-      "/mnt/media"
       "/var/volumes/sabnzbd"
     ];
   };
@@ -101,7 +100,6 @@
       "docker-compose-myproject-root.target"
     ];
     unitConfig.RequiresMountsFor = [
-      "/mnt/media"
       "/var/volumes/radarr"
     ];
   };
@@ -128,6 +126,9 @@
       Type = "oneshot";
       RemainAfterExit = true;
     };
+    unitConfig.RequiresMountsFor = [
+      "/mnt/media"
+    ];
     script = ''
       docker volume inspect storage || docker volume create storage --opt=device=/mnt/media --opt=o=bind --opt=type=none
     '';
