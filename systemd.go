@@ -1,10 +1,7 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"os/exec"
 	"regexp"
 	"slices"
 	"strconv"
@@ -72,11 +69,12 @@ func (s *ServiceConfig) Set(key string, value any) {
 
 // TODO(aksiksi): Add support for repeated keys.
 type UnitConfig struct {
-	After    []string
-	Requires []string
-	PartOf   []string
-	UpheldBy []string
-	WantedBy []string
+	After             []string
+	Requires          []string
+	PartOf            []string
+	UpheldBy          []string
+	WantedBy          []string
+	RequiresMountsFor []string
 	// Map for generic options.
 	Options map[string]any
 }
@@ -96,45 +94,11 @@ func (u *UnitConfig) Set(key string, value any) {
 		u.UpheldBy = append(u.UpheldBy, value.(string))
 	case "WantedBy":
 		u.WantedBy = append(u.WantedBy, value.(string))
+	case "RequiresMountsFor":
+		u.RequiresMountsFor = append(u.RequiresMountsFor, value.(string))
 	default:
 		u.Options[key] = value
 	}
-}
-
-type SystemdUnit struct {
-	Unit        string `json:"unit"`
-	Active      string `json:"active"`
-	Description string `json:"description"`
-}
-
-type SystemdProvider interface {
-	FindMountForPath(path string) (string, error)
-}
-
-type SystemdCLI struct{}
-
-func (s *SystemdCLI) FindMountForPath(path string) (string, error) {
-	cmd := exec.Command("systemctl", "list-units", "--type=mount", "--output=json")
-	output, err := cmd.Output()
-	if err != nil {
-		return "", fmt.Errorf(`failed to run "systemctl list-units": %w`, err)
-	}
-	dec := json.NewDecoder(bytes.NewReader(output))
-	units := []SystemdUnit{}
-	if err := dec.Decode(&units); err != nil {
-		return "", fmt.Errorf("failed to decode systemctl command output: %w", err)
-	}
-	for _, u := range units {
-		if u.Active != "active" {
-			continue
-		}
-		// If the systemd mount path is a prefix of the given path, our path belongs to
-		// this mount.
-		if strings.HasPrefix(path, u.Description) {
-			return u.Unit, nil
-		}
-	}
-	return "", nil
 }
 
 func (c *NixContainerSystemdConfig) ParseRestartPolicy(service *types.ServiceConfig, runtime ContainerRuntime) error {

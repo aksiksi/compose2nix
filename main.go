@@ -86,7 +86,6 @@ func main() {
 		AutoStart:              *autoStart,
 		UseComposeLogDriver:    *useComposeLogDriver,
 		GenerateUnusedResoures: *generateUnusedResources,
-		SystemdProvider:        &SystemdCLI{},
 		CheckSystemdMounts:     *checkSystemdMounts,
 		RemoveVolumes:          *removeVolumes,
 		NoCreateRootTarget:     !*createRootTarget,

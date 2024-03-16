@@ -50,6 +50,10 @@
     wantedBy = [
       "podman-compose-myproject-root.target"
     ];
+    unitConfig.RequiresMountsFor = [
+      "/mnt/media"
+      "/var/volumes/sabnzbd"
+    ];
   };
   virtualisation.oci-containers.containers."radarr" = {
     image = "lscr.io/linuxserver/radarr:develop";
@@ -93,6 +97,10 @@
     ];
     wantedBy = [
       "podman-compose-myproject-root.target"
+    ];
+    unitConfig.RequiresMountsFor = [
+      "/mnt/media"
+      "/var/volumes/radarr"
     ];
   };
 

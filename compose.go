@@ -62,7 +62,6 @@ type Generator struct {
 	AutoStart              bool
 	UseComposeLogDriver    bool
 	GenerateUnusedResoures bool
-	SystemdProvider        SystemdProvider
 	CheckSystemdMounts     bool
 	RemoveVolumes          bool
 	NoCreateRootTarget     bool
@@ -174,9 +173,6 @@ func (g *Generator) postProcessContainers(containers []*NixContainer, volumes []
 
 		// Add dependencies on systemd mounts for volumes used by this container, if any.
 		if g.CheckSystemdMounts {
-			if g.SystemdProvider == nil {
-				return fmt.Errorf("no systemd provider specified")
-			}
 			for name := range c.Volumes {
 				var path string
 				// Check to see if this is a named volume.
@@ -194,18 +190,9 @@ func (g *Generator) postProcessContainers(containers []*NixContainer, volumes []
 					log.Printf("Volume path %q is not absolute; skipping systemd mount dependency for service %q", path, serviceName)
 					continue
 				}
-				unit, err := g.SystemdProvider.FindMountForPath(path)
-				if err != nil {
-					return err
-				}
-				if unit == "" {
-					// No unit exists for this path.
-					continue
-				} else if !slices.Contains(c.SystemdConfig.Unit.Requires, unit) {
-					c.SystemdConfig.Unit.After = append(c.SystemdConfig.Unit.After, unit)
-					c.SystemdConfig.Unit.Requires = append(c.SystemdConfig.Unit.Requires, unit)
-				}
+				c.SystemdConfig.Unit.RequiresMountsFor = append(c.SystemdConfig.Unit.RequiresMountsFor, path)
 			}
+			slices.Sort(c.SystemdConfig.Unit.RequiresMountsFor)
 		}
 	}
 

@@ -15,19 +15,6 @@ import (
 
 var update = flag.Bool("update", false, "update golden files")
 
-type fakeSystemd struct {
-	PathToMount map[string]string
-}
-
-func (s *fakeSystemd) FindMountForPath(path string) (string, error) {
-	for p, m := range s.PathToMount {
-		if strings.HasPrefix(path, p) {
-			return m, nil
-		}
-	}
-	return "", nil
-}
-
 func getPaths(t *testing.T) (string, string, string) {
 	outFileName := fmt.Sprintf("%s_out.nix", t.Name())
 	composePath := path.Join("testdata", "docker-compose.yml")
@@ -215,17 +202,37 @@ func TestUnusedResources(t *testing.T) {
 func TestDocker_SystemdMount(t *testing.T) {
 	ctx := context.Background()
 	composePath, envFilePath, outFilePath := getPaths(t)
-	fakeSystemd := &fakeSystemd{
-		PathToMount: map[string]string{
-			"/mnt/media":  "mnt-media.mount",
-			"/mnt/photos": "mnt-photos.mount",
-		},
-	}
 	g := Generator{
 		Runtime:            ContainerRuntimeDocker,
 		Inputs:             []string{composePath},
 		EnvFiles:           []string{envFilePath},
-		SystemdProvider:    fakeSystemd,
+		CheckSystemdMounts: true,
+	}
+	c, err := g.Run(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantOutput, err := os.ReadFile(outFilePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, want := c.String(), string(wantOutput)
+	if *update {
+		if err := os.WriteFile(outFilePath, []byte(got), 0644); err != nil {
+			t.Fatal(err)
+		}
+	} else if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("output diff: %s\n", diff)
+	}
+}
+
+func TestPodman_SystemdMount(t *testing.T) {
+	ctx := context.Background()
+	composePath, envFilePath, outFilePath := getPaths(t)
+	g := Generator{
+		Runtime:            ContainerRuntimePodman,
+		Inputs:             []string{composePath},
+		EnvFiles:           []string{envFilePath},
 		CheckSystemdMounts: true,
 	}
 	c, err := g.Run(ctx)
