@@ -22,8 +22,8 @@
       TZ = "America/New_York";
     };
     volumes = [
-      "/mnt/media/Books:/books:rw"
       "/var/volumes/jellyseerr:/app/config:rw"
+      "books:/books:rw"
     ];
     cmd = [ "ls" "-la" "/" ];
     labels = {
@@ -55,6 +55,12 @@
     unitConfig = {
       StartLimitIntervalSec = lib.mkOverride 500 120;
     };
+    after = [
+      "podman-volume-books.service"
+    ];
+    requires = [
+      "podman-volume-books.service"
+    ];
     partOf = [
       "podman-compose-myproject-root.target"
     ];
@@ -77,8 +83,8 @@
       TZ = "America/New_York";
     };
     volumes = [
-      "/mnt/media:/storage:rw"
       "/var/volumes/sabnzbd:/config:rw"
+      "storage:/storage:rw"
     ];
     labels = {
       "traefik.enable" = "true";
@@ -108,9 +114,11 @@
     };
     after = [
       "podman-network-myproject-default.service"
+      "podman-volume-storage.service"
     ];
     requires = [
       "podman-network-myproject-default.service"
+      "podman-volume-storage.service"
     ];
     partOf = [
       "podman-compose-myproject-root.target"
@@ -130,8 +138,8 @@
       MARIADB_USER = "photoprism";
     };
     volumes = [
-      "/mnt/photos:/photos:rw"
       "/var/volumes/photoprism-mariadb:/var/lib/mysql:rw"
+      "photos:/photos:rw"
     ];
     user = "1000:1000";
     log-driver = "journald";
@@ -158,6 +166,12 @@
     unitConfig = {
       StartLimitIntervalSec = lib.mkOverride 500 "infinity";
     };
+    after = [
+      "podman-volume-photos.service"
+    ];
+    requires = [
+      "podman-volume-photos.service"
+    ];
     partOf = [
       "podman-compose-myproject-root.target"
     ];
@@ -184,9 +198,9 @@
     };
     volumes = [
       "/etc/localtime:/etc/localtime:ro"
-      "/mnt/media:/storage:rw"
       "/var/volumes/transmission/config:/config:rw"
       "/var/volumes/transmission/scripts:/scripts:rw"
+      "storage:/storage:rw"
     ];
     ports = [
       "9091:9091/tcp"
@@ -228,9 +242,11 @@
     };
     after = [
       "podman-network-myproject-something.service"
+      "podman-volume-storage.service"
     ];
     requires = [
       "podman-network-myproject-something.service"
+      "podman-volume-storage.service"
     ];
     partOf = [
       "podman-compose-myproject-root.target"
@@ -319,6 +335,44 @@
     };
     script = ''
       podman network inspect myproject-something || podman network create myproject-something --opt isolate=true --label=test-label=okay
+    '';
+    partOf = [ "podman-compose-myproject-root.target" ];
+    wantedBy = [ "podman-compose-myproject-root.target" ];
+  };
+
+  # Volumes
+  systemd.services."podman-volume-books" = {
+    path = [ pkgs.podman ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    script = ''
+      podman volume inspect books || podman volume create books --opt=device=/mnt/media/Books --opt=o=bind --opt=type=none
+    '';
+    partOf = [ "podman-compose-myproject-root.target" ];
+    wantedBy = [ "podman-compose-myproject-root.target" ];
+  };
+  systemd.services."podman-volume-photos" = {
+    path = [ pkgs.podman ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    script = ''
+      podman volume inspect photos || podman volume create photos --opt=device=/mnt/photos --opt=o=bind --opt=type=none --label=test-label=okay
+    '';
+    partOf = [ "podman-compose-myproject-root.target" ];
+    wantedBy = [ "podman-compose-myproject-root.target" ];
+  };
+  systemd.services."podman-volume-storage" = {
+    path = [ pkgs.podman ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    script = ''
+      podman volume inspect storage || podman volume create storage --opt=device=/mnt/media --opt=o=bind --opt=type=none
     '';
     partOf = [ "podman-compose-myproject-root.target" ];
     wantedBy = [ "podman-compose-myproject-root.target" ];

@@ -586,26 +586,6 @@ func (g *Generator) buildNixVolumes(composeProject *types.Project, containers []
 			RemoveOnStop: g.RemoveVolumes,
 		}
 
-		// FIXME(aksiksi): Podman does not properly handle NFS if the volume
-		// is a regular mount. So, we can just "patch" each container's volume
-		// mapping to use a direct bind mount instead of a volume and then skip
-		// creation of the volume entirely.
-		if g.Runtime == ContainerRuntimePodman && v.Driver == "" {
-			bindPath := v.DriverOpts["device"]
-			if bindPath == "" {
-				log.Printf("Volume %q has no device set; skipping", name)
-				continue
-			}
-			for _, c := range containers {
-				if volumeString, ok := c.Volumes[name]; ok {
-					volumeString = strings.TrimPrefix(volumeString, name)
-					c.Volumes[bindPath] = bindPath + volumeString
-					delete(c.Volumes, name)
-				}
-			}
-			continue
-		}
-
 		// If a volume is unused, we don't need to generate it.
 		used := false
 		for _, c := range containers {

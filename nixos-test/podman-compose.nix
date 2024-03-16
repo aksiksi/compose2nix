@@ -21,8 +21,8 @@
       TZ = "America/New_York";
     };
     volumes = [
-      "/mnt/media:/storage:rw"
       "/var/volumes/sabnzbd:/config:rw"
+      "storage:/storage:rw"
     ];
     log-driver = "journald";
     extraOptions = [
@@ -40,9 +40,11 @@
     };
     after = [
       "podman-network-myproject-default.service"
+      "podman-volume-storage.service"
     ];
     requires = [
       "podman-network-myproject-default.service"
+      "podman-volume-storage.service"
     ];
     partOf = [
       "podman-compose-myproject-root.target"
@@ -61,8 +63,8 @@
       TZ = "America/New_York";
     };
     volumes = [
-      "/mnt/media:/storage:rw"
       "/var/volumes/radarr:/config:rw"
+      "storage:/storage:rw"
     ];
     dependsOn = [
       "myproject-sabnzbd"
@@ -85,9 +87,11 @@
     };
     after = [
       "podman-network-myproject-default.service"
+      "podman-volume-storage.service"
     ];
     requires = [
       "podman-network-myproject-default.service"
+      "podman-volume-storage.service"
     ];
     partOf = [
       "podman-compose-myproject-root.target"
@@ -114,6 +118,20 @@
     };
     script = ''
       podman network inspect myproject-default || podman network create myproject-default --opt isolate=true
+    '';
+    partOf = [ "podman-compose-myproject-root.target" ];
+    wantedBy = [ "podman-compose-myproject-root.target" ];
+  };
+
+  # Volumes
+  systemd.services."podman-volume-storage" = {
+    path = [ pkgs.podman ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    script = ''
+      podman volume inspect storage || podman volume create storage --opt=device=/mnt/media --opt=o=bind --opt=type=none
     '';
     partOf = [ "podman-compose-myproject-root.target" ];
     wantedBy = [ "podman-compose-myproject-root.target" ];
