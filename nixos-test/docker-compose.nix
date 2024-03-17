@@ -10,23 +10,23 @@
   virtualisation.oci-containers.backend = "docker";
 
   # Containers
-  virtualisation.oci-containers.containers."myproject-sabnzbd" = {
-    image = "lscr.io/linuxserver/sabnzbd:latest";
+  virtualisation.oci-containers.containers."myproject-service-a" = {
+    image = "docker.io/library/nginx:stable-alpine-slim";
     environment = {
       TZ = "America/New_York";
     };
     volumes = [
-      "/var/volumes/sabnzbd:/config:rw"
+      "/var/volumes/service-a:/config:rw"
       "storage:/storage:rw"
     ];
     log-driver = "journald";
     extraOptions = [
-      "--cpus=1.0"
-      "--network-alias=sabnzbd"
+      "--cpus=0.5"
+      "--network-alias=service-a"
       "--network=myproject-default"
     ];
   };
-  systemd.services."docker-myproject-sabnzbd" = {
+  systemd.services."docker-myproject-service-a" = {
     serviceConfig = {
       Restart = lib.mkOverride 500 "no";
       RestartMaxDelaySec = lib.mkOverride 500 "1m";
@@ -35,7 +35,7 @@
       RuntimeMaxSec = lib.mkOverride 500 360;
     };
     unitConfig = {
-      Description = lib.mkOverride 500 "This is the sabnzbd container!";
+      Description = lib.mkOverride 500 "This is the service-a container!";
     };
     after = [
       "docker-network-myproject-default.service"
@@ -52,28 +52,28 @@
       "docker-compose-myproject-root.target"
     ];
     unitConfig.RequiresMountsFor = [
-      "/var/volumes/sabnzbd"
+      "/var/volumes/service-a"
     ];
   };
-  virtualisation.oci-containers.containers."radarr" = {
-    image = "lscr.io/linuxserver/radarr:develop";
+  virtualisation.oci-containers.containers."service-b" = {
+    image = "docker.io/library/nginx:stable-alpine-slim";
     environment = {
       TZ = "America/New_York";
     };
     volumes = [
-      "/var/volumes/radarr:/config:rw"
+      "/var/volumes/service-b:/config:rw"
       "storage:/storage:rw"
     ];
     dependsOn = [
-      "myproject-sabnzbd"
+      "myproject-service-a"
     ];
     log-driver = "journald";
     extraOptions = [
-      "--network-alias=radarr"
+      "--network-alias=service-b"
       "--network=myproject-default"
     ];
   };
-  systemd.services."docker-radarr" = {
+  systemd.services."docker-service-b" = {
     serviceConfig = {
       Restart = lib.mkOverride 500 "on-failure";
       RuntimeMaxSec = lib.mkOverride 500 360;
@@ -95,13 +95,13 @@
       "docker-compose-myproject-root.target"
     ];
     unitConfig.UpheldBy = [
-      "docker-myproject-sabnzbd.service"
+      "docker-myproject-service-a.service"
     ];
     wantedBy = [
       "docker-compose-myproject-root.target"
     ];
     unitConfig.RequiresMountsFor = [
-      "/var/volumes/radarr"
+      "/var/volumes/service-b"
     ];
   };
 
