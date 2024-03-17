@@ -1,35 +1,35 @@
 version: "3.7"
 name: "myproject"
 services:
-  sabnzbd:
-    image: lscr.io/linuxserver/sabnzbd:latest
+  service-a:
+    image: docker.io/library/nginx:stable-alpine-slim
     environment:
       TZ: ${TIMEZONE}
     volumes:
-      - /var/volumes/sabnzbd:/config
+      - /var/volumes/service-a:/config
       - storage:/storage
     deploy:
       resources:
         reservations:
-          cpus: "1.0"
+          cpus: "0.5"
     labels:
       - 'compose2nix.systemd.service.Restart="no"'
       - "compose2nix.systemd.service.RuntimeMaxSec=360"
-      - "compose2nix.systemd.unit.Description=This is the sabnzbd container!"
+      - "compose2nix.systemd.unit.Description=This is the service-a container!"
     restart: unless-stopped
-  radarr:
-    image: lscr.io/linuxserver/radarr:develop
-    container_name: radarr
+  service-b:
+    image: docker.io/library/nginx:stable-alpine-slim
+    container_name: service-b
     environment:
       TZ: ${TIMEZONE}
     volumes:
-      - /var/volumes/radarr:/config
+      - /var/volumes/service-b:/config
       - storage:/storage
     labels:
       - "compose2nix.systemd.unit.AllowIsolate=no"
       - "compose2nix.systemd.service.RuntimeMaxSec=360"
     depends_on:
-      - sabnzbd
+      - service-a
     restart: on-failure:3
 
 networks:
@@ -43,10 +43,4 @@ volumes:
     driver_opts:
       type: none
       device: /mnt/media
-      o: bind
-  books:
-    name: books
-    driver_opts:
-      type: none
-      device: /mnt/media/Books
       o: bind
