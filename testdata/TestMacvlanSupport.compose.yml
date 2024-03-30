@@ -1,0 +1,29 @@
+version: '3.7'
+name: "myproject"
+services:
+  teddycloud:
+    container_name: container
+    mac_address: 10:50:02:01:00:02
+    dns: 192.168.8.1
+    hostname: tc
+    image: ghcr.io/container/container:latest
+    ports:
+     - 80:80
+     - 443:443
+    volumes:
+      - /opt/container/certs:/container/certs
+    restart: unless-stopped
+    networks:
+      homenet:
+        ipv4_address: 192.168.8.10
+
+networks:
+  homenet:
+    driver: macvlan
+    driver_opts:
+      parent: enp2s0
+    ipam:
+      config:
+        - subnet: 192.168.8.0/24
+          gateway: 192.168.8.1
+
