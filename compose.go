@@ -607,9 +607,17 @@ func (g *Generator) buildNixNetworks(composeProject *types.Project, containers [
 	var networks []*NixNetwork
 	for name, network := range composeProject.Networks {
 		n := &NixNetwork{
-			Runtime: g.Runtime,
-			Name:    g.Project.With(name),
-			Labels:  network.Labels,
+			Runtime:    g.Runtime,
+			Name:       g.Project.With(name),
+			Driver:     network.Driver,
+			DriverOpts: network.DriverOpts,
+			Labels:     network.Labels,
+		}
+		if g.Runtime == ContainerRuntimePodman {
+			if n.DriverOpts == nil {
+				n.DriverOpts = make(map[string]string)
+			}
+			n.DriverOpts["isolate"] = "true"
 		}
 		// Keep track of all container services that are in this network.
 		used := false

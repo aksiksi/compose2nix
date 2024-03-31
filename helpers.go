@@ -27,15 +27,6 @@ func mapToRepeatedKeyValFlag(flagName string, m map[string]string) []string {
 	return arr
 }
 
-func mapToRepeatedFlag(flagName string, m map[string]string) []string {
-	var flags []string
-	for k, v := range m {
-		flags = append(flags, fmt.Sprintf("%s=%s=%s", flagName, k, v))
-	}
-	slices.Sort(flags)
-	return flags
-}
-
 // ReadEnvFiles reads the given set of env files into a list of KEY=VAL entries.
 //
 // If mergeWithEnv is set, the running env is merged with the provided env files. Any
