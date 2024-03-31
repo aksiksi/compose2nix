@@ -60,7 +60,7 @@
       ExecStop = "${pkgs.podman}/bin/podman network rm -f myproject-test1";
     };
     script = ''
-      podman network inspect myproject-test1 || podman network create myproject-test1
+      podman network inspect myproject-test1 || podman network create myproject-test1 --internal
     '';
     partOf = [ "podman-compose-myproject-root.target" ];
     wantedBy = [ "podman-compose-myproject-root.target" ];
