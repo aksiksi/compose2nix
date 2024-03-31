@@ -626,6 +626,10 @@ func (g *Generator) buildNixNetworks(composeProject *types.Project, containers [
 			Labels:     network.Labels,
 		}
 
+		if network.Internal {
+			n.ExtraOptions = append(n.ExtraOptions, "--internal")
+		}
+
 		// IPAM configuration.
 		// https://docs.docker.com/compose/compose-file/06-networks/#ipam
 		// https://docs.docker.com/reference/cli/docker/network/create/

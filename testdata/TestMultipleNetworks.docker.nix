@@ -59,7 +59,7 @@
       ExecStop = "${pkgs.docker}/bin/docker network rm -f myproject-test1";
     };
     script = ''
-      docker network inspect myproject-test1 || docker network create myproject-test1
+      docker network inspect myproject-test1 || docker network create myproject-test1 --internal
     '';
     partOf = [ "docker-compose-myproject-root.target" ];
     wantedBy = [ "docker-compose-myproject-root.target" ];

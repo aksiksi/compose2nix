@@ -59,13 +59,14 @@ type IpamConfig struct {
 }
 
 type NixNetwork struct {
-	Runtime     ContainerRuntime
-	Name        string
-	Driver      string
-	DriverOpts  map[string]string
-	Labels      map[string]string
-	IpamDriver  string
-	IpamConfigs []IpamConfig
+	Runtime      ContainerRuntime
+	Name         string
+	Driver       string
+	DriverOpts   map[string]string
+	Labels       map[string]string
+	IpamDriver   string
+	IpamConfigs  []IpamConfig
+	ExtraOptions []string
 }
 
 func (n *NixNetwork) Unit() string {
@@ -98,6 +99,10 @@ func (n *NixNetwork) Command() string {
 		for _, addr := range cfg.AuxAddresses {
 			cmd += fmt.Sprintf(` --aux-address="%s"`, addr)
 		}
+	}
+
+	if len(n.ExtraOptions) > 0 {
+		cmd += " " + strings.Join(n.ExtraOptions, " ")
 	}
 
 	if len(n.Labels) > 0 {

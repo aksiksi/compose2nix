@@ -17,6 +17,7 @@ services:
 
 networks:
   test1:
+    internal: true
   test2:
   test3:
 
