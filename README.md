@@ -211,6 +211,8 @@ Usage of compose2nix:
         if set, always use the Docker Compose log driver.
   -version
         display version and exit
+  -write_nix_setup
+        if true, Nix setup code is written to output (runtime, DNS, autoprune, etc.) (default true)
 ```
 
 ### Supported Docker Compose Features
