@@ -270,38 +270,6 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 	// We need to know this to be able to determine if we can configure a network alias.
 	inBridgeNetwork := len(service.Networks) > 0
 
-	for name, net := range service.Networks {
-		networkName := g.Project.With(name)
-		c.Networks = append(c.Networks, networkName)
-
-		// Network-scoped aliases.
-		var aliases []string
-		if net != nil {
-			aliases = append(aliases, net.Aliases...)
-		}
-
-		networkFlag := fmt.Sprintf("--network=%s", networkName)
-		switch g.Runtime {
-		case ContainerRuntimeDocker:
-			// Aliases are scoped to this (single) network.
-			for _, alias := range aliases {
-				c.ExtraOptions = append(c.ExtraOptions, "--network-alias="+alias)
-			}
-		case ContainerRuntimePodman:
-			// Aliases are scoped to the current network.
-			// https://docs.podman.io/en/latest/markdown/podman-run.1.html#network-mode-net
-			var networkOpts []string
-			for _, alias := range aliases {
-				networkOpts = append(networkOpts, "alias="+alias)
-			}
-			if len(networkOpts) > 0 {
-				networkFlag += fmt.Sprintf(":%s", strings.Join(networkOpts, ","))
-			}
-		}
-
-		c.ExtraOptions = append(c.ExtraOptions, networkFlag)
-	}
-
 	// https://docs.docker.com/compose/compose-file/05-services/#network_mode
 	// https://docs.podman.io/en/latest/markdown/podman-run.1.html#network-mode-net
 	if networkMode := strings.TrimSpace(service.NetworkMode); networkMode != "" {
@@ -338,6 +306,74 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 		default:
 			return nil, fmt.Errorf("unsupported network_mode: %s", networkMode)
 		}
+	}
+
+	var firstNetworkName string
+	for name, net := range service.Networks {
+		if firstNetworkName == "" {
+			firstNetworkName = name
+		}
+
+		networkName := g.Project.With(name)
+		c.Networks = append(c.Networks, networkName)
+
+		networkFlag := fmt.Sprintf("--network=%s", networkName)
+
+		// If we don't have any additional config set on this network, stop here.
+		if net == nil {
+			c.ExtraOptions = append(c.ExtraOptions, networkFlag)
+			continue
+		}
+
+		switch g.Runtime {
+		case ContainerRuntimeDocker:
+			// Aliases are scoped to this (single) network.
+			for _, alias := range net.Aliases {
+				c.ExtraOptions = append(c.ExtraOptions, "--network-alias="+alias)
+			}
+			if len(service.Networks) > 1 {
+				// TODO(aksiksi): Improve logging.
+				log.Printf("WARNING: Docker only supports a single network per container")
+				break
+			}
+		case ContainerRuntimePodman:
+			// Aliases are scoped to the current network.
+			// https://docs.podman.io/en/latest/markdown/podman-run.1.html#network-mode-net
+			var networkOpts []string
+			for _, alias := range net.Aliases {
+				networkOpts = append(networkOpts, "alias="+alias)
+			}
+
+			// Below, we fallback to using --ip/--ip6 if a single network is
+			// specified. This aligns with Docker behavior.
+			if len(service.Networks) > 1 {
+				if net.Ipv4Address != "" {
+					networkOpts = append(networkOpts, "ip="+net.Ipv4Address)
+				}
+				if net.Ipv6Address != "" {
+					networkOpts = append(networkOpts, "ip="+net.Ipv6Address)
+				}
+			}
+
+			if len(networkOpts) > 0 {
+				networkFlag += fmt.Sprintf(":%s", strings.Join(networkOpts, ","))
+			}
+		}
+
+		c.ExtraOptions = append(c.ExtraOptions, networkFlag)
+	}
+
+	if net := service.Networks[firstNetworkName]; len(service.Networks) == 1 && net != nil {
+		if net.Ipv4Address != "" {
+			c.ExtraOptions = append(c.ExtraOptions, "--ip="+net.Ipv4Address)
+		}
+		if net.Ipv6Address != "" {
+			c.ExtraOptions = append(c.ExtraOptions, "--ip6="+net.Ipv6Address)
+		}
+	}
+
+	if service.MacAddress != "" {
+		c.ExtraOptions = append(c.ExtraOptions, "--mac-address="+service.MacAddress)
 	}
 
 	if inBridgeNetwork {
@@ -571,11 +607,43 @@ func (g *Generator) buildNixNetworks(composeProject *types.Project, containers [
 	var networks []*NixNetwork
 	for name, network := range composeProject.Networks {
 		n := &NixNetwork{
-			Runtime: g.Runtime,
-			Name:    g.Project.With(name),
-			Labels:  network.Labels,
+			Runtime:    g.Runtime,
+			Name:       g.Project.With(name),
+			Driver:     network.Driver,
+			DriverOpts: network.DriverOpts,
+			Labels:     network.Labels,
 		}
+		if g.Runtime == ContainerRuntimePodman {
+			if n.DriverOpts == nil {
+				n.DriverOpts = make(map[string]string)
+			}
+			n.DriverOpts["isolate"] = "true"
+		}
+
+		// IPAM configuration.
+		// https://docs.docker.com/compose/compose-file/06-networks/#ipam
+		// https://docs.docker.com/reference/cli/docker/network/create/
+		// https://docs.podman.io/en/latest/markdown/podman-network-create.1.html
+		if network.Ipam.Driver != "" {
+			n.IpamDriver = network.Ipam.Driver
+		}
+		for _, ipamConfig := range network.Ipam.Config {
+			cfg := IpamConfig{
+				Subnet:  ipamConfig.Subnet,
+				IPRange: ipamConfig.IPRange,
+				Gateway: ipamConfig.Gateway,
+			}
+			if g.Runtime == ContainerRuntimeDocker {
+				for k, v := range ipamConfig.AuxiliaryAddresses {
+					cfg.AuxAddresses = append(cfg.AuxAddresses, fmt.Sprintf("%s=%s", k, v))
+				}
+				slices.Sort(cfg.AuxAddresses)
+			}
+			n.IpamConfigs = append(n.IpamConfigs, cfg)
+		}
+
 		// Keep track of all container services that are in this network.
+		// If a network is unused, we don't need to generate it.
 		used := false
 		for _, c := range containers {
 			if slices.Contains(c.Networks, n.Name) {
@@ -583,10 +651,10 @@ func (g *Generator) buildNixNetworks(composeProject *types.Project, containers [
 				break
 			}
 		}
-		// If a network is unused, we don't need to generate it.
 		if !used && !g.GenerateUnusedResoures {
 			continue
 		}
+
 		networks = append(networks, n)
 	}
 	slices.SortFunc(networks, func(n1, n2 *NixNetwork) int {

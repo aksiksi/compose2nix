@@ -30,10 +30,17 @@ services:
       - "compose2nix.systemd.service.RuntimeMaxSec=360"
     depends_on:
       - service-a
+    networks:
+      something:
+        ipv4_address: 192.168.8.20
     restart: on-failure:3
 
 networks:
   something:
+    ipam:
+      config:
+        - subnet: 192.168.8.0/24
+          gateway: 192.168.8.1
     labels:
       - "test-label=okay"
 

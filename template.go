@@ -46,10 +46,7 @@ func toNixList(s []string) string {
 }
 
 var funcMap template.FuncMap = template.FuncMap{
-	"derefInt":                derefInt,
-	"mapToKeyValArray":        mapToKeyValArray,
-	"mapToRepeatedFlag":       mapToRepeatedFlag,
-	"mapToRepeatedKeyValFlag": mapToRepeatedKeyValFlag,
-	"toNixValue":              toNixValue,
-	"toNixList":               toNixList,
+	"derefInt":   derefInt,
+	"toNixValue": toNixValue,
+	"toNixList":  toNixList,
 }
