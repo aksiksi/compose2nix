@@ -261,13 +261,10 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 		}
 	}
 
-	// https://docs.docker.com/network/#ip-address-and-hostname
-	if g.Runtime == ContainerRuntimeDocker && len(service.Networks) > 1 {
-		return nil, fmt.Errorf("only a single network is supported for each Docker service")
-	}
-
 	// If the container is connected to a network, it's counted as being in a bridge network.
 	// We need to know this to be able to determine if we can configure a network alias.
+	//
+	// NOTE(aksiksi): Is this even correct?
 	inBridgeNetwork := len(service.Networks) > 0
 
 	// https://docs.docker.com/compose/compose-file/05-services/#network_mode
@@ -327,14 +324,9 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 
 		switch g.Runtime {
 		case ContainerRuntimeDocker:
-			// Aliases are scoped to this (single) network.
+			// Aliases are scoped to all networks - I think?
 			for _, alias := range net.Aliases {
 				c.ExtraOptions = append(c.ExtraOptions, "--network-alias="+alias)
-			}
-			if len(service.Networks) > 1 {
-				// TODO(aksiksi): Improve logging.
-				log.Printf("WARNING: Docker only supports a single network per container")
-				break
 			}
 		case ContainerRuntimePodman:
 			// Aliases are scoped to the current network.
@@ -363,6 +355,12 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 		c.ExtraOptions = append(c.ExtraOptions, networkFlag)
 	}
 
+	// NOTE(aksiksi): Docker might actually support network-scoped IPs.
+	//
+	// But, we need to think about this carefully because the flags seem to be
+	// order-depdendent. That is, the order of --network and --ip/--ip6 needs
+	// to be maintained. Since we sort the ExtraOptions array, the ordering
+	// would break without some changes.
 	if net := service.Networks[firstNetworkName]; len(service.Networks) == 1 && net != nil {
 		if net.Ipv4Address != "" {
 			c.ExtraOptions = append(c.ExtraOptions, "--ip="+net.Ipv4Address)

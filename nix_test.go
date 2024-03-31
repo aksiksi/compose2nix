@@ -162,3 +162,13 @@ func TestMacvlanSupport(t *testing.T) {
 	}
 	runSubtestsWithGenerator(t, g)
 }
+
+func TestMultipleNetworks(t *testing.T) {
+	// Supported in Docker too.
+	// See: https://github.com/moby/moby/issues/35543
+	composePath, _ := getPaths(t, false)
+	g := &Generator{
+		Inputs: []string{composePath},
+	}
+	runSubtestsWithGenerator(t, g)
+}
