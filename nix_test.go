@@ -60,10 +60,10 @@ func runSubtestsWithGenerator(t *testing.T, g *Generator) {
 func TestBasic(t *testing.T) {
 	composePath, envFilePath := getPaths(t, true)
 	g := &Generator{
-		Inputs:                 []string{composePath},
-		EnvFiles:               []string{envFilePath},
-		AutoStart:              true,
-		GenerateUnusedResoures: true,
+		Inputs:                  []string{composePath},
+		EnvFiles:                []string{envFilePath},
+		AutoStart:               true,
+		GenerateUnusedResources: true,
 	}
 	runSubtestsWithGenerator(t, g)
 }
@@ -166,6 +166,14 @@ func TestMacvlanSupport(t *testing.T) {
 func TestMultipleNetworks(t *testing.T) {
 	// Supported in Docker too.
 	// See: https://github.com/moby/moby/issues/35543
+	composePath, _ := getPaths(t, false)
+	g := &Generator{
+		Inputs: []string{composePath},
+	}
+	runSubtestsWithGenerator(t, g)
+}
+
+func TestExternalNetworksAndVolumes(t *testing.T) {
 	composePath, _ := getPaths(t, false)
 	g := &Generator{
 		Inputs: []string{composePath},
