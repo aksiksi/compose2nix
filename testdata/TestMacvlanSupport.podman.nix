@@ -31,7 +31,7 @@
       "--ip=192.168.8.10"
       "--mac-address=10:50:02:01:00:02"
       "--network-alias=teddycloud"
-      "--network=myproject-homenet"
+      "--network=myproject_homenet"
     ];
   };
   systemd.services."podman-container" = {
@@ -39,10 +39,10 @@
       Restart = lib.mkOverride 500 "always";
     };
     after = [
-      "podman-network-myproject-homenet.service"
+      "podman-network-myproject_homenet.service"
     ];
     requires = [
-      "podman-network-myproject-homenet.service"
+      "podman-network-myproject_homenet.service"
     ];
     partOf = [
       "podman-compose-myproject-root.target"
@@ -53,15 +53,15 @@
   };
 
   # Networks
-  systemd.services."podman-network-myproject-homenet" = {
+  systemd.services."podman-network-myproject_homenet" = {
     path = [ pkgs.podman ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.podman}/bin/podman network rm -f myproject-homenet";
+      ExecStop = "${pkgs.podman}/bin/podman network rm -f myproject_homenet";
     };
     script = ''
-      podman network inspect myproject-homenet || podman network create myproject-homenet --driver=macvlan --opt=parent=enp2s0 --subnet=192.168.8.0/24 --gateway=192.168.8.1
+      podman network inspect myproject_homenet || podman network create myproject_homenet --driver=macvlan --opt=parent=enp2s0 --subnet=192.168.8.0/24 --gateway=192.168.8.1
     '';
     partOf = [ "podman-compose-myproject-root.target" ];
     wantedBy = [ "podman-compose-myproject-root.target" ];

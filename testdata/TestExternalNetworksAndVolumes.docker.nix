@@ -24,9 +24,9 @@
     extraOptions = [
       "--network-alias=my-container"
       "--network-alias=traefik"
-      "--network=myproject-test1"
-      "--network=myproject-test2"
-      "--network=myproject-test3"
+      "--network=myproject_test1"
+      "--network=test2"
+      "--network=test3"
     ];
   };
   systemd.services."docker-traefik" = {
@@ -37,11 +37,15 @@
       RestartSteps = lib.mkOverride 500 9;
     };
     after = [
-      "docker-network-myproject-test1.service"
+      "docker-network-myproject_test1.service"
+      "docker-network-test2.service"
+      "docker-network-test3.service"
       "docker-volume-test1.service"
     ];
     requires = [
-      "docker-network-myproject-test1.service"
+      "docker-network-myproject_test1.service"
+      "docker-network-test2.service"
+      "docker-network-test3.service"
       "docker-volume-test1.service"
     ];
     partOf = [
@@ -53,15 +57,15 @@
   };
 
   # Networks
-  systemd.services."docker-network-myproject-test1" = {
+  systemd.services."docker-network-myproject_test1" = {
     path = [ pkgs.docker ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.docker}/bin/docker network rm -f myproject-test1";
+      ExecStop = "${pkgs.docker}/bin/docker network rm -f myproject_test1";
     };
     script = ''
-      docker network inspect myproject-test1 || docker network create myproject-test1
+      docker network inspect myproject_test1 || docker network create myproject_test1
     '';
     partOf = [ "docker-compose-myproject-root.target" ];
     wantedBy = [ "docker-compose-myproject-root.target" ];

@@ -180,3 +180,11 @@ func TestExternalNetworksAndVolumes(t *testing.T) {
 	}
 	runSubtestsWithGenerator(t, g)
 }
+
+func TestNetworkAndVolumeNames(t *testing.T) {
+	composePath, _ := getPaths(t, false)
+	g := &Generator{
+		Inputs: []string{composePath},
+	}
+	runSubtestsWithGenerator(t, g)
+}

@@ -106,7 +106,7 @@
       "--log-opt=max-file=3"
       "--log-opt=max-size=10m"
       "--network-alias=sabnzbd"
-      "--network=myproject-default"
+      "--network=myproject_default"
     ];
   };
   systemd.services."podman-myproject-sabnzbd" = {
@@ -119,11 +119,11 @@
       Description = lib.mkOverride 500 "This is the sabnzbd container!";
     };
     after = [
-      "podman-network-myproject-default.service"
+      "podman-network-myproject_default.service"
       "podman-volume-storage.service"
     ];
     requires = [
-      "podman-network-myproject-default.service"
+      "podman-network-myproject_default.service"
       "podman-volume-storage.service"
     ];
     partOf = [
@@ -232,7 +232,7 @@
       "--dns=8.8.4.4"
       "--dns=8.8.8.8"
       "--network-alias=transmission"
-      "--network=myproject-something:alias=my-torrent-client"
+      "--network=myproject_something:alias=my-torrent-client"
       "--no-healthcheck"
       "--privileged"
       "--shm-size=67108864"
@@ -249,11 +249,11 @@
       StartLimitIntervalSec = lib.mkOverride 500 "infinity";
     };
     after = [
-      "podman-network-myproject-something.service"
+      "podman-network-myproject_something.service"
       "podman-volume-storage.service"
     ];
     requires = [
-      "podman-network-myproject-something.service"
+      "podman-network-myproject_something.service"
       "podman-volume-storage.service"
     ];
     partOf = [
@@ -322,28 +322,28 @@
   };
 
   # Networks
-  systemd.services."podman-network-myproject-default" = {
+  systemd.services."podman-network-myproject_default" = {
     path = [ pkgs.podman ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.podman}/bin/podman network rm -f myproject-default";
+      ExecStop = "${pkgs.podman}/bin/podman network rm -f myproject_default";
     };
     script = ''
-      podman network inspect myproject-default || podman network create myproject-default
+      podman network inspect myproject_default || podman network create myproject_default
     '';
     partOf = [ "podman-compose-myproject-root.target" ];
     wantedBy = [ "podman-compose-myproject-root.target" ];
   };
-  systemd.services."podman-network-myproject-something" = {
+  systemd.services."podman-network-myproject_something" = {
     path = [ pkgs.podman ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.podman}/bin/podman network rm -f myproject-something";
+      ExecStop = "${pkgs.podman}/bin/podman network rm -f myproject_something";
     };
     script = ''
-      podman network inspect myproject-something || podman network create myproject-something --label=test-label=okay
+      podman network inspect myproject_something || podman network create myproject_something --label=test-label=okay
     '';
     partOf = [ "podman-compose-myproject-root.target" ];
     wantedBy = [ "podman-compose-myproject-root.target" ];
