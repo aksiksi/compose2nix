@@ -377,3 +377,34 @@ func TestDocker_NoWriteNixSetup(t *testing.T) {
 		t.Errorf("output diff: %s\n", diff)
 	}
 }
+
+func TestMacvlanSupport(t *testing.T) {
+	ctx := context.Background()
+	testName := t.Name()
+	inputPath := fmt.Sprintf("testdata/%s.compose.yml", testName)
+	for _, runtime := range []ContainerRuntime{ContainerRuntimeDocker, ContainerRuntimePodman} {
+		t.Run(runtime.String(), func(t *testing.T) {
+			outFilePath := fmt.Sprintf("testdata/%s_%s.nix", testName, runtime)
+			g := Generator{
+				Runtime: runtime,
+				Inputs:  []string{inputPath},
+			}
+			c, err := g.Run(ctx)
+			if err != nil {
+				t.Fatal(err)
+			}
+			wantOutput, err := os.ReadFile(outFilePath)
+			if err != nil {
+				t.Fatal(err)
+			}
+			got, want := c.String(), string(wantOutput)
+			if *update {
+				if err := os.WriteFile(outFilePath, []byte(got), 0644); err != nil {
+					t.Fatal(err)
+				}
+			} else if diff := cmp.Diff(want, got); diff != "" {
+				t.Errorf("output diff: %s\n", diff)
+			}
+		})
+	}
+}

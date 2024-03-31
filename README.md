@@ -236,6 +236,7 @@ If a feature is missing, please feel free to [create an issue](https://github.co
 | [`deploy.resources`](https://docs.docker.com/compose/compose-file/deploy/#resources) | ✅ | |
 | [`devices`](https://docs.docker.com/compose/compose-file/05-services/#devices) | ✅ | |
 | [`networks.aliases`](https://docs.docker.com/compose/compose-file/05-services/#aliases) | ✅ | |
+| [`networks.ipv*_address`](https://docs.docker.com/compose/compose-file/05-services/#ipv4_address-ipv6_address) | ✅ | |
 | [`network_mode`](https://docs.docker.com/compose/compose-file/05-services/#network_mode) | ✅ | |
 | [`privileged`](https://docs.docker.com/compose/compose-file/05-services/#privileged) | ✅ | |
 | [`extra_hosts`](https://docs.docker.com/compose/compose-file/05-services/#extra_hosts) | ✅ | |
@@ -246,15 +247,17 @@ If a feature is missing, please feel free to [create an issue](https://github.co
 | [`command`](https://docs.docker.com/compose/compose-file/05-services/#command) | ✅ | |
 | [`healthcheck`](https://docs.docker.com/compose/compose-file/05-services/#healthcheck) | ✅ | |
 | [`hostname`](https://docs.docker.com/compose/compose-file/05-services/#hostname) | ✅ | |
+| [`mac_address`](https://docs.docker.com/compose/compose-file/05-services/#mac_address) | ✅ | |
 
 #### [`networks`](https://docs.docker.com/compose/compose-file/06-networks/)
 
 |   |     |
 |---|:---:|
 | [`labels`](https://docs.docker.com/compose/compose-file/06-networks/#labels) | ✅ |
-| [`name`](https://docs.docker.com/compose/compose-file/06-networks/#name) | ❌ |
-| [`driver`](https://docs.docker.com/compose/compose-file/06-networks/#driver) | ❌ |
-| [`driver_opts`](https://docs.docker.com/compose/compose-file/06-networks/#driver_opts) | ❌ |
+| [`name`](https://docs.docker.com/compose/compose-file/06-networks/#name) | ✅ |
+| [`driver`](https://docs.docker.com/compose/compose-file/06-networks/#driver) | ✅ |
+| [`driver_opts`](https://docs.docker.com/compose/compose-file/06-networks/#driver_opts) | ✅ |
+| [`ipam`](https://docs.docker.com/compose/compose-file/06-networks/#ipam) | ✅ |
 | [`external`](https://docs.docker.com/compose/compose-file/06-networks/#external) | ❌ |
 | [`internal`](https://docs.docker.com/compose/compose-file/06-networks/#internal) | ❌ |
 

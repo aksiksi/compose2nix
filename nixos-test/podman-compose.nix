@@ -71,8 +71,9 @@
     ];
     log-driver = "journald";
     extraOptions = [
+      "--ip=192.168.8.20"
       "--network-alias=service-b"
-      "--network=myproject-default"
+      "--network=myproject-something"
     ];
   };
   systemd.services."podman-service-b" = {
@@ -86,11 +87,11 @@
       StartLimitIntervalSec = lib.mkOverride 500 "infinity";
     };
     after = [
-      "podman-network-myproject-default.service"
+      "podman-network-myproject-something.service"
       "podman-volume-storage.service"
     ];
     requires = [
-      "podman-network-myproject-default.service"
+      "podman-network-myproject-something.service"
       "podman-volume-storage.service"
     ];
     partOf = [
@@ -116,7 +117,20 @@
       ExecStop = "${pkgs.podman}/bin/podman network rm -f myproject-default";
     };
     script = ''
-      podman network inspect myproject-default || podman network create myproject-default --opt isolate=true
+      podman network inspect myproject-default || podman network create myproject-default --opt=isolate=true
+    '';
+    partOf = [ "podman-compose-myproject-root.target" ];
+    wantedBy = [ "podman-compose-myproject-root.target" ];
+  };
+  systemd.services."podman-network-myproject-something" = {
+    path = [ pkgs.podman ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStop = "${pkgs.podman}/bin/podman network rm -f myproject-something";
+    };
+    script = ''
+      podman network inspect myproject-something || podman network create myproject-something --opt=isolate=true --subnet=192.168.8.0/24 --gateway=192.168.8.1 --label=test-label=okay
     '';
     partOf = [ "podman-compose-myproject-root.target" ];
     wantedBy = [ "podman-compose-myproject-root.target" ];
