@@ -51,12 +51,21 @@ func (p *Project) With(name string) string {
 	return fmt.Sprintf("%s%s%s", p.Name, p.separator, name)
 }
 
+type IpamConfig struct {
+	Subnet       string
+	IPRange      string
+	Gateway      string
+	AuxAddresses []string
+}
+
 type NixNetwork struct {
-	Runtime    ContainerRuntime
-	Name       string
-	Driver     string
-	DriverOpts map[string]string
-	Labels     map[string]string
+	Runtime     ContainerRuntime
+	Name        string
+	Driver      string
+	DriverOpts  map[string]string
+	Labels      map[string]string
+	IpamDriver  string
+	IpamConfigs []IpamConfig
 }
 
 func (n *NixNetwork) Unit() string {
@@ -72,6 +81,25 @@ func (n *NixNetwork) Command() string {
 		driverOpts := mapToRepeatedKeyValFlag("--opt", n.DriverOpts)
 		cmd += " " + strings.Join(driverOpts, " ")
 	}
+
+	if n.IpamDriver != "" {
+		cmd += fmt.Sprintf(" --ipam-driver=%s", n.IpamDriver)
+	}
+	for _, cfg := range n.IpamConfigs {
+		if cfg.Subnet != "" {
+			cmd += fmt.Sprintf(" --subnet=%s", cfg.Subnet)
+		}
+		if cfg.IPRange != "" {
+			cmd += fmt.Sprintf(" --ip-range=%s", cfg.IPRange)
+		}
+		if cfg.Gateway != "" {
+			cmd += fmt.Sprintf(" --gateway=%s", cfg.Gateway)
+		}
+		for _, addr := range cfg.AuxAddresses {
+			cmd += fmt.Sprintf(` --aux-address="%s"`, addr)
+		}
+	}
+
 	if len(n.Labels) > 0 {
 		labels := mapToRepeatedKeyValFlag("--label", n.Labels)
 		cmd += " " + strings.Join(labels, " ")

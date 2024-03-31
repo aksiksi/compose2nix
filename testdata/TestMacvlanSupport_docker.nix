@@ -59,7 +59,7 @@
       ExecStop = "${pkgs.docker}/bin/docker network rm -f myproject-homenet";
     };
     script = ''
-      docker network inspect myproject-homenet || docker network create myproject-homenet --driver=macvlan --opt=parent=enp2s0
+      docker network inspect myproject-homenet || docker network create myproject-homenet --driver=macvlan --opt=parent=enp2s0 --subnet=192.168.8.0/24 --gateway=192.168.8.1 --aux-address="host1=192.168.8.5"
     '';
     partOf = [ "docker-compose-myproject-root.target" ];
     wantedBy = [ "docker-compose-myproject-root.target" ];
