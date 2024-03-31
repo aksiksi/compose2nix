@@ -125,8 +125,8 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 	}
 
 	networks, networkMap := g.buildNixNetworks(composeProject)
-	volumes, volumeNameMap := g.buildNixVolumes(composeProject)
-	containers, err := g.buildNixContainers(composeProject, networkMap, volumeNameMap)
+	volumes, volumeMap := g.buildNixVolumes(composeProject)
+	containers, err := g.buildNixContainers(composeProject, networkMap, volumeMap)
 	if err != nil {
 		return nil, err
 	}
