@@ -61,6 +61,7 @@ type IpamConfig struct {
 type NixNetwork struct {
 	Runtime      ContainerRuntime
 	Name         string
+	OriginalName string
 	Driver       string
 	DriverOpts   map[string]string
 	Labels       map[string]string

@@ -102,7 +102,7 @@
       "--log-opt=max-file=3"
       "--log-opt=max-size=10m"
       "--network-alias=sabnzbd"
-      "--network=myproject-default"
+      "--network=myproject_default"
     ];
   };
   systemd.services."docker-myproject-sabnzbd" = {
@@ -117,11 +117,11 @@
       Description = lib.mkOverride 500 "This is the sabnzbd container!";
     };
     after = [
-      "docker-network-myproject-default.service"
+      "docker-network-myproject_default.service"
       "docker-volume-storage.service"
     ];
     requires = [
-      "docker-network-myproject-default.service"
+      "docker-network-myproject_default.service"
       "docker-volume-storage.service"
     ];
     partOf = [
@@ -231,7 +231,7 @@
       "--dns=8.8.8.8"
       "--network-alias=my-torrent-client"
       "--network-alias=transmission"
-      "--network=myproject-something"
+      "--network=myproject_something"
       "--no-healthcheck"
       "--privileged"
       "--shm-size=67108864"
@@ -247,11 +247,11 @@
       StartLimitIntervalSec = lib.mkOverride 500 "infinity";
     };
     after = [
-      "docker-network-myproject-something.service"
+      "docker-network-myproject_something.service"
       "docker-volume-storage.service"
     ];
     requires = [
-      "docker-network-myproject-something.service"
+      "docker-network-myproject_something.service"
       "docker-volume-storage.service"
     ];
     partOf = [
@@ -322,28 +322,28 @@
   };
 
   # Networks
-  systemd.services."docker-network-myproject-default" = {
+  systemd.services."docker-network-myproject_default" = {
     path = [ pkgs.docker ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.docker}/bin/docker network rm -f myproject-default";
+      ExecStop = "${pkgs.docker}/bin/docker network rm -f myproject_default";
     };
     script = ''
-      docker network inspect myproject-default || docker network create myproject-default
+      docker network inspect myproject_default || docker network create myproject_default
     '';
     partOf = [ "docker-compose-myproject-root.target" ];
     wantedBy = [ "docker-compose-myproject-root.target" ];
   };
-  systemd.services."docker-network-myproject-something" = {
+  systemd.services."docker-network-myproject_something" = {
     path = [ pkgs.docker ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.docker}/bin/docker network rm -f myproject-something";
+      ExecStop = "${pkgs.docker}/bin/docker network rm -f myproject_something";
     };
     script = ''
-      docker network inspect myproject-something || docker network create myproject-something --label=test-label=okay
+      docker network inspect myproject_something || docker network create myproject_something --label=test-label=okay
     '';
     partOf = [ "docker-compose-myproject-root.target" ];
     wantedBy = [ "docker-compose-myproject-root.target" ];

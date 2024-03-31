@@ -18,10 +18,9 @@
     log-driver = "journald";
     autoStart = false;
     extraOptions = [
-      "--network-alias=my-container"
       "--network-alias=traefik"
+      "--network=my-network"
       "--network=myproject_test1"
-      "--network=myproject_test2"
       "--network=myproject_test3"
     ];
   };
@@ -33,13 +32,13 @@
       RestartSteps = lib.mkOverride 500 9;
     };
     after = [
+      "docker-network-my-network.service"
       "docker-network-myproject_test1.service"
-      "docker-network-myproject_test2.service"
       "docker-network-myproject_test3.service"
     ];
     requires = [
+      "docker-network-my-network.service"
       "docker-network-myproject_test1.service"
-      "docker-network-myproject_test2.service"
       "docker-network-myproject_test3.service"
     ];
     partOf = [
@@ -51,6 +50,19 @@
   };
 
   # Networks
+  systemd.services."docker-network-my-network" = {
+    path = [ pkgs.docker ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStop = "${pkgs.docker}/bin/docker network rm -f my-network";
+    };
+    script = ''
+      docker network inspect my-network || docker network create my-network
+    '';
+    partOf = [ "docker-compose-myproject-root.target" ];
+    wantedBy = [ "docker-compose-myproject-root.target" ];
+  };
   systemd.services."docker-network-myproject_test1" = {
     path = [ pkgs.docker ];
     serviceConfig = {
@@ -60,19 +72,6 @@
     };
     script = ''
       docker network inspect myproject_test1 || docker network create myproject_test1 --internal
-    '';
-    partOf = [ "docker-compose-myproject-root.target" ];
-    wantedBy = [ "docker-compose-myproject-root.target" ];
-  };
-  systemd.services."docker-network-myproject_test2" = {
-    path = [ pkgs.docker ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-      ExecStop = "${pkgs.docker}/bin/docker network rm -f myproject_test2";
-    };
-    script = ''
-      docker network inspect myproject_test2 || docker network create myproject_test2
     '';
     partOf = [ "docker-compose-myproject-root.target" ];
     wantedBy = [ "docker-compose-myproject-root.target" ];

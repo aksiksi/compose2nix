@@ -16,10 +16,6 @@
   # Containers
   virtualisation.oci-containers.containers."traefik" = {
     image = "docker.io/library/traefik";
-    volumes = [
-      "test1:/test1:rw"
-      "test2:/test2:rw"
-    ];
     ports = [
       "80:80/tcp"
       "443:443/tcp"
@@ -28,9 +24,9 @@
     autoStart = false;
     extraOptions = [
       "--network-alias=traefik"
-      "--network=myproject_test1:alias=my-container"
-      "--network=test2"
-      "--network=test3"
+      "--network=my-network"
+      "--network=myproject_test1"
+      "--network=myproject_test3"
     ];
   };
   systemd.services."podman-traefik" = {
@@ -38,16 +34,14 @@
       Restart = lib.mkOverride 500 "always";
     };
     after = [
+      "podman-network-my-network.service"
       "podman-network-myproject_test1.service"
-      "podman-network-test2.service"
-      "podman-network-test3.service"
-      "podman-volume-test1.service"
+      "podman-network-myproject_test3.service"
     ];
     requires = [
+      "podman-network-my-network.service"
       "podman-network-myproject_test1.service"
-      "podman-network-test2.service"
-      "podman-network-test3.service"
-      "podman-volume-test1.service"
+      "podman-network-myproject_test3.service"
     ];
     partOf = [
       "podman-compose-myproject-root.target"
@@ -58,6 +52,19 @@
   };
 
   # Networks
+  systemd.services."podman-network-my-network" = {
+    path = [ pkgs.podman ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStop = "${pkgs.podman}/bin/podman network rm -f my-network";
+    };
+    script = ''
+      podman network inspect my-network || podman network create my-network
+    '';
+    partOf = [ "podman-compose-myproject-root.target" ];
+    wantedBy = [ "podman-compose-myproject-root.target" ];
+  };
   systemd.services."podman-network-myproject_test1" = {
     path = [ pkgs.podman ];
     serviceConfig = {
@@ -66,21 +73,20 @@
       ExecStop = "${pkgs.podman}/bin/podman network rm -f myproject_test1";
     };
     script = ''
-      podman network inspect myproject_test1 || podman network create myproject_test1
+      podman network inspect myproject_test1 || podman network create myproject_test1 --internal
     '';
     partOf = [ "podman-compose-myproject-root.target" ];
     wantedBy = [ "podman-compose-myproject-root.target" ];
   };
-
-  # Volumes
-  systemd.services."podman-volume-test1" = {
+  systemd.services."podman-network-myproject_test3" = {
     path = [ pkgs.podman ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
+      ExecStop = "${pkgs.podman}/bin/podman network rm -f myproject_test3";
     };
     script = ''
-      podman volume inspect test1 || podman volume create test1
+      podman network inspect myproject_test3 || podman network create myproject_test3
     '';
     partOf = [ "podman-compose-myproject-root.target" ];
     wantedBy = [ "podman-compose-myproject-root.target" ];

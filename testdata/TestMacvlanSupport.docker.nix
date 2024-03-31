@@ -26,7 +26,7 @@
       "--ip=192.168.8.10"
       "--mac-address=10:50:02:01:00:02"
       "--network-alias=teddycloud"
-      "--network=myproject-homenet"
+      "--network=myproject_homenet"
     ];
   };
   systemd.services."docker-container" = {
@@ -37,10 +37,10 @@
       RestartSteps = lib.mkOverride 500 9;
     };
     after = [
-      "docker-network-myproject-homenet.service"
+      "docker-network-myproject_homenet.service"
     ];
     requires = [
-      "docker-network-myproject-homenet.service"
+      "docker-network-myproject_homenet.service"
     ];
     partOf = [
       "docker-compose-myproject-root.target"
@@ -51,15 +51,15 @@
   };
 
   # Networks
-  systemd.services."docker-network-myproject-homenet" = {
+  systemd.services."docker-network-myproject_homenet" = {
     path = [ pkgs.docker ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.docker}/bin/docker network rm -f myproject-homenet";
+      ExecStop = "${pkgs.docker}/bin/docker network rm -f myproject_homenet";
     };
     script = ''
-      docker network inspect myproject-homenet || docker network create myproject-homenet --driver=macvlan --opt=parent=enp2s0 --subnet=192.168.8.0/24 --gateway=192.168.8.1 --aux-address="host1=192.168.8.5"
+      docker network inspect myproject_homenet || docker network create myproject_homenet --driver=macvlan --opt=parent=enp2s0 --subnet=192.168.8.0/24 --gateway=192.168.8.1 --aux-address="host1=192.168.8.5"
     '';
     partOf = [ "docker-compose-myproject-root.target" ];
     wantedBy = [ "docker-compose-myproject-root.target" ];
