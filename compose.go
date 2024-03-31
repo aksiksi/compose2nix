@@ -611,12 +611,6 @@ func (g *Generator) buildNixNetworks(composeProject *types.Project, containers [
 			DriverOpts: network.DriverOpts,
 			Labels:     network.Labels,
 		}
-		if g.Runtime == ContainerRuntimePodman {
-			if n.DriverOpts == nil {
-				n.DriverOpts = make(map[string]string)
-			}
-			n.DriverOpts["isolate"] = "true"
-		}
 
 		// IPAM configuration.
 		// https://docs.docker.com/compose/compose-file/06-networks/#ipam
