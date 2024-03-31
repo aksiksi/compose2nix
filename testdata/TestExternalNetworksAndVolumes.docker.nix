@@ -38,15 +38,11 @@
     };
     after = [
       "docker-network-myproject_test1.service"
-      "docker-network-test2.service"
-      "docker-network-test3.service"
-      "docker-volume-test1.service"
+      "docker-volume-myproject_test1.service"
     ];
     requires = [
       "docker-network-myproject_test1.service"
-      "docker-network-test2.service"
-      "docker-network-test3.service"
-      "docker-volume-test1.service"
+      "docker-volume-myproject_test1.service"
     ];
     partOf = [
       "docker-compose-myproject-root.target"
@@ -72,14 +68,14 @@
   };
 
   # Volumes
-  systemd.services."docker-volume-test1" = {
+  systemd.services."docker-volume-myproject_test1" = {
     path = [ pkgs.docker ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
     };
     script = ''
-      docker volume inspect test1 || docker volume create test1
+      docker volume inspect myproject_test1 || docker volume create myproject_test1
     '';
     partOf = [ "docker-compose-myproject-root.target" ];
     wantedBy = [ "docker-compose-myproject-root.target" ];

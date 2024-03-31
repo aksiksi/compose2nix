@@ -64,6 +64,7 @@ type NixNetwork struct {
 	OriginalName string
 	Driver       string
 	DriverOpts   map[string]string
+	External     bool
 	Labels       map[string]string
 	IpamDriver   string
 	IpamConfigs  []IpamConfig
@@ -118,6 +119,7 @@ type NixVolume struct {
 	Name              string
 	Driver            string
 	DriverOpts        map[string]string
+	External          bool
 	Labels            map[string]string
 	RemoveOnStop      bool
 	RequiresMountsFor []string

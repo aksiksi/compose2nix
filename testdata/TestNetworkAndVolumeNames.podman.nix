@@ -16,6 +16,11 @@
   # Containers
   virtualisation.oci-containers.containers."traefik" = {
     image = "docker.io/library/traefik";
+    volumes = [
+      "test2:/test2:rw"
+      "test3:/test3:rw"
+      "test1:/test1:rw"
+    ];
     ports = [
       "80:80/tcp"
       "443:443/tcp"
@@ -26,7 +31,7 @@
       "--network-alias=traefik"
       "--network=my-network"
       "--network=myproject_test1"
-      "--network=myproject_test3"
+      "--network=test3"
     ];
   };
   systemd.services."podman-traefik" = {
@@ -36,12 +41,14 @@
     after = [
       "podman-network-my-network.service"
       "podman-network-myproject_test1.service"
-      "podman-network-myproject_test3.service"
+      "podman-volume-my-volume.service"
+      "podman-volume-myproject_test3.service"
     ];
     requires = [
       "podman-network-my-network.service"
       "podman-network-myproject_test1.service"
-      "podman-network-myproject_test3.service"
+      "podman-volume-my-volume.service"
+      "podman-volume-myproject_test3.service"
     ];
     partOf = [
       "podman-compose-myproject-root.target"
@@ -78,15 +85,28 @@
     partOf = [ "podman-compose-myproject-root.target" ];
     wantedBy = [ "podman-compose-myproject-root.target" ];
   };
-  systemd.services."podman-network-myproject_test3" = {
+
+  # Volumes
+  systemd.services."podman-volume-my-volume" = {
     path = [ pkgs.podman ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.podman}/bin/podman network rm -f myproject_test3";
     };
     script = ''
-      podman network inspect myproject_test3 || podman network create myproject_test3
+      podman volume inspect my-volume || podman volume create my-volume
+    '';
+    partOf = [ "podman-compose-myproject-root.target" ];
+    wantedBy = [ "podman-compose-myproject-root.target" ];
+  };
+  systemd.services."podman-volume-myproject_test3" = {
+    path = [ pkgs.podman ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    script = ''
+      podman volume inspect myproject_test3 || podman volume create myproject_test3
     '';
     partOf = [ "podman-compose-myproject-root.target" ];
     wantedBy = [ "podman-compose-myproject-root.target" ];
