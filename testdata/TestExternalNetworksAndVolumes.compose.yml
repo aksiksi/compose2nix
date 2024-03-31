@@ -1,0 +1,32 @@
+version: "3.7"
+name: "myproject"
+services:
+  traefik:
+    container_name: traefik
+    image: docker.io/library/traefik
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - test1:/test1
+      - test2:/test2
+    networks:
+      test1:
+        aliases:
+          - my-container
+      test2:
+      test3:
+    restart: unless-stopped
+
+networks:
+  test1:
+  test2:
+    external: true
+  test3:
+    external: true
+
+volumes:
+  test1:
+  test2:
+    external: true
+

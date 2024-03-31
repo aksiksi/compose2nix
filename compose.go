@@ -51,23 +51,23 @@ func portConfigsToPortStrings(portConfigs []types.ServicePortConfig) []string {
 }
 
 type Generator struct {
-	Project                *Project
-	Runtime                ContainerRuntime
-	Inputs                 []string
-	EnvFiles               []string
-	IncludeEnvFiles        bool
-	EnvFilesOnly           bool
-	IgnoreMissingEnvFiles  bool
-	ServiceInclude         *regexp.Regexp
-	AutoStart              bool
-	UseComposeLogDriver    bool
-	GenerateUnusedResoures bool
-	CheckSystemdMounts     bool
-	RemoveVolumes          bool
-	NoCreateRootTarget     bool
-	WriteHeader            bool
-	NoWriteNixSetup        bool
-	DefaultStopTimeout     time.Duration
+	Project                 *Project
+	Runtime                 ContainerRuntime
+	Inputs                  []string
+	EnvFiles                []string
+	IncludeEnvFiles         bool
+	EnvFilesOnly            bool
+	IgnoreMissingEnvFiles   bool
+	ServiceInclude          *regexp.Regexp
+	AutoStart               bool
+	UseComposeLogDriver     bool
+	GenerateUnusedResources bool
+	CheckSystemdMounts      bool
+	RemoveVolumes           bool
+	NoCreateRootTarget      bool
+	WriteHeader             bool
+	NoWriteNixSetup         bool
+	DefaultStopTimeout      time.Duration
 
 	serviceToContainerName map[string]string
 }
@@ -132,7 +132,7 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 	volumes := g.buildNixVolumes(composeProject, containers)
 
 	// Post-process any Compose settings that require the full state.
-	g.postProcessContainers(containers, volumes)
+	g.postProcessContainers(containers, networks, volumes)
 
 	var version string
 	if g.WriteHeader {
@@ -152,7 +152,7 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 	}, nil
 }
 
-func (g *Generator) postProcessContainers(containers []*NixContainer, volumes []*NixVolume) error {
+func (g *Generator) postProcessContainers(containers []*NixContainer, networks []*NixNetwork, volumes []*NixVolume) error {
 	for _, c := range containers {
 		var serviceName string
 		for s, containerName := range g.serviceToContainerName {
@@ -160,6 +160,22 @@ func (g *Generator) postProcessContainers(containers []*NixContainer, volumes []
 				serviceName = s
 				break
 			}
+		}
+
+		// Add systemd dependencies on network(s).
+		for _, n := range networks {
+			var networkName string
+			for _, name := range c.Networks {
+				if name == n.Name {
+					networkName = name
+					break
+				}
+			}
+			if networkName == "" {
+				continue
+			}
+			c.SystemdConfig.Unit.After = append(c.SystemdConfig.Unit.After, g.networkNameToService(networkName))
+			c.SystemdConfig.Unit.Requires = append(c.SystemdConfig.Unit.Requires, g.networkNameToService(networkName))
 		}
 
 		// Add systemd dependencies on volume(s).
@@ -191,8 +207,11 @@ func (g *Generator) postProcessContainers(containers []*NixContainer, volumes []
 				}
 				c.SystemdConfig.Unit.RequiresMountsFor = append(c.SystemdConfig.Unit.RequiresMountsFor, path)
 			}
-			slices.Sort(c.SystemdConfig.Unit.RequiresMountsFor)
 		}
+
+		slices.Sort(c.SystemdConfig.Unit.After)
+		slices.Sort(c.SystemdConfig.Unit.Requires)
+		slices.Sort(c.SystemdConfig.Unit.RequiresMountsFor)
 	}
 
 	return nil
@@ -542,11 +561,6 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig) (*NixContaine
 	slices.Sort(c.ExtraOptions)
 	slices.Sort(c.Networks)
 
-	// Add systemd dependencies on network(s).
-	for _, networkName := range c.Networks {
-		c.SystemdConfig.Unit.After = append(c.SystemdConfig.Unit.After, g.networkNameToService(networkName))
-		c.SystemdConfig.Unit.Requires = append(c.SystemdConfig.Unit.Requires, g.networkNameToService(networkName))
-	}
 	// Add systemd dependency on root target.
 	if !g.NoCreateRootTarget {
 		c.SystemdConfig.Unit.PartOf = append(c.SystemdConfig.Unit.PartOf, fmt.Sprintf("%s.target", rootTarget(g.Runtime, g.Project)))
@@ -643,7 +657,7 @@ func (g *Generator) buildNixNetworks(composeProject *types.Project, containers [
 				break
 			}
 		}
-		if !used && !g.GenerateUnusedResoures {
+		if (!used && !g.GenerateUnusedResources) || network.External.External {
 			continue
 		}
 
@@ -676,7 +690,7 @@ func (g *Generator) buildNixVolumes(composeProject *types.Project, containers []
 				break
 			}
 		}
-		if !used && !g.GenerateUnusedResoures {
+		if (!used && !g.GenerateUnusedResources) || volume.External.External {
 			continue
 		}
 		volumes = append(volumes, v)
