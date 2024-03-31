@@ -15,302 +15,113 @@ import (
 
 var update = flag.Bool("update", false, "update golden files")
 
-func getPaths(t *testing.T) (string, string, string) {
-	outFileName := fmt.Sprintf("%s_out.nix", t.Name())
-	composePath := path.Join("testdata", "docker-compose.yml")
+func getPaths(t *testing.T, useCommonInput bool) (string, string) {
+	t.Helper()
+	var composePath string
+	if useCommonInput {
+		composePath = path.Join("testdata", "compose.yml")
+	} else {
+		composePath = path.Join("testdata", fmt.Sprintf("%s.compose.yml", t.Name()))
+	}
 	envFilePath := path.Join("testdata", "input.env")
-	outFilePath := path.Join("testdata", outFileName)
-	return composePath, envFilePath, outFilePath
+	return composePath, envFilePath
 }
 
-func TestDocker(t *testing.T) {
+func runSubtestsWithGenerator(t *testing.T, g *Generator) {
+	t.Helper()
 	ctx := context.Background()
-	composePath, envFilePath, outFilePath := getPaths(t)
-	g := Generator{
-		Runtime:                ContainerRuntimeDocker,
-		Inputs:                 []string{composePath},
-		EnvFiles:               []string{envFilePath},
-		AutoStart:              true,
-		GenerateUnusedResoures: true,
-	}
-	c, err := g.Run(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	wantOutput, err := os.ReadFile(outFilePath)
-	if err != nil {
-		t.Fatal(err)
-	}
-	got, want := c.String(), string(wantOutput)
-	if *update {
-		if err := os.WriteFile(outFilePath, []byte(got), 0644); err != nil {
-			t.Fatal(err)
-		}
-	} else if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("output diff: %s\n", diff)
-	}
-}
-
-func TestDocker_WithProject(t *testing.T) {
-	ctx := context.Background()
-	composePath, envFilePath, outFilePath := getPaths(t)
-	g := Generator{
-		Project:  NewProject("myproject"),
-		Runtime:  ContainerRuntimeDocker,
-		Inputs:   []string{composePath},
-		EnvFiles: []string{envFilePath},
-	}
-	c, err := g.Run(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	wantOutput, err := os.ReadFile(outFilePath)
-	if err != nil {
-		t.Fatal(err)
-	}
-	got, want := c.String(), string(wantOutput)
-	if *update {
-		if err := os.WriteFile(outFilePath, []byte(got), 0644); err != nil {
-			t.Fatal(err)
-		}
-	} else if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("output diff: %s\n", diff)
-	}
-}
-
-func TestPodman(t *testing.T) {
-	ctx := context.Background()
-	composePath, envFilePath, outFilePath := getPaths(t)
-	g := Generator{
-		Runtime:                ContainerRuntimePodman,
-		Inputs:                 []string{composePath},
-		EnvFiles:               []string{envFilePath},
-		AutoStart:              true,
-		GenerateUnusedResoures: true,
-	}
-	c, err := g.Run(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	wantOutput, err := os.ReadFile(outFilePath)
-	if err != nil {
-		t.Fatal(err)
-	}
-	got, want := c.String(), string(wantOutput)
-	if *update {
-		if err := os.WriteFile(outFilePath, []byte(got), 0644); err != nil {
-			t.Fatal(err)
-		}
-	} else if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("output diff: %s\n", diff)
-	}
-}
-
-func TestPodman_WithProject(t *testing.T) {
-	ctx := context.Background()
-	composePath, envFilePath, outFilePath := getPaths(t)
-	g := Generator{
-		Project:  NewProject("myproject"),
-		Runtime:  ContainerRuntimePodman,
-		Inputs:   []string{composePath},
-		EnvFiles: []string{envFilePath},
-	}
-	c, err := g.Run(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	wantOutput, err := os.ReadFile(outFilePath)
-	if err != nil {
-		t.Fatal(err)
-	}
-	got, want := c.String(), string(wantOutput)
-	if *update {
-		if err := os.WriteFile(outFilePath, []byte(got), 0644); err != nil {
-			t.Fatal(err)
-		}
-	} else if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("output diff: %s\n", diff)
-	}
-}
-
-func TestUnusedResources(t *testing.T) {
-	ctx := context.Background()
-	composeFile := strings.TrimSpace("version: \"3.7\"\nnetworks:\n  test:\nvolumes:\n  some-volume:")
-	path := path.Join(t.TempDir(), "docker-compose.yml")
-	if err := os.WriteFile(path, []byte(composeFile), 0644); err != nil {
-		t.Fatal(err)
-	}
-
-	testcases := []struct {
-		runtime ContainerRuntime
-		want    string
-	}{
-		{
-			runtime: ContainerRuntimeDocker,
-			want: `{ pkgs, lib, ... }:
-
-{
-  # Runtime
-  virtualisation.docker = {
-    enable = true;
-    autoPrune.enable = true;
-  };
-  virtualisation.oci-containers.backend = "docker";
-}
-`,
-		},
-		{
-			runtime: ContainerRuntimePodman,
-			want: `{ pkgs, lib, ... }:
-
-{
-  # Runtime
-  virtualisation.podman = {
-    enable = true;
-    autoPrune.enable = true;
-    dockerCompat = true;
-    defaultNetwork.settings = {
-      # Required for container networking to be able to use names.
-      dns_enabled = true;
-    };
-  };
-  virtualisation.oci-containers.backend = "podman";
-}
-`,
-		},
-	}
-
-	for _, tc := range testcases {
-		t.Run(tc.runtime.String(), func(t *testing.T) {
-			g := Generator{
-				Project:            NewProject("myproject"),
-				Runtime:            tc.runtime,
-				Inputs:             []string{path},
-				NoCreateRootTarget: true,
-			}
+	for _, runtime := range []ContainerRuntime{ContainerRuntimeDocker, ContainerRuntimePodman} {
+		t.Run(runtime.String(), func(t *testing.T) {
+			testName := strings.ReplaceAll(t.Name(), "/", ".")
+			outFilePath := path.Join("testdata", fmt.Sprintf("%s.nix", testName))
+			g.Runtime = runtime
 			c, err := g.Run(ctx)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if diff := cmp.Diff(tc.want, c.String()); diff != "" {
+			got := c.String()
+			if *update {
+				if err := os.WriteFile(outFilePath, []byte(got), 0644); err != nil {
+					t.Fatal(err)
+				}
+				return
+			}
+			wantOutput, err := os.ReadFile(outFilePath)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diff := cmp.Diff(string(wantOutput), got); diff != "" {
 				t.Errorf("output diff: %s\n", diff)
 			}
 		})
 	}
 }
 
-func TestDocker_SystemdMount(t *testing.T) {
-	ctx := context.Background()
-	composePath, envFilePath, outFilePath := getPaths(t)
-	g := Generator{
-		Runtime:            ContainerRuntimeDocker,
+func TestBasic(t *testing.T) {
+	composePath, envFilePath := getPaths(t, true)
+	g := &Generator{
+		Inputs:                 []string{composePath},
+		EnvFiles:               []string{envFilePath},
+		AutoStart:              true,
+		GenerateUnusedResoures: true,
+	}
+	runSubtestsWithGenerator(t, g)
+}
+
+func TestProject(t *testing.T) {
+	composePath, envFilePath := getPaths(t, true)
+	g := &Generator{
+		Project:  NewProject("myproject"),
+		Inputs:   []string{composePath},
+		EnvFiles: []string{envFilePath},
+	}
+	runSubtestsWithGenerator(t, g)
+}
+
+func TestUnusedResources(t *testing.T) {
+	composePath, _ := getPaths(t, false)
+	g := &Generator{
+		Project:            NewProject("myproject"),
+		Inputs:             []string{composePath},
+		NoCreateRootTarget: true,
+	}
+	runSubtestsWithGenerator(t, g)
+}
+
+func TestSystemdMount(t *testing.T) {
+	composePath, envFilePath := getPaths(t, true)
+	g := &Generator{
 		Inputs:             []string{composePath},
 		EnvFiles:           []string{envFilePath},
 		CheckSystemdMounts: true,
 	}
-	c, err := g.Run(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	wantOutput, err := os.ReadFile(outFilePath)
-	if err != nil {
-		t.Fatal(err)
-	}
-	got, want := c.String(), string(wantOutput)
-	if *update {
-		if err := os.WriteFile(outFilePath, []byte(got), 0644); err != nil {
-			t.Fatal(err)
-		}
-	} else if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("output diff: %s\n", diff)
-	}
+	runSubtestsWithGenerator(t, g)
 }
 
-func TestPodman_SystemdMount(t *testing.T) {
-	ctx := context.Background()
-	composePath, envFilePath, outFilePath := getPaths(t)
-	g := Generator{
-		Runtime:            ContainerRuntimePodman,
-		Inputs:             []string{composePath},
-		EnvFiles:           []string{envFilePath},
-		CheckSystemdMounts: true,
-	}
-	c, err := g.Run(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	wantOutput, err := os.ReadFile(outFilePath)
-	if err != nil {
-		t.Fatal(err)
-	}
-	got, want := c.String(), string(wantOutput)
-	if *update {
-		if err := os.WriteFile(outFilePath, []byte(got), 0644); err != nil {
-			t.Fatal(err)
-		}
-	} else if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("output diff: %s\n", diff)
-	}
-}
-
-func TestDocker_RemoveVolumes(t *testing.T) {
-	ctx := context.Background()
-	composePath, envFilePath, outFilePath := getPaths(t)
-	g := Generator{
-		Runtime:       ContainerRuntimeDocker,
+func TestRemoveVolumes(t *testing.T) {
+	composePath, envFilePath := getPaths(t, true)
+	g := &Generator{
 		Inputs:        []string{composePath},
 		EnvFiles:      []string{envFilePath},
 		RemoveVolumes: true,
 	}
-	c, err := g.Run(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	wantOutput, err := os.ReadFile(outFilePath)
-	if err != nil {
-		t.Fatal(err)
-	}
-	got, want := c.String(), string(wantOutput)
-	if *update {
-		if err := os.WriteFile(outFilePath, []byte(got), 0644); err != nil {
-			t.Fatal(err)
-		}
-	} else if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("output diff: %s\n", diff)
-	}
+	runSubtestsWithGenerator(t, g)
 }
 
-func TestDocker_EnvFilesOnly(t *testing.T) {
-	ctx := context.Background()
-	composePath, envFilePath, outFilePath := getPaths(t)
-	g := Generator{
-		Runtime:         ContainerRuntimeDocker,
+func TestEnvFilesOnly(t *testing.T) {
+	composePath, envFilePath := getPaths(t, true)
+	g := &Generator{
 		Inputs:          []string{composePath},
 		EnvFiles:        []string{envFilePath},
 		IncludeEnvFiles: true,
 		EnvFilesOnly:    true,
 	}
-	c, err := g.Run(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	wantOutput, err := os.ReadFile(outFilePath)
-	if err != nil {
-		t.Fatal(err)
-	}
-	got, want := c.String(), string(wantOutput)
-	if *update {
-		if err := os.WriteFile(outFilePath, []byte(got), 0644); err != nil {
-			t.Fatal(err)
-		}
-	} else if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("output diff: %s\n", diff)
-	}
+	runSubtestsWithGenerator(t, g)
 }
 
-func TestDocker_IgnoreMissingEnvFiles(t *testing.T) {
+func TestIgnoreMissingEnvFiles(t *testing.T) {
 	ctx := context.Background()
-	composePath, envFilePath, _ := getPaths(t)
+	composePath, envFilePath := getPaths(t, true)
 	g := Generator{
 		Runtime:               ContainerRuntimeDocker,
 		Inputs:                []string{composePath},
@@ -324,87 +135,30 @@ func TestDocker_IgnoreMissingEnvFiles(t *testing.T) {
 	}
 }
 
-func TestDocker_OverrideSystemdStopTimeout(t *testing.T) {
-	ctx := context.Background()
-	composePath, envFilePath, outFilePath := getPaths(t)
-	g := Generator{
-		Runtime:            ContainerRuntimeDocker,
+func TestOverrideSystemdStopTimeout(t *testing.T) {
+	composePath, envFilePath := getPaths(t, true)
+	g := &Generator{
 		Inputs:             []string{composePath},
 		EnvFiles:           []string{envFilePath},
 		DefaultStopTimeout: 10 * time.Second,
 	}
-	c, err := g.Run(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	wantOutput, err := os.ReadFile(outFilePath)
-	if err != nil {
-		t.Fatal(err)
-	}
-	got, want := c.String(), string(wantOutput)
-	if *update {
-		if err := os.WriteFile(outFilePath, []byte(got), 0644); err != nil {
-			t.Fatal(err)
-		}
-	} else if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("output diff: %s\n", diff)
-	}
+	runSubtestsWithGenerator(t, g)
 }
 
-func TestDocker_NoWriteNixSetup(t *testing.T) {
-	ctx := context.Background()
-	composePath, envFilePath, outFilePath := getPaths(t)
-	g := Generator{
-		Runtime:         ContainerRuntimeDocker,
+func TestNoWriteNixSetup(t *testing.T) {
+	composePath, envFilePath := getPaths(t, true)
+	g := &Generator{
 		Inputs:          []string{composePath},
 		EnvFiles:        []string{envFilePath},
 		NoWriteNixSetup: true,
 	}
-	c, err := g.Run(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	wantOutput, err := os.ReadFile(outFilePath)
-	if err != nil {
-		t.Fatal(err)
-	}
-	got, want := c.String(), string(wantOutput)
-	if *update {
-		if err := os.WriteFile(outFilePath, []byte(got), 0644); err != nil {
-			t.Fatal(err)
-		}
-	} else if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("output diff: %s\n", diff)
-	}
+	runSubtestsWithGenerator(t, g)
 }
 
 func TestMacvlanSupport(t *testing.T) {
-	ctx := context.Background()
-	testName := t.Name()
-	inputPath := fmt.Sprintf("testdata/%s.compose.yml", testName)
-	for _, runtime := range []ContainerRuntime{ContainerRuntimeDocker, ContainerRuntimePodman} {
-		t.Run(runtime.String(), func(t *testing.T) {
-			outFilePath := fmt.Sprintf("testdata/%s_%s.nix", testName, runtime)
-			g := Generator{
-				Runtime: runtime,
-				Inputs:  []string{inputPath},
-			}
-			c, err := g.Run(ctx)
-			if err != nil {
-				t.Fatal(err)
-			}
-			wantOutput, err := os.ReadFile(outFilePath)
-			if err != nil {
-				t.Fatal(err)
-			}
-			got, want := c.String(), string(wantOutput)
-			if *update {
-				if err := os.WriteFile(outFilePath, []byte(got), 0644); err != nil {
-					t.Fatal(err)
-				}
-			} else if diff := cmp.Diff(want, got); diff != "" {
-				t.Errorf("output diff: %s\n", diff)
-			}
-		})
+	composePath, _ := getPaths(t, false)
+	g := &Generator{
+		Inputs: []string{composePath},
 	}
+	runSubtestsWithGenerator(t, g)
 }
