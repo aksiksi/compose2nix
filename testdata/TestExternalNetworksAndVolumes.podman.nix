@@ -39,15 +39,11 @@
     };
     after = [
       "podman-network-myproject_test1.service"
-      "podman-network-test2.service"
-      "podman-network-test3.service"
-      "podman-volume-test1.service"
+      "podman-volume-myproject_test1.service"
     ];
     requires = [
       "podman-network-myproject_test1.service"
-      "podman-network-test2.service"
-      "podman-network-test3.service"
-      "podman-volume-test1.service"
+      "podman-volume-myproject_test1.service"
     ];
     partOf = [
       "podman-compose-myproject-root.target"
@@ -73,14 +69,14 @@
   };
 
   # Volumes
-  systemd.services."podman-volume-test1" = {
+  systemd.services."podman-volume-myproject_test1" = {
     path = [ pkgs.podman ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
     };
     script = ''
-      podman volume inspect test1 || podman volume create test1
+      podman volume inspect myproject_test1 || podman volume create myproject_test1
     '';
     partOf = [ "podman-compose-myproject-root.target" ];
     wantedBy = [ "podman-compose-myproject-root.target" ];

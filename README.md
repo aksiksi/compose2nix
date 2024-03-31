@@ -270,7 +270,7 @@ If a feature is missing, please feel free to [create an issue](https://github.co
 | [`driver`](https://docs.docker.com/compose/compose-file/07-volumes/#driver) | ✅ |
 | [`driver_opts`](https://docs.docker.com/compose/compose-file/07-volumes/#driver_opts) | ✅ |
 | [`labels`](https://docs.docker.com/compose/compose-file/07-volumes/#labels) | ✅ |
-| [`name`](https://docs.docker.com/compose/compose-file/07-volumes/#name) | ❌ |
+| [`name`](https://docs.docker.com/compose/compose-file/07-volumes/#name) | ✅ |
 | [`external`](https://docs.docker.com/compose/compose-file/07-volumes/#external) | ✅ |
 
 #### Misc

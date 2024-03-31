@@ -11,6 +11,10 @@ services:
       test1:
       test2:
       test3:
+    volumes:
+      - test1:/test1
+      - test2:/test2
+      - test3:/test3
     restart: unless-stopped
 
 networks:
@@ -18,5 +22,13 @@ networks:
     internal: true
   test2:
     name: my-network
+  test3:
+    external: true
+
+volumes:
+  test1:
+    external: true
+  test2:
+    name: my-volume
   test3:
 

@@ -11,6 +11,11 @@
   # Containers
   virtualisation.oci-containers.containers."traefik" = {
     image = "docker.io/library/traefik";
+    volumes = [
+      "test2:/test2:rw"
+      "test3:/test3:rw"
+      "test1:/test1:rw"
+    ];
     ports = [
       "80:80/tcp"
       "443:443/tcp"
@@ -21,7 +26,7 @@
       "--network-alias=traefik"
       "--network=my-network"
       "--network=myproject_test1"
-      "--network=myproject_test3"
+      "--network=test3"
     ];
   };
   systemd.services."docker-traefik" = {
@@ -34,12 +39,14 @@
     after = [
       "docker-network-my-network.service"
       "docker-network-myproject_test1.service"
-      "docker-network-myproject_test3.service"
+      "docker-volume-my-volume.service"
+      "docker-volume-myproject_test3.service"
     ];
     requires = [
       "docker-network-my-network.service"
       "docker-network-myproject_test1.service"
-      "docker-network-myproject_test3.service"
+      "docker-volume-my-volume.service"
+      "docker-volume-myproject_test3.service"
     ];
     partOf = [
       "docker-compose-myproject-root.target"
@@ -76,15 +83,28 @@
     partOf = [ "docker-compose-myproject-root.target" ];
     wantedBy = [ "docker-compose-myproject-root.target" ];
   };
-  systemd.services."docker-network-myproject_test3" = {
+
+  # Volumes
+  systemd.services."docker-volume-my-volume" = {
     path = [ pkgs.docker ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.docker}/bin/docker network rm -f myproject_test3";
     };
     script = ''
-      docker network inspect myproject_test3 || docker network create myproject_test3
+      docker volume inspect my-volume || docker volume create my-volume
+    '';
+    partOf = [ "docker-compose-myproject-root.target" ];
+    wantedBy = [ "docker-compose-myproject-root.target" ];
+  };
+  systemd.services."docker-volume-myproject_test3" = {
+    path = [ pkgs.docker ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    script = ''
+      docker volume inspect myproject_test3 || docker volume create myproject_test3
     '';
     partOf = [ "docker-compose-myproject-root.target" ];
     wantedBy = [ "docker-compose-myproject-root.target" ];
