@@ -343,7 +343,7 @@
       ExecStop = "${pkgs.podman}/bin/podman network rm -f myproject-default";
     };
     script = ''
-      podman network inspect myproject-default || podman network create myproject-default --opt=isolate=true
+      podman network inspect myproject-default || podman network create myproject-default
     '';
     partOf = [ "podman-compose-myproject-root.target" ];
     wantedBy = [ "podman-compose-myproject-root.target" ];
@@ -356,7 +356,7 @@
       ExecStop = "${pkgs.podman}/bin/podman network rm -f myproject-something";
     };
     script = ''
-      podman network inspect myproject-something || podman network create myproject-something --opt=isolate=true --label=test-label=okay
+      podman network inspect myproject-something || podman network create myproject-something --label=test-label=okay
     '';
     partOf = [ "podman-compose-myproject-root.target" ];
     wantedBy = [ "podman-compose-myproject-root.target" ];

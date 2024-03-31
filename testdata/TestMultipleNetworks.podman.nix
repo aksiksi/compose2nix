@@ -60,7 +60,7 @@
       ExecStop = "${pkgs.podman}/bin/podman network rm -f myproject-test1";
     };
     script = ''
-      podman network inspect myproject-test1 || podman network create myproject-test1 --opt=isolate=true
+      podman network inspect myproject-test1 || podman network create myproject-test1
     '';
     partOf = [ "podman-compose-myproject-root.target" ];
     wantedBy = [ "podman-compose-myproject-root.target" ];
@@ -73,7 +73,7 @@
       ExecStop = "${pkgs.podman}/bin/podman network rm -f myproject-test2";
     };
     script = ''
-      podman network inspect myproject-test2 || podman network create myproject-test2 --opt=isolate=true
+      podman network inspect myproject-test2 || podman network create myproject-test2
     '';
     partOf = [ "podman-compose-myproject-root.target" ];
     wantedBy = [ "podman-compose-myproject-root.target" ];
@@ -86,7 +86,7 @@
       ExecStop = "${pkgs.podman}/bin/podman network rm -f myproject-test3";
     };
     script = ''
-      podman network inspect myproject-test3 || podman network create myproject-test3 --opt=isolate=true
+      podman network inspect myproject-test3 || podman network create myproject-test3
     '';
     partOf = [ "podman-compose-myproject-root.target" ];
     wantedBy = [ "podman-compose-myproject-root.target" ];
