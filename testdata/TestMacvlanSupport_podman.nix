@@ -61,7 +61,7 @@
       ExecStop = "${pkgs.podman}/bin/podman network rm -f myproject-homenet";
     };
     script = ''
-      podman network inspect myproject-homenet || podman network create myproject-homenet --driver=macvlan --opt=isolate=true --opt=parent=enp2s0
+      podman network inspect myproject-homenet || podman network create myproject-homenet --driver=macvlan --opt=isolate=true --opt=parent=enp2s0 --subnet=192.168.8.0/24 --gateway=192.168.8.1
     '';
     partOf = [ "podman-compose-myproject-root.target" ];
     wantedBy = [ "podman-compose-myproject-root.target" ];

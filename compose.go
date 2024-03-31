@@ -619,7 +619,31 @@ func (g *Generator) buildNixNetworks(composeProject *types.Project, containers [
 			}
 			n.DriverOpts["isolate"] = "true"
 		}
+
+		// IPAM configuration.
+		// https://docs.docker.com/compose/compose-file/06-networks/#ipam
+		// https://docs.docker.com/reference/cli/docker/network/create/
+		// https://docs.podman.io/en/latest/markdown/podman-network-create.1.html
+		if network.Ipam.Driver != "" {
+			n.IpamDriver = network.Ipam.Driver
+		}
+		for _, ipamConfig := range network.Ipam.Config {
+			cfg := IpamConfig{
+				Subnet:  ipamConfig.Subnet,
+				IPRange: ipamConfig.IPRange,
+				Gateway: ipamConfig.Gateway,
+			}
+			if g.Runtime == ContainerRuntimeDocker {
+				for k, v := range ipamConfig.AuxiliaryAddresses {
+					cfg.AuxAddresses = append(cfg.AuxAddresses, fmt.Sprintf("%s=%s", k, v))
+				}
+				slices.Sort(cfg.AuxAddresses)
+			}
+			n.IpamConfigs = append(n.IpamConfigs, cfg)
+		}
+
 		// Keep track of all container services that are in this network.
+		// If a network is unused, we don't need to generate it.
 		used := false
 		for _, c := range containers {
 			if slices.Contains(c.Networks, n.Name) {
@@ -627,10 +651,10 @@ func (g *Generator) buildNixNetworks(composeProject *types.Project, containers [
 				break
 			}
 		}
-		// If a network is unused, we don't need to generate it.
 		if !used && !g.GenerateUnusedResoures {
 			continue
 		}
+
 		networks = append(networks, n)
 	}
 	slices.SortFunc(networks, func(n1, n2 *NixNetwork) int {

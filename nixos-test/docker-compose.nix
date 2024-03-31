@@ -69,8 +69,9 @@
     ];
     log-driver = "journald";
     extraOptions = [
+      "--ip=192.168.8.20"
       "--network-alias=service-b"
-      "--network=myproject-default"
+      "--network=myproject-something"
     ];
   };
   systemd.services."docker-service-b" = {
@@ -84,11 +85,11 @@
       StartLimitIntervalSec = lib.mkOverride 500 "infinity";
     };
     after = [
-      "docker-network-myproject-default.service"
+      "docker-network-myproject-something.service"
       "docker-volume-storage.service"
     ];
     requires = [
-      "docker-network-myproject-default.service"
+      "docker-network-myproject-something.service"
       "docker-volume-storage.service"
     ];
     partOf = [
@@ -115,6 +116,19 @@
     };
     script = ''
       docker network inspect myproject-default || docker network create myproject-default
+    '';
+    partOf = [ "docker-compose-myproject-root.target" ];
+    wantedBy = [ "docker-compose-myproject-root.target" ];
+  };
+  systemd.services."docker-network-myproject-something" = {
+    path = [ pkgs.docker ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStop = "${pkgs.docker}/bin/docker network rm -f myproject-something";
+    };
+    script = ''
+      docker network inspect myproject-something || docker network create myproject-something --subnet=192.168.8.0/24 --gateway=192.168.8.1 --label=test-label=okay
     '';
     partOf = [ "docker-compose-myproject-root.target" ];
     wantedBy = [ "docker-compose-myproject-root.target" ];
