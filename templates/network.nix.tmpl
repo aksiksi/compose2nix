@@ -1,4 +1,3 @@
-{{- $labels := mapToRepeatedKeyValFlag "--label" .Labels -}}
 systemd.services."{{.Runtime}}-network-{{.Name}}" = {
   path = [ pkgs.{{.Runtime}} ];
   serviceConfig = {
@@ -6,15 +5,9 @@ systemd.services."{{.Runtime}}-network-{{.Name}}" = {
     RemainAfterExit = true;
     ExecStop = "${pkgs.{{.Runtime}}}/bin/{{.Runtime}} network rm -f {{.Name}}";
   };
-  {{- if eq (.Runtime | printf "%s") "docker"}}
   script = ''
-    {{.Runtime}} network inspect {{.Name}} || {{.Runtime}} network create {{.Name}}{{- if $labels}} {{ $labels | join " "}}{{- end}}
+    {{ .Command }}
   '';
-  {{- else}}
-  script = ''
-    {{.Runtime}} network inspect {{.Name}} || {{.Runtime}} network create {{.Name}} --opt isolate=true{{- if $labels}} {{ $labels | join " "}}{{- end}}
-  '';
-  {{- end}}
   {{- if rootTarget}}
   {{- /* PartOf for stop/restart of root, WantedBy for start of root. */}}
   partOf = [ "{{rootTarget}}.target" ];

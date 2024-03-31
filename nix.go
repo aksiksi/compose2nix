@@ -52,13 +52,31 @@ func (p *Project) With(name string) string {
 }
 
 type NixNetwork struct {
-	Runtime ContainerRuntime
-	Name    string
-	Labels  map[string]string
+	Runtime    ContainerRuntime
+	Name       string
+	Driver     string
+	DriverOpts map[string]string
+	Labels     map[string]string
 }
 
 func (n *NixNetwork) Unit() string {
 	return fmt.Sprintf("%s-network-%s.service", n.Runtime, n.Name)
+}
+
+func (n *NixNetwork) Command() string {
+	cmd := fmt.Sprintf("%[1]s network inspect %[2]s || %[1]s network create %[2]s", n.Runtime, n.Name)
+	if n.Driver != "" {
+		cmd += fmt.Sprintf(" --driver=%s", n.Driver)
+	}
+	if len(n.DriverOpts) > 0 {
+		driverOpts := mapToRepeatedKeyValFlag("--opt", n.DriverOpts)
+		cmd += " " + strings.Join(driverOpts, " ")
+	}
+	if len(n.Labels) > 0 {
+		labels := mapToRepeatedKeyValFlag("--label", n.Labels)
+		cmd += " " + strings.Join(labels, " ")
+	}
+	return cmd
 }
 
 type NixVolume struct {
@@ -77,6 +95,22 @@ func (v *NixVolume) Path() string {
 
 func (v *NixVolume) Unit() string {
 	return fmt.Sprintf("%s-volume-%s.service", v.Runtime, v.Name)
+}
+
+func (v *NixVolume) Command() string {
+	cmd := fmt.Sprintf("%[1]s volume inspect %[2]s || %[1]s volume create %[2]s", v.Runtime, v.Name)
+	if v.Driver != "" {
+		cmd += fmt.Sprintf(" --driver=%s", v.Driver)
+	}
+	if len(v.DriverOpts) > 0 {
+		driverOpts := mapToRepeatedKeyValFlag("--opt", v.DriverOpts)
+		cmd += " " + strings.Join(driverOpts, " ")
+	}
+	if len(v.Labels) > 0 {
+		labels := mapToRepeatedKeyValFlag("--label", v.Labels)
+		cmd += " " + strings.Join(labels, " ")
+	}
+	return cmd
 }
 
 // NixContainerSystemdConfig configures the container's systemd config.
