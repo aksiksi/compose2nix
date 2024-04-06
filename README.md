@@ -77,9 +77,9 @@ By default, the tool looks for `docker-compose.yml` in the **current directory**
 
 ### Sample
 
-* Input: https://github.com/aksiksi/compose2nix/blob/main/testdata/docker-compose.yml
-* Output (Docker): https://github.com/aksiksi/compose2nix/blob/main/testdata/TestDocker_out.nix
-* Output (Podman): https://github.com/aksiksi/compose2nix/blob/main/testdata/TestPodman_out.nix
+* Input: https://github.com/aksiksi/compose2nix/blob/main/testdata/compose.yml
+* Output (Docker): https://github.com/aksiksi/compose2nix/blob/main/testdata/TestBasic.docker.nix
+* Output (Podman): https://github.com/aksiksi/compose2nix/blob/main/testdata/TestBasic.podman.nix
 
 ### Working with Secrets
 
