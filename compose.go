@@ -9,11 +9,12 @@ import (
 	"os"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
-	"github.com/compose-spec/compose-go/loader"
-	"github.com/compose-spec/compose-go/types"
+	"github.com/compose-spec/compose-go/v2/loader"
+	"github.com/compose-spec/compose-go/v2/types"
 )
 
 func composeEnvironmentToMap(env types.MappingWithEquals) map[string]string {
@@ -416,10 +417,15 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 	}
 
 	// https://docs.docker.com/compose/compose-file/05-services/#extra_hosts
+	// https://github.com/compose-spec/compose-spec/blob/master/spec.md#extra_hosts
 	// https://docs.docker.com/engine/reference/commandline/run/#add-host
 	// https://docs.podman.io/en/latest/markdown/podman-run.1.html#add-host-host-ip
-	for hostname, ip := range service.ExtraHosts {
-		c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--add-host=%s:%s", hostname, ip))
+	for hostname, ips := range service.ExtraHosts {
+		// We can get upto two IPs per hostname: one v4 and one v6.
+		// See: https://github.com/compose-spec/compose-go/pull/563
+		for _, ip := range ips {
+			c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--add-host=%s:%s", hostname, ip))
+		}
 	}
 
 	if service.Hostname != "" {
@@ -511,8 +517,8 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 				c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--memory=%db", limits.MemoryBytes))
 			}
 			// Name is misleading - this actually is the exact number passed in with "cpus".
-			if limits.NanoCPUs != "" {
-				c.ExtraOptions = append(c.ExtraOptions, "--cpu-quota="+limits.NanoCPUs)
+			if limits.NanoCPUs != 0 {
+				c.ExtraOptions = append(c.ExtraOptions, "--cpu-quota="+strconv.FormatFloat(float64(limits.NanoCPUs), 'f', -1, 32))
 			}
 		}
 		if reservations := deploy.Resources.Reservations; reservations != nil {
@@ -520,8 +526,8 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 				c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--memory-reservation=%db", reservations.MemoryBytes))
 			}
 			// Name is misleading - this actually is the exact number passed in with "cpus".
-			if reservations.NanoCPUs != "" {
-				c.ExtraOptions = append(c.ExtraOptions, "--cpus="+reservations.NanoCPUs)
+			if reservations.NanoCPUs != 0 {
+				c.ExtraOptions = append(c.ExtraOptions, "--cpus="+strconv.FormatFloat(float64(reservations.NanoCPUs), 'f', -1, 32))
 			}
 		}
 	}
@@ -619,7 +625,7 @@ func (g *Generator) buildNixNetworks(composeProject *types.Project) ([]*NixNetwo
 			OriginalName: name,
 			Driver:       network.Driver,
 			DriverOpts:   network.DriverOpts,
-			External:     network.External.External,
+			External:     bool(network.External),
 			Labels:       network.Labels,
 		}
 
@@ -671,7 +677,7 @@ func (g *Generator) buildNixVolumes(composeProject *types.Project) ([]*NixVolume
 			Name:         g.Project.With(name),
 			Driver:       volume.Driver,
 			DriverOpts:   volume.DriverOpts,
-			External:     volume.External.External,
+			External:     bool(volume.External),
 			Labels:       volume.Labels,
 			RemoveOnStop: g.RemoveVolumes,
 		}
