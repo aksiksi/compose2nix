@@ -39,7 +39,7 @@
     autoStart = false;
     extraOptions = [
       "--cpu-quota=1.5"
-      "--cpus=1.0"
+      "--cpus=1"
       "--dns=1.1.1.1"
       "--health-cmd='curl -f http://localhost/\${POTATO}'"
       "--log-opt=compress=true"
@@ -233,6 +233,7 @@
     autoStart = false;
     extraOptions = [
       "--add-host=abc:93.184.216.34"
+      "--add-host=abc:::1"
       "--cap-add=NET_ADMIN"
       "--device=/dev/net/tun:/dev/net/tun"
       "--dns=8.8.4.4"

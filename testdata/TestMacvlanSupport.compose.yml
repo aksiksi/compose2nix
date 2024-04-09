@@ -1,4 +1,3 @@
-version: '3.7'
 name: "myproject"
 services:
   teddycloud:
