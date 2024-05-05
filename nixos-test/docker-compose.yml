@@ -29,6 +29,7 @@ services:
     labels:
       - "compose2nix.systemd.unit.AllowIsolate=no"
       - "compose2nix.systemd.service.RuntimeMaxSec=360"
+      - "some-other-label=\"test\""
     depends_on:
       - service-a
     healthcheck:
@@ -48,6 +49,7 @@ networks:
           gateway: 192.168.8.1
     labels:
       - "test-label=okay"
+      - "quoted=\"words\""
 
 volumes:
   storage:
@@ -56,6 +58,8 @@ volumes:
       type: none
       device: /mnt/media
       o: bind
+    labels:
+      - "quoted=\"words\""
   books:
     driver_opts:
       type: none

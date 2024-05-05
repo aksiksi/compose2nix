@@ -1,4 +1,4 @@
-# Auto-generated using compose2nix v0.2.1-pre.
+# Auto-generated using compose2nix v0.2.2-pre.
 { pkgs, lib, ... }:
 
 {
@@ -91,6 +91,9 @@
       "myproject_books:/books:rw"
       "storage:/storage:rw"
     ];
+    labels = {
+      "some-other-label" = "\"test\"";
+    };
     dependsOn = [
       "myproject-service-a"
     ];
@@ -158,7 +161,7 @@
       ExecStop = "docker network rm -f myproject_something";
     };
     script = ''
-      docker network inspect myproject_something || docker network create myproject_something --subnet=192.168.8.0/24 --gateway=192.168.8.1 --label=test-label=okay
+      docker network inspect myproject_something || docker network create myproject_something --subnet=192.168.8.0/24 --gateway=192.168.8.1 --label=quoted="words" --label=test-label=okay
     '';
     partOf = [ "docker-compose-myproject-root.target" ];
     wantedBy = [ "docker-compose-myproject-root.target" ];
@@ -190,7 +193,7 @@
       "/mnt/media"
     ];
     script = ''
-      docker volume inspect storage || docker volume create storage --opt=device=/mnt/media --opt=o=bind --opt=type=none
+      docker volume inspect storage || docker volume create storage --opt=device=/mnt/media --opt=o=bind --opt=type=none --label=quoted="words"
     '';
     partOf = [ "docker-compose-myproject-root.target" ];
     wantedBy = [ "docker-compose-myproject-root.target" ];
