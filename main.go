@@ -32,6 +32,7 @@ var runtime = flag.String("runtime", "podman", `one of: ["podman", "docker"].`)
 var useComposeLogDriver = flag.Bool("use_compose_log_driver", false, "if set, always use the Docker Compose log driver.")
 var generateUnusedResources = flag.Bool("generate_unused_resources", false, "if set, unused resources (e.g., networks) will be generated even if no containers use them.")
 var checkSystemdMounts = flag.Bool("check_systemd_mounts", false, "if set, volume paths will be checked against systemd mount paths on the current machine and marked as container dependencies.")
+var useUpheldBy = flag.Bool("use_upheld_by", false, "if set, upheldBy will be used for service dependencies (NixOS 24.05+).")
 var removeVolumes = flag.Bool("remove_volumes", false, "if set, volumes will be removed on systemd service stop.")
 var createRootTarget = flag.Bool("create_root_target", true, "if set, a root systemd target will be created, which when stopped tears down all resources.")
 var defaultStopTimeout = flag.Duration("default_stop_timeout", defaultSystemdStopTimeout, "default stop timeout for generated container services.")
@@ -87,6 +88,7 @@ func main() {
 		UseComposeLogDriver:     *useComposeLogDriver,
 		GenerateUnusedResources: *generateUnusedResources,
 		CheckSystemdMounts:      *checkSystemdMounts,
+		UseUpheldBy:             *useUpheldBy,
 		RemoveVolumes:           *removeVolumes,
 		NoCreateRootTarget:      !*createRootTarget,
 		WriteHeader:             true,

@@ -98,6 +98,16 @@ func TestSystemdMount(t *testing.T) {
 	runSubtestsWithGenerator(t, g)
 }
 
+func TestUpheldBy(t *testing.T) {
+	composePath, envFilePath := getPaths(t, true)
+	g := &Generator{
+		Inputs:      []string{composePath},
+		EnvFiles:    []string{envFilePath},
+		UseUpheldBy: true,
+	}
+	runSubtestsWithGenerator(t, g)
+}
+
 func TestRemoveVolumes(t *testing.T) {
 	composePath, envFilePath := getPaths(t, true)
 	g := &Generator{

@@ -95,7 +95,7 @@
     partOf = [
       "docker-compose-myproject-root.target"
     ];
-    unitConfig.UpheldBy = [
+    upheldBy = [
       "docker-myproject-service-a.service"
     ];
     wantedBy = [

@@ -68,9 +68,6 @@
     partOf = [
       "podman-compose-myproject-root.target"
     ];
-    unitConfig.UpheldBy = [
-      "podman-myproject-sabnzbd.service"
-    ];
     wantedBy = [
       "podman-compose-myproject-root.target"
     ];
@@ -256,9 +253,6 @@
     partOf = [
       "podman-compose-myproject-root.target"
     ];
-    unitConfig.UpheldBy = [
-      "podman-myproject-sabnzbd.service"
-    ];
     wantedBy = [
       "podman-compose-myproject-root.target"
     ];
@@ -308,9 +302,6 @@
     };
     partOf = [
       "podman-compose-myproject-root.target"
-    ];
-    unitConfig.UpheldBy = [
-      "podman-sabnzbd.service"
     ];
     wantedBy = [
       "podman-compose-myproject-root.target"

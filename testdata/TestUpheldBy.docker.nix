@@ -65,11 +65,11 @@
     partOf = [
       "docker-compose-myproject-root.target"
     ];
+    upheldBy = [
+      "docker-myproject-sabnzbd.service"
+    ];
     wantedBy = [
       "docker-compose-myproject-root.target"
-    ];
-    unitConfig.RequiresMountsFor = [
-      "/var/volumes/jellyseerr"
     ];
   };
   virtualisation.oci-containers.containers."myproject-sabnzbd" = {
@@ -130,9 +130,6 @@
     wantedBy = [
       "docker-compose-myproject-root.target"
     ];
-    unitConfig.RequiresMountsFor = [
-      "/var/volumes/sabnzbd"
-    ];
   };
   virtualisation.oci-containers.containers."photoprism-mariadb" = {
     image = "docker.io/library/mariadb:10.9";
@@ -185,9 +182,6 @@
     ];
     wantedBy = [
       "docker-compose-myproject-root.target"
-    ];
-    unitConfig.RequiresMountsFor = [
-      "/var/volumes/photoprism-mariadb"
     ];
   };
   virtualisation.oci-containers.containers."torrent-client" = {
@@ -264,13 +258,11 @@
     partOf = [
       "docker-compose-myproject-root.target"
     ];
+    upheldBy = [
+      "docker-myproject-sabnzbd.service"
+    ];
     wantedBy = [
       "docker-compose-myproject-root.target"
-    ];
-    unitConfig.RequiresMountsFor = [
-      "/etc/localtime"
-      "/var/volumes/transmission/config"
-      "/var/volumes/transmission/scripts"
     ];
   };
   virtualisation.oci-containers.containers."traefik" = {
@@ -322,12 +314,11 @@
     partOf = [
       "docker-compose-myproject-root.target"
     ];
+    upheldBy = [
+      "docker-sabnzbd.service"
+    ];
     wantedBy = [
       "docker-compose-myproject-root.target"
-    ];
-    unitConfig.RequiresMountsFor = [
-      "/var/run/podman/podman.sock"
-      "/var/volumes/traefik"
     ];
   };
 
@@ -366,9 +357,6 @@
       Type = "oneshot";
       RemainAfterExit = true;
     };
-    unitConfig.RequiresMountsFor = [
-      "/mnt/media/Books"
-    ];
     script = ''
       docker volume inspect books || docker volume create books --opt=device=/mnt/media/Books --opt=o=bind --opt=type=none
     '';
@@ -381,9 +369,6 @@
       Type = "oneshot";
       RemainAfterExit = true;
     };
-    unitConfig.RequiresMountsFor = [
-      "/mnt/photos"
-    ];
     script = ''
       docker volume inspect photos || docker volume create photos --opt=device=/mnt/photos --opt=o=bind --opt=type=none --label=test-label=okay
     '';
@@ -396,9 +381,6 @@
       Type = "oneshot";
       RemainAfterExit = true;
     };
-    unitConfig.RequiresMountsFor = [
-      "/mnt/media"
-    ];
     script = ''
       docker volume inspect storage || docker volume create storage --opt=device=/mnt/media --opt=o=bind --opt=type=none
     '';

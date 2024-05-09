@@ -97,7 +97,7 @@
     partOf = [
       "podman-compose-myproject-root.target"
     ];
-    unitConfig.UpheldBy = [
+    upheldBy = [
       "podman-myproject-service-a.service"
     ];
     wantedBy = [
