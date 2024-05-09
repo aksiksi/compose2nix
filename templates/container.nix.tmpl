@@ -114,7 +114,7 @@ systemd.services."{{.Runtime}}-{{.Name}}" = {
   ];
   {{- end}}
   {{- if .SystemdConfig.Unit.UpheldBy}}
-  unitConfig.UpheldBy = [
+  upheldBy = [
     {{- range .SystemdConfig.Unit.UpheldBy}}
     "{{.}}"
     {{- end}}
