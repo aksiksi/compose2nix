@@ -1,0 +1,12 @@
+name: "dovecot"
+services:
+  dovecot:
+    container_name: dovecot
+    image: dovecot
+    labels:
+      ofelia.enabled: "true"
+      ofelia.job-exec.dovecot_imapsync_runner.schedule: "@every 1m"
+      ofelia.job-exec.dovecot_imapsync_runner.no-overlap: "true"
+      ofelia.job-exec.dovecot_imapsync_runner.command: "/bin/bash -c \"[[ $${MASTER} == y ]] && /usr/local/bin/gosu nobody /usr/local/bin/imapsync_runner.pl || exit 0\""
+      ofelia.job-exec.dovecot_trim_logs.schedule: "@every 1m"
+      ofelia.job-exec.dovecot_trim_logs.command: "/bin/bash -c \"[[ $${MASTER} == y ]] && /usr/local/bin/gosu vmail /usr/local/bin/trim_logs.sh || exit 0\""

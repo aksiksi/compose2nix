@@ -4,7 +4,7 @@ virtualisation.oci-containers.containers."{{.Name}}" = {
   {{- if .Environment}}
   environment = {
     {{- range $k, $v := .Environment}}
-    {{$k}} = "{{$v}}";
+    {{$k}} = "{{escapeChars $v}}";
     {{- end}}
   };
   {{- end}}
@@ -20,7 +20,7 @@ virtualisation.oci-containers.containers."{{.Name}}" = {
   {{- if .Volumes}}
   volumes = [
     {{- range $k, $v := .Volumes}}
-    "{{$v}}"
+    "{{escapeChars $v}}"
     {{- end}}
   ];
   {{- end}}
@@ -40,7 +40,7 @@ virtualisation.oci-containers.containers."{{.Name}}" = {
   {{- if .Labels}}
   labels = {
     {{- range $k, $v := .Labels}}
-    "{{$k}}" = "{{$v}}";
+    "{{escapeChars $k}}" = "{{escapeChars $v}}";
     {{- end}}
   };
   {{- end}}

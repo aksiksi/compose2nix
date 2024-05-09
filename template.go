@@ -45,8 +45,16 @@ func toNixList(s []string) string {
 	return fmt.Sprintf("[ %s ]", b.String())
 }
 
+func escapeChars(s string) string {
+	s = strings.ReplaceAll(s, "\"", "\\\"")
+	s = strings.ReplaceAll(s, "$", "\\$")
+
+	return s
+}
+
 var funcMap template.FuncMap = template.FuncMap{
-	"derefInt":   derefInt,
-	"toNixValue": toNixValue,
-	"toNixList":  toNixList,
+	"derefInt":    derefInt,
+	"toNixValue":  toNixValue,
+	"toNixList":   toNixList,
+	"escapeChars": escapeChars,
 }
