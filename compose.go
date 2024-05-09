@@ -64,6 +64,7 @@ type Generator struct {
 	UseComposeLogDriver     bool
 	GenerateUnusedResources bool
 	CheckSystemdMounts      bool
+	UseUpheldBy             bool
 	RemoveVolumes           bool
 	NoCreateRootTarget      bool
 	WriteHeader             bool
@@ -561,17 +562,23 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 		c.SystemdConfig.Unit.WantedBy = append(c.SystemdConfig.Unit.WantedBy, fmt.Sprintf("%s.target", rootTarget(g.Runtime, g.Project)))
 	}
 
-	// Set UpheldBy for this service's dependencies. This ensures that, when the dependency comes up,
-	// this container will also be started - and continuously restarted with backoff - until it comes up.
-	// See: https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Upholds=
-	//
-	// Why do we need to do this? Because, by default, systemd does not attempt to start failed dependent units
-	// when the parent (dependency) comes up. See: https://github.com/systemd/systemd/issues/1312.
-	//
-	// Note 2: Upholds is supported in version 249+. NixOS 23.05 uses 253.6, so this should always be supported.
-	// See: https://github.com/NixOS/nixpkgs/blob/nixos-23.05/pkgs/os-specific/linux/systemd/default.nix#L148.
-	for _, containerName := range c.DependsOn {
-		c.SystemdConfig.Unit.UpheldBy = append(c.SystemdConfig.Unit.UpheldBy, fmt.Sprintf("%s-%s.service", g.Runtime, containerName))
+	// UpheldBy is only supported in NixOS 24.05+, which is why we have this
+	// behind a flag.
+	if g.UseUpheldBy {
+		// Set UpheldBy for this service's dependencies. This ensures that, when
+		// the dependency comes up, this container will also be started - and
+		// continuously restarted with backoff - until it comes up.
+		//
+		// See: https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Upholds=
+		//
+		// Why do we need to do this? Because, by default, systemd does not
+		// attempt to start failed dependent units when the parent (dependency)
+		// comes up. See: https://github.com/systemd/systemd/issues/1312.
+		//
+		// For further discussion, see: https://github.com/aksiksi/compose2nix/issues/19
+		for _, containerName := range c.DependsOn {
+			c.SystemdConfig.Unit.UpheldBy = append(c.SystemdConfig.Unit.UpheldBy, fmt.Sprintf("%s-%s.service", g.Runtime, containerName))
+		}
 	}
 
 	slices.Sort(c.SystemdConfig.Unit.After)
