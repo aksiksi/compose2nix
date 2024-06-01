@@ -20,13 +20,14 @@ const (
 
 // TODO(aksiksi): Investigate parsing flags into structs using the *Val functions.
 var inputs = flag.String("inputs", "docker-compose.yml", "one or more comma-separated path(s) to Compose file(s).")
+var output = flag.String("output", "docker-compose.nix", "path to output Nix file.")
+var project = flag.String("project", "", "project name used as a prefix for generated resources. this overrides any top-level \"name\" set in the Compose file(s).")
+var serviceInclude = flag.String("service_include", "", "regex pattern for services to include.")
+var rootPath = flag.String("root_path", "", "root path to use for any relative paths in the Compose file (e.g., volumes).")
 var envFiles = flag.String("env_files", "", "one or more comma-separated paths to .env file(s).")
 var includeEnvFiles = flag.Bool("include_env_files", false, "include env files in the NixOS container definition.")
 var envFilesOnly = flag.Bool("env_files_only", false, "only use env file(s) in the NixOS container definitions.")
 var ignoreMissingEnvFiles = flag.Bool("ignore_missing_env_files", false, "if set, missing env files will be ignored.")
-var output = flag.String("output", "docker-compose.nix", "path to output Nix file.")
-var project = flag.String("project", "", "project name used as a prefix for generated resources. this overrides any top-level \"name\" set in the Compose file(s).")
-var serviceInclude = flag.String("service_include", "", "regex pattern for services to include.")
 var autoStart = flag.Bool("auto_start", true, "auto-start setting for generated service(s). this applies to all services, not just containers.")
 var runtime = flag.String("runtime", "podman", `one of: ["podman", "docker"].`)
 var useComposeLogDriver = flag.Bool("use_compose_log_driver", false, "if set, always use the Docker Compose log driver.")
@@ -80,6 +81,7 @@ func main() {
 		Runtime:                 containerRuntime,
 		Inputs:                  inputs,
 		EnvFiles:                envFiles,
+		RootPath:                *rootPath,
 		IncludeEnvFiles:         *includeEnvFiles,
 		EnvFilesOnly:            *envFilesOnly,
 		IgnoreMissingEnvFiles:   *ignoreMissingEnvFiles,
