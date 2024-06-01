@@ -212,7 +212,7 @@ Usage of compose2nix:
   -remove_volumes
         if set, volumes will be removed on systemd service stop.
   -root_path string
-        root path to use for any relative paths in the Compose file (e.g., volumes).
+        root path to use for any relative paths in the Compose file (e.g., volumes). if unset, the current working directory will be used.
   -runtime string
         one of: ["podman", "docker"]. (default "podman")
   -service_include string
