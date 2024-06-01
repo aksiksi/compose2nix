@@ -54,7 +54,7 @@ Install the `compose2nix` CLI via one of the following methods:
 <!-- LINT.OnChange(version) -->
 4. Install the command using `go`:
     ```
-    go install github.com/aksiksi/compose2nix@v0.1.9
+    go install github.com/aksiksi/compose2nix@v0.1.10
     ```
 <!-- LINT.ThenChange(flake.nix:version, main.go:version) -->
 5. Clone this repo and run `make build`.

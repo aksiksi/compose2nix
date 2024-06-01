@@ -17,7 +17,7 @@
     pname = "compose2nix";
     owner = "aksiksi";
     # LINT.OnChange(version)
-    version = "0.1.9";
+    version = "0.1.10";
     # LINT.ThenChange(main.go:version, README.md:version)
   in {
     # Nix package
