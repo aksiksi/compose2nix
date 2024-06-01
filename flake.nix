@@ -18,7 +18,7 @@
     owner = "aksiksi";
     # LINT.OnChange(version)
     version = "0.2.0-pre";
-    # LINT.ThenChange(main.go:version, README.md:version)
+    # LINT.ThenChange(main.go:version)
   in {
     # Nix package
     packages = forAllSystems (system:
