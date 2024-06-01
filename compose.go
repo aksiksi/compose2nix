@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 	"regexp"
 	"slices"
 	"strconv"
@@ -51,11 +52,23 @@ func portConfigsToPortStrings(portConfigs []types.ServicePortConfig) []string {
 	return ports
 }
 
+func (g *Generator) GetRootPath() (string, error) {
+	if g.RootPath != "" {
+		return g.RootPath, nil
+	}
+	cwd, err := os.Getwd()
+	if err != nil {
+		return "", fmt.Errorf("failed to get current working directory: %w", err)
+	}
+	return cwd, nil
+}
+
 type Generator struct {
 	Project                 *Project
 	Runtime                 ContainerRuntime
 	Inputs                  []string
 	EnvFiles                []string
+	RootPath                string
 	IncludeEnvFiles         bool
 	EnvFilesOnly            bool
 	IgnoreMissingEnvFiles   bool
@@ -233,15 +246,29 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 			}
 		} else {
 			// This is a bind mount.
-			c.Volumes[v.Source] = v.String()
+			sourcePath := v.Source
+
+			// Let's first check if this is a relative path. If it is, we'll
+			// prepend the root path configured if set, or the current working
+			// dir otherwise. Either way, we cannot use relative paths.
+			//
+			// TODO(aksiksi): Evaluate if erroring out is better if no root
+			// path is set.
+			if !path.IsAbs(sourcePath) {
+				root, err := g.GetRootPath()
+				if err != nil {
+					return nil, fmt.Errorf("failed to get root path for relative volume path %q: %w", sourcePath, err)
+				}
+				sourcePath = path.Join(root, sourcePath)
+			}
+
+			// Replace the source path in the volume string.
+			volumeString := strings.Split(v.String(), ":")
+			volumeString[0] = sourcePath
+			c.Volumes[sourcePath] = strings.Join(volumeString, ":")
 
 			if g.CheckSystemdMounts {
-				path := v.Source
-				if !strings.HasPrefix(path, "/") {
-					log.Printf("Bind mount path %q is not absolute; skipping systemd mount dependency for service %q", path, service.Name)
-				} else {
-					c.SystemdConfig.Unit.RequiresMountsFor = append(c.SystemdConfig.Unit.RequiresMountsFor, path)
-				}
+				c.SystemdConfig.Unit.RequiresMountsFor = append(c.SystemdConfig.Unit.RequiresMountsFor, sourcePath)
 			}
 		}
 	}

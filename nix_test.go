@@ -198,3 +198,12 @@ func TestNetworkAndVolumeNames(t *testing.T) {
 	}
 	runSubtestsWithGenerator(t, g)
 }
+
+func TestRelativeServiceVolumes(t *testing.T) {
+	composePath, _ := getPaths(t, false)
+	g := &Generator{
+		Inputs:   []string{composePath},
+		RootPath: "/my/root",
+	}
+	runSubtestsWithGenerator(t, g)
+}

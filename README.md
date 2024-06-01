@@ -172,6 +172,14 @@ You can do one of the following:
 sudo systemctl start podman-compose-myservice-root.target
 ```
 
+### NixOS Version Support Policy
+
+I always aim to support the **latest** stable version of NixOS (24.05 at the
+time of writing). As a result, some NixOS unstable options are not used.
+
+If the option has a strong usecase, I am open to adding a CLI flag that can be
+deprecated once the option is stable.
+
 ### Usage
 
 ```
@@ -203,12 +211,16 @@ Usage of compose2nix:
         project name used as a prefix for generated resources. this overrides any top-level "name" set in the Compose file(s).
   -remove_volumes
         if set, volumes will be removed on systemd service stop.
+  -root_path string
+        root path to use for any relative paths in the Compose file (e.g., volumes).
   -runtime string
         one of: ["podman", "docker"]. (default "podman")
   -service_include string
         regex pattern for services to include.
   -use_compose_log_driver
         if set, always use the Docker Compose log driver.
+  -use_upheld_by
+        if set, upheldBy will be used for service dependencies (NixOS 24.05+).
   -version
         display version and exit
   -write_nix_setup
