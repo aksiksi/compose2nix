@@ -12,6 +12,8 @@
   virtualisation.oci-containers.containers."traefik" = {
     image = "docker.io/library/traefik";
     volumes = [
+      "/my/abc:/other:rw"
+      "/my/def/xyz:/xyz:rw"
       "/my/root/abc:/abc:rw"
       "/some/abc:/some/abc:rw"
       "test2:/test2:rw"
