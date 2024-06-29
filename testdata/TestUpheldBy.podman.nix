@@ -41,7 +41,7 @@
       "--cpu-quota=1.5"
       "--cpus=1"
       "--dns=1.1.1.1"
-      "--health-cmd='curl -f http://localhost/\${POTATO}'"
+      "--health-cmd=curl -f http://localhost/\${POTATO}"
       "--log-opt=compress=true"
       "--log-opt=max-file=3"
       "--log-opt=max-size=10m"
@@ -99,7 +99,7 @@
     log-driver = "journald";
     autoStart = false;
     extraOptions = [
-      "--health-cmd='curl -f http://localhost/'"
+      "--health-cmd=curl -f http://localhost/"
       "--hostname=sabnzbd"
       "--log-opt=compress=true"
       "--log-opt=max-file=3"
@@ -149,7 +149,7 @@
     log-driver = "journald";
     autoStart = false;
     extraOptions = [
-      "--health-cmd='[\"curl\",\"-f\",\"http://localhost\"]'"
+      "--health-cmd=[\"curl\",\"-f\",\"http://localhost\"]"
       "--health-interval=1m30s"
       "--health-retries=3"
       "--health-start-interval=5s"
