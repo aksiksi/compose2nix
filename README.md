@@ -178,6 +178,22 @@ time of writing). As a result, some NixOS unstable options are not used.
 If the option has a strong usecase, I am open to adding a CLI flag that can be
 deprecated once the option is stable.
 
+### Known Issues
+
+#### Docker & multiple networks
+
+If you are using the Docker runtime and a Compose service connects to multiple networks, you'll need to use v25+. Otherwise, the container service will fail to start.
+
+You can pin the Docker version to v25 like so:
+
+```nix
+{
+  virtualisation.docker.package = pkgs.docker_25;
+}
+```
+
+Discussion: https://github.com/aksiksi/compose2nix/issues/24
+
 ### Usage
 
 ```
