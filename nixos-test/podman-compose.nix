@@ -1,4 +1,4 @@
-# Auto-generated using compose2nix v0.1.9.
+# Auto-generated using compose2nix v0.2.0-pre.
 { pkgs, lib, ... }:
 
 {
@@ -71,6 +71,7 @@
     ];
     log-driver = "journald";
     extraOptions = [
+      "--health-cmd=echo abc && true"
       "--ip=192.168.8.20"
       "--network-alias=service-b"
       "--network=myproject_something"

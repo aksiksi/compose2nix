@@ -516,7 +516,7 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 				cmd = strings.ReplaceAll(cmd, `"`, `\"`)
 				cmd = strings.ReplaceAll(cmd, "${", `\${`)
 
-				c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--health-cmd='%s'", cmd))
+				c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--health-cmd=%s", cmd))
 			}
 			if timeout := healthCheck.Timeout; timeout != nil {
 				c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--health-timeout=%v", *timeout))

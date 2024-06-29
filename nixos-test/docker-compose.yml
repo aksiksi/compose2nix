@@ -29,6 +29,8 @@ services:
       - "compose2nix.systemd.service.RuntimeMaxSec=360"
     depends_on:
       - service-a
+    healthcheck:
+      test: echo abc && true
     networks:
       something:
         ipv4_address: 192.168.8.20
