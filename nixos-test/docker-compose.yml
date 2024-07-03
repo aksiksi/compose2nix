@@ -24,6 +24,7 @@ services:
     volumes:
       - /var/volumes/service-b:/config
       - storage:/storage
+      - books:/books
     labels:
       - "compose2nix.systemd.unit.AllowIsolate=no"
       - "compose2nix.systemd.service.RuntimeMaxSec=360"
@@ -52,3 +53,9 @@ volumes:
       type: none
       device: /mnt/media
       o: bind
+  books:
+    driver_opts:
+      type: none
+      device: /mnt/media/Books
+      o: bind
+

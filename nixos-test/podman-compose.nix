@@ -64,6 +64,7 @@
     };
     volumes = [
       "/var/volumes/service-b:/config:rw"
+      "myproject_books:/books:rw"
       "storage:/storage:rw"
     ];
     dependsOn = [
@@ -89,10 +90,12 @@
     };
     after = [
       "podman-network-myproject_something.service"
+      "podman-volume-myproject_books.service"
       "podman-volume-storage.service"
     ];
     requires = [
       "podman-network-myproject_something.service"
+      "podman-volume-myproject_books.service"
       "podman-volume-storage.service"
     ];
     partOf = [
@@ -138,6 +141,21 @@
   };
 
   # Volumes
+  systemd.services."podman-volume-myproject_books" = {
+    path = [ pkgs.podman ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    unitConfig.RequiresMountsFor = [
+      "/mnt/media/Books"
+    ];
+    script = ''
+      podman volume inspect myproject_books || podman volume create myproject_books --opt=device=/mnt/media/Books --opt=o=bind --opt=type=none
+    '';
+    partOf = [ "podman-compose-myproject-root.target" ];
+    wantedBy = [ "podman-compose-myproject-root.target" ];
+  };
   systemd.services."podman-volume-storage" = {
     path = [ pkgs.podman ];
     serviceConfig = {

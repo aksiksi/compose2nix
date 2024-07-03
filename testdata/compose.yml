@@ -217,7 +217,6 @@ volumes:
       device: /mnt/media
       o: bind
   books:
-    name: books
     driver_opts:
       type: none
       device: /mnt/media/Books

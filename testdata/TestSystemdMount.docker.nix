@@ -18,7 +18,7 @@
     };
     volumes = [
       "/var/volumes/jellyseerr:/app/config:rw"
-      "books:/books:rw"
+      "myproject_books:/books:rw"
     ];
     cmd = [ "ls" "-la" "/" ];
     labels = {
@@ -57,10 +57,10 @@
       StartLimitIntervalSec = lib.mkOverride 500 120;
     };
     after = [
-      "docker-volume-books.service"
+      "docker-volume-myproject_books.service"
     ];
     requires = [
-      "docker-volume-books.service"
+      "docker-volume-myproject_books.service"
     ];
     partOf = [
       "docker-compose-myproject-root.target"
@@ -360,7 +360,7 @@
   };
 
   # Volumes
-  systemd.services."docker-volume-books" = {
+  systemd.services."docker-volume-myproject_books" = {
     path = [ pkgs.docker ];
     serviceConfig = {
       Type = "oneshot";
@@ -370,7 +370,7 @@
       "/mnt/media/Books"
     ];
     script = ''
-      docker volume inspect books || docker volume create books --opt=device=/mnt/media/Books --opt=o=bind --opt=type=none
+      docker volume inspect myproject_books || docker volume create myproject_books --opt=device=/mnt/media/Books --opt=o=bind --opt=type=none
     '';
     partOf = [ "docker-compose-myproject-root.target" ];
     wantedBy = [ "docker-compose-myproject-root.target" ];

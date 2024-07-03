@@ -21,8 +21,8 @@
       "/my/def/xyz:/xyz:rw"
       "/my/root/abc:/abc:rw"
       "/some/abc:/some/abc:rw"
-      "test2:/test2:rw"
-      "test3:/test3:rw"
+      "my-volume:/test2:rw"
+      "myproject_test3:/test3:rw"
       "test1:/test1:rw"
     ];
     log-driver = "journald";
