@@ -62,6 +62,7 @@
     };
     volumes = [
       "/var/volumes/service-b:/config:rw"
+      "myproject_books:/books:rw"
       "storage:/storage:rw"
     ];
     dependsOn = [
@@ -87,10 +88,12 @@
     };
     after = [
       "docker-network-myproject_something.service"
+      "docker-volume-myproject_books.service"
       "docker-volume-storage.service"
     ];
     requires = [
       "docker-network-myproject_something.service"
+      "docker-volume-myproject_books.service"
       "docker-volume-storage.service"
     ];
     partOf = [
@@ -136,6 +139,21 @@
   };
 
   # Volumes
+  systemd.services."docker-volume-myproject_books" = {
+    path = [ pkgs.docker ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    unitConfig.RequiresMountsFor = [
+      "/mnt/media/Books"
+    ];
+    script = ''
+      docker volume inspect myproject_books || docker volume create myproject_books --opt=device=/mnt/media/Books --opt=o=bind --opt=type=none
+    '';
+    partOf = [ "docker-compose-myproject-root.target" ];
+    wantedBy = [ "docker-compose-myproject-root.target" ];
+  };
   systemd.services."docker-volume-storage" = {
     path = [ pkgs.docker ];
     serviceConfig = {

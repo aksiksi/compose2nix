@@ -17,8 +17,8 @@
   virtualisation.oci-containers.containers."traefik" = {
     image = "docker.io/library/traefik";
     volumes = [
-      "test2:/test2:rw"
-      "test3:/test3:rw"
+      "my-volume:/test2:rw"
+      "myproject_test3:/test3:rw"
       "test1:/test1:rw"
     ];
     ports = [

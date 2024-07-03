@@ -23,7 +23,7 @@
     };
     volumes = [
       "/var/volumes/jellyseerr:/app/config:rw"
-      "books:/books:rw"
+      "myproject_books:/books:rw"
     ];
     cmd = [ "ls" "-la" "/" ];
     labels = {
@@ -59,10 +59,10 @@
       StartLimitIntervalSec = lib.mkOverride 500 120;
     };
     after = [
-      "podman-volume-books.service"
+      "podman-volume-myproject_books.service"
     ];
     requires = [
-      "podman-volume-books.service"
+      "podman-volume-myproject_books.service"
     ];
     partOf = [
       "podman-compose-myproject-root.target"
@@ -332,14 +332,14 @@
   };
 
   # Volumes
-  systemd.services."podman-volume-books" = {
+  systemd.services."podman-volume-myproject_books" = {
     path = [ pkgs.podman ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
     };
     script = ''
-      podman volume inspect books || podman volume create books --opt=device=/mnt/media/Books --opt=o=bind --opt=type=none
+      podman volume inspect myproject_books || podman volume create myproject_books --opt=device=/mnt/media/Books --opt=o=bind --opt=type=none
     '';
     partOf = [ "podman-compose-myproject-root.target" ];
     wantedBy = [ "podman-compose-myproject-root.target" ];
