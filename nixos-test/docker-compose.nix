@@ -10,6 +10,31 @@
   virtualisation.oci-containers.backend = "docker";
 
   # Containers
+  virtualisation.oci-containers.containers."myproject-no-restart" = {
+    image = "docker.io/library/nginx:stable-alpine-slim";
+    log-driver = "journald";
+    extraOptions = [
+      "--network-alias=no-restart"
+      "--network=myproject_default"
+    ];
+  };
+  systemd.services."docker-myproject-no-restart" = {
+    serviceConfig = {
+      Restart = lib.mkOverride 500 "no";
+    };
+    after = [
+      "docker-network-myproject_default.service"
+    ];
+    requires = [
+      "docker-network-myproject_default.service"
+    ];
+    partOf = [
+      "docker-compose-myproject-root.target"
+    ];
+    wantedBy = [
+      "docker-compose-myproject-root.target"
+    ];
+  };
   virtualisation.oci-containers.containers."myproject-service-a" = {
     image = "docker.io/library/nginx:stable-alpine-slim";
     environment = {
@@ -83,7 +108,7 @@
     };
     startLimitBurst = 3;
     unitConfig = {
-      AllowIsolate = lib.mkOverride 500 false;
+      AllowIsolate = lib.mkOverride 500 "no";
       StartLimitIntervalSec = lib.mkOverride 500 "infinity";
     };
     after = [

@@ -19,9 +19,10 @@ const (
 )
 
 var (
-	// We purposefully do not support 0/1 for false/true.
-	systemdTrue  = []string{"true", "yes", "on"}
-	systemdFalse = []string{"false", "no", "off"}
+	// We purposefully do not support no/yes or 0/1 for false/true to avoid
+	// ambiguity. Nix supports strings and bools for boolean keys anyways.
+	systemdTrue  = []string{"true", "on"}
+	systemdFalse = []string{"false", "off"}
 
 	// Examples:
 	// compose2nix.systemd.service.RuntimeMaxSec=100
@@ -107,8 +108,7 @@ func (c *NixContainerSystemdConfig) ParseRestartPolicy(service *types.ServiceCon
 	// https://docs.docker.com/compose/compose-file/compose-file-v2/#restart
 	switch restart := service.Restart; restart {
 	case "", "no":
-		// Need to use string literal here to avoid parsing as a boolean.
-		c.Service.Set("Restart", `"no"`)
+		c.Service.Set("Restart", "no")
 	case "always", "on-failure":
 		// Both of these match the systemd restart options.
 		c.Service.Set("Restart", restart)
@@ -138,8 +138,7 @@ func (c *NixContainerSystemdConfig) ParseRestartPolicy(service *types.ServiceCon
 	if deploy := service.Deploy; deploy != nil && deploy.RestartPolicy != nil {
 		switch condition := deploy.RestartPolicy.Condition; condition {
 		case "none":
-			// Need to use string literal here to avoid parsing as a boolean.
-			c.Service.Set("Restart", `"no"`)
+			c.Service.Set("Restart", "no")
 		case "", "any":
 			// If unset, defaults to "any".
 			c.Service.Set("Restart", "always")

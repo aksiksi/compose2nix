@@ -15,6 +15,31 @@
   virtualisation.oci-containers.backend = "podman";
 
   # Containers
+  virtualisation.oci-containers.containers."myproject-no-restart" = {
+    image = "docker.io/library/nginx:stable-alpine-slim";
+    log-driver = "journald";
+    extraOptions = [
+      "--network-alias=no-restart"
+      "--network=myproject_default"
+    ];
+  };
+  systemd.services."podman-myproject-no-restart" = {
+    serviceConfig = {
+      Restart = lib.mkOverride 500 "no";
+    };
+    after = [
+      "podman-network-myproject_default.service"
+    ];
+    requires = [
+      "podman-network-myproject_default.service"
+    ];
+    partOf = [
+      "podman-compose-myproject-root.target"
+    ];
+    wantedBy = [
+      "podman-compose-myproject-root.target"
+    ];
+  };
   virtualisation.oci-containers.containers."myproject-service-a" = {
     image = "docker.io/library/nginx:stable-alpine-slim";
     environment = {
@@ -85,7 +110,7 @@
     };
     startLimitBurst = 3;
     unitConfig = {
-      AllowIsolate = lib.mkOverride 500 false;
+      AllowIsolate = lib.mkOverride 500 "no";
       StartLimitIntervalSec = lib.mkOverride 500 "infinity";
     };
     after = [
