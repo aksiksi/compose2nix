@@ -4,3 +4,4 @@ bin/
 out.nix*
 *.env
 result
+.pre-commit-config.yaml

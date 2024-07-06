@@ -1,6 +1,4 @@
 # References:
-# https://blog.lenny.ninja/part-1-quickly-packaging-services-using-nix-flakes.html
-# https://ayats.org/blog/no-flake-utils/
 # https://nixos.org/manual/nixos/stable/#sec-writing-modules
 # https://nixos.org/manual/nixpkgs/stable/#ssec-language-go
 {
@@ -8,9 +6,13 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nix-pre-commit.url = "github:jmgilman/nix-pre-commit";
+    nix-pre-commit.inputs.nixpkgs.follows = "nixpkgs";
+    onchg.url = "github:aksiksi/onchg-rs";
+    onchg.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nixpkgs, ... }: let
+  outputs = { self, nixpkgs, nix-pre-commit, onchg, ... }: let
     supportedSystems = [ "x86_64-linux" "x86_64-darwin" "aarch64-linux" "aarch64-darwin" ];
     forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
     pkgsFor = system: nixpkgs.legacyPackages.${system};
@@ -23,7 +25,6 @@
     # Nix package
     packages = forAllSystems (system:
       let pkgs = pkgsFor system; in {
-        # TODO(aksiksi): Pull from GitHub.
         default = pkgs.buildGoModule {
           inherit pname;
           inherit version;
@@ -38,6 +39,26 @@
       let pkgs = pkgsFor system; in {
         default = pkgs.mkShell {
           buildInputs = [ pkgs.go pkgs.gopls ];
+          # Add a Git pre-commit hook.
+          shellHook = (nix-pre-commit.lib.${system}.mkConfig {
+            inherit pkgs;
+            config = {
+              repos = [
+                {
+                  repo = "local";
+                  hooks = [
+                    {
+                      id = "onchg";
+                      language = "system";
+                      entry = "${onchg.packages.${system}.default}/bin/onchg repo";
+                      types = [ "text" ];
+                      pass_filenames = false;
+                    }
+                  ];
+                }
+              ];
+            };
+          }).shellHook;
         };
       }
     );

@@ -1,5 +1,41 @@
 {
   "nodes": {
+    "flake-utils": {
+      "locked": {
+        "lastModified": 1652776076,
+        "narHash": "sha256-gzTw/v1vj4dOVbpBSJX4J0DwUR6LIyXo7/SuuTJp1kM=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "04c1b180862888302ddfb2e3ad9eaa63afc60cf8",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
+    "nix-pre-commit": {
+      "inputs": {
+        "flake-utils": "flake-utils",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1653259102,
+        "narHash": "sha256-XfCEu4zur/N2Dk4v8wFiQAgJ7bgNqPqwWp1vBXkeczM=",
+        "owner": "jmgilman",
+        "repo": "nix-pre-commit",
+        "rev": "6a99b2711c7eac9960939d8eb91e84322b22d50c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "jmgilman",
+        "repo": "nix-pre-commit",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1715087517,
@@ -16,9 +52,31 @@
         "type": "github"
       }
     },
+    "onchg": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1717034837,
+        "narHash": "sha256-MCQaYjX3RLzpB5qeCtvsBdBkYCyiAU2XXaL6Y8XJXWg=",
+        "owner": "aksiksi",
+        "repo": "onchg-rs",
+        "rev": "b681cadde5e5886ecb7fce1f3d690ececd65fcbe",
+        "type": "github"
+      },
+      "original": {
+        "owner": "aksiksi",
+        "repo": "onchg-rs",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
-        "nixpkgs": "nixpkgs"
+        "nix-pre-commit": "nix-pre-commit",
+        "nixpkgs": "nixpkgs",
+        "onchg": "onchg"
       }
     }
   },
