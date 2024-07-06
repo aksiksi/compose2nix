@@ -15,6 +15,7 @@ let
     virtualisation.graphics = false;
     virtualisation.oci-containers.containers."myproject-service-a".imageFile = nginxImage;
     virtualisation.oci-containers.containers."service-b".imageFile = nginxImage;
+    virtualisation.oci-containers.containers."myproject-no-restart".imageFile = nginxImage;
     environment.systemPackages = [ pkgs.jq ];
     system.stateVersion = "23.05";
   };
@@ -52,6 +53,7 @@ in
       # Wait for container services.
       m.wait_for_unit(f"{runtime}-myproject-service-a.service")
       m.wait_for_unit(f"{runtime}-service-b.service")
+      m.wait_for_unit(f"{runtime}-myproject-no-restart.service")
 
       # Wait until the health check succeeds.
       m.wait_until_succeeds(f"{runtime} inspect service-b | jq .[0].State.Health.Status | grep healthy", timeout=30)
