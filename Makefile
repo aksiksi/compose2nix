@@ -10,12 +10,14 @@ coverage:
 flake:
 	nix build -L .#packages.x86_64-linux.default
 
-# Updates Go module deps + runs tests.
+# Updates nixpkgs, Go module deps, and runs tests.
 update-deps:
 	go get -u ./...
 	go mod tidy
-	make test
+	nix flake lock --update-input nixpkgs
 	make flake
+	make shell
+	make test
 
 # Pulls in all build dependencies into a shell.
 shell:
