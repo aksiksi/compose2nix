@@ -56,7 +56,7 @@
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.docker}/bin/docker network rm -f myproject_test1";
+      ExecStop = "docker network rm -f myproject_test1";
     };
     script = ''
       docker network inspect myproject_test1 || docker network create myproject_test1 --internal
@@ -69,7 +69,7 @@
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.docker}/bin/docker network rm -f myproject_test2";
+      ExecStop = "docker network rm -f myproject_test2";
     };
     script = ''
       docker network inspect myproject_test2 || docker network create myproject_test2
@@ -82,7 +82,7 @@
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.docker}/bin/docker network rm -f myproject_test3";
+      ExecStop = "docker network rm -f myproject_test3";
     };
     script = ''
       docker network inspect myproject_test3 || docker network create myproject_test3

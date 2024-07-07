@@ -58,7 +58,7 @@
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.podman}/bin/podman network rm -f myproject_homenet";
+      ExecStop = "podman network rm -f myproject_homenet";
     };
     script = ''
       podman network inspect myproject_homenet || podman network create myproject_homenet --driver=macvlan --opt=parent=enp2s0 --subnet=192.168.8.0/24 --gateway=192.168.8.1

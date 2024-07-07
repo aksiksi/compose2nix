@@ -42,7 +42,7 @@
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.docker}/bin/docker network rm -f test_default";
+      ExecStop = "docker network rm -f test_default";
     };
     script = ''
       docker network inspect test_default || docker network create test_default

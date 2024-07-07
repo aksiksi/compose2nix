@@ -3,7 +3,7 @@ systemd.services."{{.Runtime}}-network-{{.Name}}" = {
   serviceConfig = {
     Type = "oneshot";
     RemainAfterExit = true;
-    ExecStop = "${pkgs.{{.Runtime}}}/bin/{{.Runtime}} network rm -f {{.Name}}";
+    ExecStop = "{{.Runtime}} network rm -f {{.Name}}";
   };
   script = ''
     {{ .Command }}

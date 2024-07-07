@@ -57,7 +57,7 @@
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.podman}/bin/podman network rm -f myproject_test1";
+      ExecStop = "podman network rm -f myproject_test1";
     };
     script = ''
       podman network inspect myproject_test1 || podman network create myproject_test1 --internal
@@ -70,7 +70,7 @@
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.podman}/bin/podman network rm -f myproject_test2";
+      ExecStop = "podman network rm -f myproject_test2";
     };
     script = ''
       podman network inspect myproject_test2 || podman network create myproject_test2
@@ -83,7 +83,7 @@
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.podman}/bin/podman network rm -f myproject_test3";
+      ExecStop = "podman network rm -f myproject_test3";
     };
     script = ''
       podman network inspect myproject_test3 || podman network create myproject_test3

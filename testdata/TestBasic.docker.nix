@@ -311,7 +311,7 @@
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.docker}/bin/docker network rm -f myproject_default";
+      ExecStop = "docker network rm -f myproject_default";
     };
     script = ''
       docker network inspect myproject_default || docker network create myproject_default
@@ -324,7 +324,7 @@
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.docker}/bin/docker network rm -f myproject_something";
+      ExecStop = "docker network rm -f myproject_something";
     };
     script = ''
       docker network inspect myproject_something || docker network create myproject_something --label=test-label=okay
