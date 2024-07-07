@@ -4,7 +4,7 @@ systemd.services."{{.Runtime}}-volume-{{.Name}}" = {
     Type = "oneshot";
     RemainAfterExit = true;
     {{- if .RemoveOnStop}}
-    ExecStop = "${pkgs.{{.Runtime}}}/bin/{{.Runtime}} volume rm -f {{.Name}}";
+    ExecStop = "{{.Runtime}} volume rm -f {{.Name}}";
     {{- end}}
   };
   {{- if .RequiresMountsFor}}

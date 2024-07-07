@@ -314,7 +314,7 @@
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.podman}/bin/podman network rm -f myproject_default";
+      ExecStop = "podman network rm -f myproject_default";
     };
     script = ''
       podman network inspect myproject_default || podman network create myproject_default
@@ -327,7 +327,7 @@
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.podman}/bin/podman network rm -f myproject_something";
+      ExecStop = "podman network rm -f myproject_something";
     };
     script = ''
       podman network inspect myproject_something || podman network create myproject_something --label=test-label=okay
@@ -342,7 +342,7 @@
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.podman}/bin/podman volume rm -f myproject_books";
+      ExecStop = "podman volume rm -f myproject_books";
     };
     script = ''
       podman volume inspect myproject_books || podman volume create myproject_books --opt=device=/mnt/media/Books --opt=o=bind --opt=type=none
@@ -355,7 +355,7 @@
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.podman}/bin/podman volume rm -f photos";
+      ExecStop = "podman volume rm -f photos";
     };
     script = ''
       podman volume inspect photos || podman volume create photos --opt=device=/mnt/photos --opt=o=bind --opt=type=none --label=test-label=okay
@@ -368,7 +368,7 @@
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.podman}/bin/podman volume rm -f storage";
+      ExecStop = "podman volume rm -f storage";
     };
     script = ''
       podman volume inspect storage || podman volume create storage --opt=device=/mnt/media --opt=o=bind --opt=type=none

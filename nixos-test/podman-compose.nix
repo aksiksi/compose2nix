@@ -1,4 +1,4 @@
-# Auto-generated using compose2nix v0.2.0-pre.
+# Auto-generated using compose2nix v0.2.1-pre.
 { pkgs, lib, ... }:
 
 {
@@ -143,7 +143,7 @@
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.podman}/bin/podman network rm -f myproject_default";
+      ExecStop = "podman network rm -f myproject_default";
     };
     script = ''
       podman network inspect myproject_default || podman network create myproject_default
@@ -156,7 +156,7 @@
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.podman}/bin/podman network rm -f myproject_something";
+      ExecStop = "podman network rm -f myproject_something";
     };
     script = ''
       podman network inspect myproject_something || podman network create myproject_something --subnet=192.168.8.0/24 --gateway=192.168.8.1 --label=test-label=okay

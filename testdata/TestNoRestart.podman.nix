@@ -47,7 +47,7 @@
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.podman}/bin/podman network rm -f test_default";
+      ExecStop = "podman network rm -f test_default";
     };
     script = ''
       podman network inspect test_default || podman network create test_default

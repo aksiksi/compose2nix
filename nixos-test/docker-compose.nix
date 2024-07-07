@@ -1,4 +1,4 @@
-# Auto-generated using compose2nix v0.2.0-pre.
+# Auto-generated using compose2nix v0.2.1-pre.
 { pkgs, lib, ... }:
 
 {
@@ -141,7 +141,7 @@
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.docker}/bin/docker network rm -f myproject_default";
+      ExecStop = "docker network rm -f myproject_default";
     };
     script = ''
       docker network inspect myproject_default || docker network create myproject_default
@@ -154,7 +154,7 @@
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.docker}/bin/docker network rm -f myproject_something";
+      ExecStop = "docker network rm -f myproject_something";
     };
     script = ''
       docker network inspect myproject_something || docker network create myproject_something --subnet=192.168.8.0/24 --gateway=192.168.8.1 --label=test-label=okay

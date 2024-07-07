@@ -34,6 +34,7 @@ in
       ];
     } // common;
   };
+  # https://nixos.org/manual/nixos/stable/index.html#sec-nixos-tests
   testScript = ''
     d = {"docker": docker, "podman": podman}
 
@@ -57,5 +58,8 @@ in
 
       # Wait until the health check succeeds.
       m.wait_until_succeeds(f"{runtime} inspect service-b | jq .[0].State.Health.Status | grep healthy", timeout=30)
+
+      # Stop the root unit.
+      m.systemctl(f"stop {runtime}-compose-myproject-root.target")
   '';
 }
