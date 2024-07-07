@@ -19,6 +19,7 @@
       "inputs": {
         "flake-utils": "flake-utils",
         "nixpkgs": [
+          "onchg",
           "nixpkgs"
         ]
       },
@@ -54,16 +55,17 @@
     },
     "onchg": {
       "inputs": {
+        "nix-pre-commit": "nix-pre-commit",
         "nixpkgs": [
           "nixpkgs"
         ]
       },
       "locked": {
-        "lastModified": 1717034837,
-        "narHash": "sha256-MCQaYjX3RLzpB5qeCtvsBdBkYCyiAU2XXaL6Y8XJXWg=",
+        "lastModified": 1720368454,
+        "narHash": "sha256-NUSw3G2gsQX8/G64/pDBb1oitM+x13m7nFRvpiI4a+s=",
         "owner": "aksiksi",
         "repo": "onchg-rs",
-        "rev": "b681cadde5e5886ecb7fce1f3d690ececd65fcbe",
+        "rev": "c42b693d10920874b3644ef1502e33318409d69c",
         "type": "github"
       },
       "original": {
@@ -74,7 +76,6 @@
     },
     "root": {
       "inputs": {
-        "nix-pre-commit": "nix-pre-commit",
         "nixpkgs": "nixpkgs",
         "onchg": "onchg"
       }

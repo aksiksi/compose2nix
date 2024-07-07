@@ -6,13 +6,11 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    nix-pre-commit.url = "github:jmgilman/nix-pre-commit";
-    nix-pre-commit.inputs.nixpkgs.follows = "nixpkgs";
     onchg.url = "github:aksiksi/onchg-rs";
     onchg.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nixpkgs, nix-pre-commit, onchg, ... }: let
+  outputs = { self, nixpkgs, onchg, ... }: let
     supportedSystems = [ "x86_64-linux" "x86_64-darwin" "aarch64-linux" "aarch64-darwin" ];
     forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
     pkgsFor = system: nixpkgs.legacyPackages.${system};
@@ -40,25 +38,7 @@
         default = pkgs.mkShell {
           buildInputs = [ pkgs.go pkgs.gopls ];
           # Add a Git pre-commit hook.
-          shellHook = (nix-pre-commit.lib.${system}.mkConfig {
-            inherit pkgs;
-            config = {
-              repos = [
-                {
-                  repo = "local";
-                  hooks = [
-                    {
-                      id = "onchg";
-                      language = "system";
-                      entry = "${onchg.packages.${system}.default}/bin/onchg repo";
-                      types = [ "text" ];
-                      pass_filenames = false;
-                    }
-                  ];
-                }
-              ];
-            };
-          }).shellHook;
+          shellHook = onchg.shellHook.${system};
         };
       }
     );
