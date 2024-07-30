@@ -12,9 +12,9 @@
   virtualisation.oci-containers.containers."jellyseerr" = {
     image = "docker.io/fallenbagel/jellyseerr:latest";
     environment = {
-      PGID = "1000";
-      PUID = "1000";
-      TZ = "America/New_York";
+      "PGID" = "1000";
+      "PUID" = "1000";
+      "TZ" = "America/New_York";
     };
     volumes = [
       "/var/volumes/jellyseerr:/app/config:rw"
@@ -71,13 +71,13 @@
   virtualisation.oci-containers.containers."myproject-sabnzbd" = {
     image = "lscr.io/linuxserver/sabnzbd";
     environment = {
-      DOCKER_MODS = "ghcr.io/gilbn/theme.park:sabnzbd";
-      PGID = "1000";
-      PUID = "1000";
-      TP_DOMAIN = "hey.hello.us\/themepark";
-      TP_HOTIO = "false";
-      TP_THEME = "potato";
-      TZ = "America/New_York";
+      "DOCKER_MODS" = "ghcr.io/gilbn/theme.park:sabnzbd";
+      "PGID" = "1000";
+      "PUID" = "1000";
+      "TP_DOMAIN" = "hey.hello.us\/themepark";
+      "TP_HOTIO" = "false";
+      "TP_THEME" = "potato";
+      "TZ" = "America/New_York";
     };
     volumes = [
       "/var/volumes/sabnzbd:/config:rw"
@@ -129,12 +129,12 @@
   virtualisation.oci-containers.containers."photoprism-mariadb" = {
     image = "docker.io/library/mariadb:10.9";
     environment = {
-      MARIADB_AUTO_UPGRADE = "1";
-      MARIADB_DATABASE = "photoprism";
-      MARIADB_INITDB_SKIP_TZINFO = "1";
-      MARIADB_PASSWORD = "insecure";
-      MARIADB_ROOT_PASSWORD = "insecure";
-      MARIADB_USER = "photoprism";
+      "MARIADB_AUTO_UPGRADE" = "1";
+      "MARIADB_DATABASE" = "photoprism";
+      "MARIADB_INITDB_SKIP_TZINFO" = "1";
+      "MARIADB_PASSWORD" = "insecure";
+      "MARIADB_ROOT_PASSWORD" = "insecure";
+      "MARIADB_USER" = "photoprism";
     };
     volumes = [
       "/var/volumes/photoprism-mariadb:/var/lib/mysql:rw"
@@ -181,19 +181,19 @@
   virtualisation.oci-containers.containers."torrent-client" = {
     image = "docker.io/haugene/transmission-openvpn";
     environment = {
-      GLOBAL_APPLY_PERMISSIONS = "false";
-      LOCAL_NETWORK = "192.168.0.0/16";
-      PGID = "1000";
-      PUID = "1000";
-      TRANSMISSION_DHT_ENABLED = "false";
-      TRANSMISSION_DOWNLOAD_DIR = "/storage/Downloads/transmission";
-      TRANSMISSION_HOME = "/config/transmission-home";
-      TRANSMISSION_INCOMPLETE_DIR = "/storage/Downloads/transmission/incomplete";
-      TRANSMISSION_INCOMPLETE_DIR_ENABLED = "true";
-      TRANSMISSION_PEX_ENABLED = "false";
-      TRANSMISSION_SCRIPT_TORRENT_DONE_ENABLED = "true";
-      TRANSMISSION_SCRIPT_TORRENT_DONE_FILENAME = "/config/transmission-unpack.sh";
-      TZ = "America/New_York";
+      "GLOBAL_APPLY_PERMISSIONS" = "false";
+      "LOCAL_NETWORK" = "192.168.0.0/16";
+      "PGID" = "1000";
+      "PUID" = "1000";
+      "TRANSMISSION_DHT_ENABLED" = "false";
+      "TRANSMISSION_DOWNLOAD_DIR" = "/storage/Downloads/transmission";
+      "TRANSMISSION_HOME" = "/config/transmission-home";
+      "TRANSMISSION_INCOMPLETE_DIR" = "/storage/Downloads/transmission/incomplete";
+      "TRANSMISSION_INCOMPLETE_DIR_ENABLED" = "true";
+      "TRANSMISSION_PEX_ENABLED" = "false";
+      "TRANSMISSION_SCRIPT_TORRENT_DONE_ENABLED" = "true";
+      "TRANSMISSION_SCRIPT_TORRENT_DONE_FILENAME" = "/config/transmission-unpack.sh";
+      "TZ" = "America/New_York";
     };
     volumes = [
       "/etc/localtime:/etc/localtime:ro"
@@ -258,8 +258,8 @@
   virtualisation.oci-containers.containers."traefik" = {
     image = "docker.io/library/traefik";
     environment = {
-      CLOUDFLARE_API_KEY = "yomama";
-      CLOUDFLARE_EMAIL = "aaa@aaa.com";
+      "CLOUDFLARE_API_KEY" = "yomama";
+      "CLOUDFLARE_EMAIL" = "aaa@aaa.com";
     };
     volumes = [
       "/var/run/podman/podman.sock:/var/run/docker.sock:ro"

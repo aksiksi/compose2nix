@@ -43,7 +43,8 @@
   virtualisation.oci-containers.containers."myproject-service-a" = {
     image = "docker.io/library/nginx:stable-alpine-slim";
     environment = {
-      TZ = "America/New_York";
+      "TZ" = "America/New_York";
+      "test.key" = "ABC";
     };
     volumes = [
       "/var/volumes/service-a:/config:rw"
@@ -85,7 +86,7 @@
   virtualisation.oci-containers.containers."service-b" = {
     image = "docker.io/library/nginx:stable-alpine-slim";
     environment = {
-      TZ = "America/New_York";
+      "TZ" = "America/New_York";
     };
     volumes = [
       "/var/volumes/service-b:/config:rw"
