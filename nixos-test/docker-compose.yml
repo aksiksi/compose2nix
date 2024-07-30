@@ -4,6 +4,7 @@ services:
     image: docker.io/library/nginx:stable-alpine-slim
     environment:
       TZ: ${TIMEZONE}
+      test.key: ABC
     volumes:
       - /var/volumes/service-a:/config
       - storage:/storage
