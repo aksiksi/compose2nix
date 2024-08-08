@@ -42,7 +42,7 @@ Install the `compose2nix` CLI via one of the following methods:
     ```
     nix run github:aksiksi/compose2nix -- -h
     ```
-3. Install the Flake and add the following to your NixOS config:
+3. Add the following to your `flake.nix`:
     ```nix
     compose2nix.url = "github:aksiksi/compose2nix";
     compose2nix.inputs.nixpkgs.follows = "nixpkgs";
@@ -51,6 +51,13 @@ Install the `compose2nix` CLI via one of the following methods:
       compose2nix.packages.x86_64-linux.default
     ];
     ```
+
+    Optionally, you can pin to a specific version:
+    <!-- LINT.OnChange(version) -->
+    ```nix
+    compose2nix.url = "github:aksiksi/compose2nix/v0.2.1";
+    ```
+    <!-- LINT.ThenChange(flake.nix:version,main.go:version) -->
 4. Install the command using `go`:
     ```
     go install github.com/aksiksi/compose2nix
