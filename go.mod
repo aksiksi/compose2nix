@@ -5,7 +5,7 @@ go 1.21
 
 require (
 	github.com/Masterminds/sprig v2.22.0+incompatible
-	github.com/compose-spec/compose-go/v2 v2.1.3
+	github.com/compose-spec/compose-go/v2 v2.1.6
 )
 
 // Test
