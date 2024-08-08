@@ -15,7 +15,7 @@ import (
 const (
 	// LINT.OnChange(version)
 	appVersion = "0.2.2-pre"
-	// LINT.ThenChange(flake.nix:version)
+	// LINT.ThenChange(flake.nix:version,README.md:version)
 )
 
 // TODO(aksiksi): Investigate parsing flags into structs using the *Val functions.
