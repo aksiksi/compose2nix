@@ -46,10 +46,6 @@ Install the `compose2nix` CLI via one of the following methods:
     ```nix
     compose2nix.url = "github:aksiksi/compose2nix";
     compose2nix.inputs.nixpkgs.follows = "nixpkgs";
-
-    environment.systemPackages = [
-      compose2nix.packages.x86_64-linux.default
-    ];
     ```
 
     Optionally, you can pin to a specific version:
@@ -58,6 +54,13 @@ Install the `compose2nix` CLI via one of the following methods:
     compose2nix.url = "github:aksiksi/compose2nix/v0.2.1";
     ```
     <!-- LINT.ThenChange(flake.nix:version,main.go:version) -->
+
+    You can then install the package by adding the following to your config:
+    ```nix
+    environment.systemPackages = [
+      inputs.compose2nix.packages.x86_64-linux.default
+    ];
+    ```
 4. Install the command using `go`:
     ```
     go install github.com/aksiksi/compose2nix
