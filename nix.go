@@ -225,8 +225,9 @@ func (c *NixContainerConfig) String() string {
 
 // Write writes out the Nix config to the provided Writer.
 //
-// If autoFormat is "true", this method will attempt to format the Nix config
-// by calling "nixfmt" and passing in the config via stdin.
+// If the AutoFormat option on this struct is set to "true", this method will
+// attempt to format the Nix config by calling "nixfmt" and passing in the
+// fully built config via stdin.
 func (c *NixContainerConfig) Write(out io.Writer) error {
 	config := []byte(c.String())
 

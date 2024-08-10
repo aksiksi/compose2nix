@@ -5,3 +5,4 @@ out.nix*
 *.env
 result
 .pre-commit-config.yaml
+coverage.out
