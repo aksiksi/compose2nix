@@ -80,6 +80,7 @@ type Generator struct {
 	UseUpheldBy             bool
 	RemoveVolumes           bool
 	NoCreateRootTarget      bool
+	AutoFormat              bool
 	WriteHeader             bool
 	NoWriteNixSetup         bool
 	DefaultStopTimeout      time.Duration
@@ -164,6 +165,7 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 		CreateRootTarget: !g.NoCreateRootTarget,
 		AutoStart:        g.AutoStart,
 		WriteNixSetup:    !g.NoWriteNixSetup,
+		AutoFormat:       g.AutoFormat,
 	}, nil
 }
 

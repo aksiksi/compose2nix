@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"strings"
 	"text/template"
 )
@@ -203,6 +204,7 @@ type NixContainerConfig struct {
 	Volumes          []*NixVolume
 	CreateRootTarget bool
 	WriteNixSetup    bool
+	AutoFormat       bool
 	AutoStart        bool
 }
 
@@ -219,6 +221,28 @@ func (c *NixContainerConfig) String() string {
 		panic(err)
 	}
 	return s.String()
+}
+
+// Write writes out the Nix config to the provided Writer.
+//
+// If autoFormat is "true", this method will attempt to format the Nix config
+// by calling "nixfmt" and passing in the config via stdin.
+func (c *NixContainerConfig) Write(out io.Writer) error {
+	config := []byte(c.String())
+
+	if c.AutoFormat {
+		formatted, err := formatNixCode(config)
+		if err != nil {
+			return err
+		}
+		config = formatted
+	}
+
+	if _, err := out.Write(config); err != nil {
+		return fmt.Errorf("failed to write Nix code: %w", err)
+	}
+
+	return nil
 }
 
 func rootTarget(runtime ContainerRuntime, project *Project) string {

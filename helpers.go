@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"slices"
 	"strings"
 )
@@ -60,4 +61,38 @@ func ReadEnvFiles(envFiles []string, mergeWithEnv, ignoreMissing bool) (env []st
 	}
 
 	return env, nil
+}
+
+// formatNixCode will format Nix code by calling 'nixfmt' and passing in the
+// given code via stdin.
+func formatNixCode(contents []byte) ([]byte, error) {
+	// Check for existence of 'nixfmt' in $PATH.
+	nixfmtPath, err := exec.LookPath("nixfmt")
+	if err != nil {
+		return nil, fmt.Errorf("'nixfmt' not found in $PATH: %w", err)
+	}
+
+	cmd := exec.Command(nixfmtPath)
+
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		return nil, fmt.Errorf("failed to setup stdin pipe: %w", err)
+	}
+	if err := func() error {
+		defer stdin.Close()
+		if _, err := stdin.Write(contents); err != nil {
+			return fmt.Errorf("failed to write content to stdin: %w", err)
+		}
+		return nil
+	}(); err != nil {
+		return nil, err
+	}
+
+	// Overwrite contents with formatted output.
+	contents, err = cmd.Output()
+	if err != nil {
+		return nil, fmt.Errorf("failed to run 'nixfmt' on contents: %w", err)
+	}
+
+	return contents, nil
 }
