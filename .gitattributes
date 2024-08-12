@@ -1,2 +1,3 @@
-testdata/* -linguist-detectable
+testdata/* linguist-detectable=false
+nixos-test/* linguist-detectable=false
 
