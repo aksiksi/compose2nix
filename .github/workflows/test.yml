@@ -20,9 +20,26 @@ jobs:
         go-version: '>=1.21'
     - run: go version
     - name: Test
-      run: go test -v -covermode=count -coverprofile=coverage.out
+      run: make coverage
     - name: Upload coverage
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
+      with:
+        fail_ci_if_error: true
+        files: coverage.out
+        token: ${{ secrets.CODECOV_TOKEN }}
+  linux-test-with-nixfmt:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: cachix/install-nix-action@v22
+      with:
+        github_access_token: ${{ secrets.GITHUB_TOKEN }}
+        nix_path: nixpkgs=channel:nixos-unstable
+    - uses: DeterminateSystems/magic-nix-cache-action@main
+    - name: Run tests with nixfmt
+      run: nix develop --command make coverage
+    - name: Upload coverage
+      uses: codecov/codecov-action@v4
       with:
         fail_ci_if_error: true
         files: coverage.out
@@ -37,3 +54,4 @@ jobs:
         nix_path: nixpkgs=channel:nixos-unstable
     - uses: DeterminateSystems/magic-nix-cache-action@main
     - run: make flake
+

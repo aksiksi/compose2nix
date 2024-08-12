@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 	"path"
 	"strings"
 	"testing"
@@ -39,7 +41,11 @@ func runSubtestsWithGenerator(t *testing.T, g *Generator) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			got := c.String()
+			gotBuf := new(bytes.Buffer)
+			if err := c.Write(gotBuf); err != nil {
+				t.Fatal(err)
+			}
+			got := gotBuf.String()
 			if *update {
 				if err := os.WriteFile(outFilePath, []byte(got), 0644); err != nil {
 					t.Fatal(err)
@@ -64,6 +70,21 @@ func TestBasic(t *testing.T) {
 		EnvFiles:                []string{envFilePath},
 		AutoStart:               true,
 		GenerateUnusedResources: true,
+	}
+	runSubtestsWithGenerator(t, g)
+}
+
+func TestBasicAutoFormat(t *testing.T) {
+	if _, err := exec.LookPath("nixfmt"); err != nil {
+		t.Skip()
+	}
+	composePath, envFilePath := getPaths(t, true)
+	g := &Generator{
+		Inputs:                  []string{composePath},
+		EnvFiles:                []string{envFilePath},
+		AutoStart:               true,
+		GenerateUnusedResources: true,
+		AutoFormat:              true,
 	}
 	runSubtestsWithGenerator(t, g)
 }
