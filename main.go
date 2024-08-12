@@ -38,6 +38,7 @@ var removeVolumes = flag.Bool("remove_volumes", false, "if set, volumes will be 
 var createRootTarget = flag.Bool("create_root_target", true, "if set, a root systemd target will be created, which when stopped tears down all resources.")
 var defaultStopTimeout = flag.Duration("default_stop_timeout", defaultSystemdStopTimeout, "default stop timeout for generated container services.")
 var writeNixSetup = flag.Bool("write_nix_setup", true, "if true, Nix setup code is written to output (runtime, DNS, autoprune, etc.)")
+var autoFormat = flag.Bool("auto_format", false, `if true, Nix output will be formatted using "nixfmt" (must be present in $PATH).`)
 var version = flag.Bool("version", false, "display version and exit")
 
 func main() {
@@ -46,6 +47,9 @@ func main() {
 	if *version {
 		fmt.Printf("compose2nix v%s\n", appVersion)
 		return
+	}
+	if *output == "" {
+		log.Fatal("No output path specified.")
 	}
 
 	ctx := context.Background()
@@ -95,6 +99,7 @@ func main() {
 		NoCreateRootTarget:      !*createRootTarget,
 		WriteHeader:             true,
 		NoWriteNixSetup:         !*writeNixSetup,
+		AutoFormat:              *autoFormat,
 		DefaultStopTimeout:      *defaultStopTimeout,
 	}
 	containerConfig, err := g.Run(ctx)
@@ -103,14 +108,16 @@ func main() {
 	}
 	fmt.Printf("Generated NixOS config in %v\n", time.Since(start))
 
-	if *output != "" {
-		dir := path.Dir(*output)
-		if _, err := os.Stat(dir); err != nil {
-			log.Fatalf("Directory %q does not exist", dir)
-		}
-		if err := os.WriteFile(*output, []byte(containerConfig.String()), 0644); err != nil {
-			log.Fatal(err)
-		}
-		fmt.Printf("Wrote NixOS config to %s\n", *output)
+	dir := path.Dir(*output)
+	if _, err := os.Stat(dir); err != nil {
+		log.Fatalf("Directory %q does not exist: %v", dir, err)
 	}
+	f, err := os.Create(*output)
+	if err != nil {
+		log.Fatalf("Failed to create file %q: %v", *output, err)
+	}
+	if err := containerConfig.Write(f); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Wrote NixOS config to %s\n", *output)
 }

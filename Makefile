@@ -5,7 +5,7 @@ test:
 	go test -v
 
 coverage:
-	go test -v -covermode=count
+	go test -v -covermode=count -coverprofile=coverage.out
 
 flake:
 	nix build -L .#packages.x86_64-linux.default

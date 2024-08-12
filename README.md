@@ -209,46 +209,48 @@ Discussion: https://github.com/aksiksi/compose2nix/issues/24
 ```
 $ compose2nix -h
 Usage of compose2nix:
+  -auto_format
+    	if true, Nix output will be formatted using "nixfmt" (must be present in $PATH).
   -auto_start
-        auto-start setting for generated service(s). this applies to all services, not just containers. (default true)
+    	auto-start setting for generated service(s). this applies to all services, not just containers. (default true)
   -check_systemd_mounts
-        if set, volume paths will be checked against systemd mount paths on the current machine and marked as container dependencies.
+    	if set, volume paths will be checked against systemd mount paths on the current machine and marked as container dependencies.
   -create_root_target
-        if set, a root systemd target will be created, which when stopped tears down all resources. (default true)
+    	if set, a root systemd target will be created, which when stopped tears down all resources. (default true)
   -default_stop_timeout duration
-        default stop timeout for generated container services. (default 1m30s)
+    	default stop timeout for generated container services. (default 1m30s)
   -env_files string
-        one or more comma-separated paths to .env file(s).
+    	one or more comma-separated paths to .env file(s).
   -env_files_only
-        only use env file(s) in the NixOS container definitions.
+    	only use env file(s) in the NixOS container definitions.
   -generate_unused_resources
-        if set, unused resources (e.g., networks) will be generated even if no containers use them.
+    	if set, unused resources (e.g., networks) will be generated even if no containers use them.
   -ignore_missing_env_files
-        if set, missing env files will be ignored.
+    	if set, missing env files will be ignored.
   -include_env_files
-        include env files in the NixOS container definition.
+    	include env files in the NixOS container definition.
   -inputs string
-        one or more comma-separated path(s) to Compose file(s). (default "docker-compose.yml")
+    	one or more comma-separated path(s) to Compose file(s). (default "docker-compose.yml")
   -output string
-        path to output Nix file. (default "docker-compose.nix")
+    	path to output Nix file. (default "docker-compose.nix")
   -project string
-        project name used as a prefix for generated resources. this overrides any top-level "name" set in the Compose file(s).
+    	project name used as a prefix for generated resources. this overrides any top-level "name" set in the Compose file(s).
   -remove_volumes
-        if set, volumes will be removed on systemd service stop.
+    	if set, volumes will be removed on systemd service stop.
   -root_path string
-        root path to use for any relative paths in the Compose file (e.g., volumes). if unset, the current working directory will be used.
+    	root path to use for any relative paths in the Compose file (e.g., volumes). if unset, the current working directory will be used.
   -runtime string
-        one of: ["podman", "docker"]. (default "podman")
+    	one of: ["podman", "docker"]. (default "podman")
   -service_include string
-        regex pattern for services to include.
+    	regex pattern for services to include.
   -use_compose_log_driver
-        if set, always use the Docker Compose log driver.
+    	if set, always use the Docker Compose log driver.
   -use_upheld_by
-        if set, upheldBy will be used for service dependencies (NixOS 24.05+).
+    	if set, upheldBy will be used for service dependencies (NixOS 24.05+).
   -version
-        display version and exit
+    	display version and exit
   -write_nix_setup
-        if true, Nix setup code is written to output (runtime, DNS, autoprune, etc.) (default true)
+    	if true, Nix setup code is written to output (runtime, DNS, autoprune, etc.) (default true)
 ```
 
 ### Supported Docker Compose Features

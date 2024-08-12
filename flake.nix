@@ -36,7 +36,7 @@
     devShells = forAllSystems (system:
       let pkgs = pkgsFor system; in {
         default = pkgs.mkShell {
-          buildInputs = [ pkgs.go pkgs.gopls ];
+          buildInputs = [ pkgs.go pkgs.gopls pkgs.nixfmt-rfc-style ];
           # Add a Git pre-commit hook.
           shellHook = onchg.shellHook.${system};
         };
