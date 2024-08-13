@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"log"
 	"os"
@@ -73,20 +74,7 @@ func formatNixCode(contents []byte) ([]byte, error) {
 	}
 
 	cmd := exec.Command(nixfmtPath)
-
-	stdin, err := cmd.StdinPipe()
-	if err != nil {
-		return nil, fmt.Errorf("failed to setup stdin pipe: %w", err)
-	}
-	if err := func() error {
-		defer stdin.Close()
-		if _, err := stdin.Write(contents); err != nil {
-			return fmt.Errorf("failed to write content to stdin: %w", err)
-		}
-		return nil
-	}(); err != nil {
-		return nil, err
-	}
+	cmd.Stdin = bytes.NewBuffer(contents)
 
 	// Overwrite contents with formatted output.
 	contents, err = cmd.Output()
