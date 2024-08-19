@@ -52,11 +52,16 @@ func portConfigsToPortStrings(portConfigs []types.ServicePortConfig) []string {
 	return ports
 }
 
+// Dummy interface that allows patching os.Getwd() in tests.
+type getWorkingDir interface {
+	GetWd() (string, error)
+}
+
 func (g *Generator) GetRootPath() (string, error) {
 	if g.RootPath != "" {
 		return g.RootPath, nil
 	}
-	cwd, err := os.Getwd()
+	cwd, err := g.GetWorkingDir.GetWd()
 	if err != nil {
 		return "", fmt.Errorf("failed to get current working directory: %w", err)
 	}
@@ -84,6 +89,7 @@ type Generator struct {
 	WriteHeader             bool
 	NoWriteNixSetup         bool
 	DefaultStopTimeout      time.Duration
+	GetWorkingDir           getWorkingDir
 
 	serviceToContainerName map[string]string
 }

@@ -41,6 +41,12 @@ var writeNixSetup = flag.Bool("write_nix_setup", true, "if true, Nix setup code 
 var autoFormat = flag.Bool("auto_format", false, `if true, Nix output will be formatted using "nixfmt" (must be present in $PATH).`)
 var version = flag.Bool("version", false, "display version and exit")
 
+type OsGetWd struct{}
+
+func (*OsGetWd) GetWd() (string, error) {
+	return os.Getwd()
+}
+
 func main() {
 	flag.Parse()
 
@@ -101,6 +107,7 @@ func main() {
 		NoWriteNixSetup:         !*writeNixSetup,
 		AutoFormat:              *autoFormat,
 		DefaultStopTimeout:      *defaultStopTimeout,
+		GetWorkingDir:           &OsGetWd{},
 	}
 	containerConfig, err := g.Run(ctx)
 	if err != nil {
