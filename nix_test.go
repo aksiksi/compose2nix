@@ -237,3 +237,23 @@ func TestNoRestart(t *testing.T) {
 	}
 	runSubtestsWithGenerator(t, g)
 }
+
+// Verifies that we adhere to spec.
+// https://github.com/compose-spec/compose-spec/blob/main/spec.md#environment
+func TestEmptyEnv(t *testing.T) {
+	composePath, _ := getPaths(t, false)
+
+	// Setup an env file that overrides an empty env var.
+	p := path.Join(t.TempDir(), "test.env")
+	content := "EMPTY_BUT_OVERRIDDEN_BY_ENV_FILE=abcde"
+	if err := os.WriteFile(p, []byte(content), 0666); err != nil {
+		t.Fatal(err)
+	}
+
+	g := &Generator{
+		Inputs:   []string{composePath},
+		Project:  NewProject("test"),
+		EnvFiles: []string{p},
+	}
+	runSubtestsWithGenerator(t, g)
+}
