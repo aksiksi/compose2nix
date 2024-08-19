@@ -29,6 +29,14 @@ func getPaths(t *testing.T, useCommonInput bool) (string, string) {
 	return composePath, envFilePath
 }
 
+type testGetWd struct {
+	workingDir string
+}
+
+func (t *testGetWd) GetWd() (string, error) {
+	return t.workingDir, nil
+}
+
 func runSubtestsWithGenerator(t *testing.T, g *Generator) {
 	t.Helper()
 	ctx := context.Background()
@@ -225,6 +233,15 @@ func TestRelativeServiceVolumes(t *testing.T) {
 	g := &Generator{
 		Inputs:   []string{composePath},
 		RootPath: "/my/root",
+	}
+	runSubtestsWithGenerator(t, g)
+}
+
+func TestRelativeServiceVolumes_CurrentDirectory(t *testing.T) {
+	composePath := path.Join("testdata", "TestRelativeServiceVolumes.compose.yml")
+	g := &Generator{
+		Inputs:        []string{composePath},
+		GetWorkingDir: &testGetWd{"/some/path/"},
 	}
 	runSubtestsWithGenerator(t, g)
 }
