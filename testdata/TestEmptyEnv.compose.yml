@@ -1,0 +1,14 @@
+services:
+  service-a:
+    image: nginx:latest
+    environment:
+      SOME_EMPTY_ENV_VAR:
+      EMPTY_BUT_OVERRIDDEN_BY_ENV_FILE:
+      NOT_EMPTY: ""
+  service-b:
+    image: nginx:latest
+    environment:
+      - ANOTHER_EMPTY_ENV_VAR
+      - EMPTY_BUT_OVERRIDDEN_BY_ENV_FILE
+      - ANOTHER_NOT_EMPTY=
+
