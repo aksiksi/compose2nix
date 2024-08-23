@@ -14,7 +14,7 @@ import (
 
 const (
 	// LINT.OnChange(version)
-	appVersion = "0.2.2"
+	appVersion = "0.2.3-pre"
 	// LINT.ThenChange(flake.nix:version,README.md:version)
 )
 
