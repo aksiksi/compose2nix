@@ -33,14 +33,16 @@ To top it all off, using Docker Compose on NixOS is fairly redundant as the feat
 
 Install the `compose2nix` CLI via one of the following methods:
 
-1. Use in a Nix shell:
-    ```bash
-    nix shell github:aksiksi/compose2nix
-    compose2nix -h
-    ```
-2. Run using `nix run`:
+1. Run using `nix run` (**recommended**):
     ```
     nix run github:aksiksi/compose2nix -- -h
+    ```
+2. Install from `nixpkgs`:
+    ```
+    # NixOS config
+    environment.systemPackages = [
+      pkgs.compose2nix
+    ];
     ```
 3. Add the following to your `flake.nix`:
     ```nix
@@ -55,17 +57,12 @@ Install the `compose2nix` CLI via one of the following methods:
     ```
     <!-- LINT.ThenChange(flake.nix:version,main.go:version) -->
 
-    You can then install the package by adding the following to your config:
+    You can then install the package by adding the following to your NixOS config:
     ```nix
     environment.systemPackages = [
       inputs.compose2nix.packages.x86_64-linux.default
     ];
     ```
-4. Install the command using `go`:
-    ```
-    go install github.com/aksiksi/compose2nix
-    ```
-5. Clone this repo and run `make build`.
 
 Run `compose2nix`. Note that project must either be passed in **or** set in the Compose file's top-level "name".
 
@@ -314,3 +311,16 @@ If a feature is missing, please feel free to [create an issue](https://github.co
 #### Misc
 
 * [`name`](https://docs.docker.com/compose/compose-file/04-version-and-name/#name-top-level-element) - ✅
+
+### Alternative Installation Methods
+
+1. Use in a Nix shell:
+    ```bash
+    nix shell github:aksiksi/compose2nix
+    ```
+2. Install the command using `go`:
+    ```
+    go install github.com/aksiksi/compose2nix
+    ```
+3. Clone this repo and run `make build`.
+
