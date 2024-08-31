@@ -571,6 +571,16 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 			if reservations.NanoCPUs != 0 {
 				c.ExtraOptions = append(c.ExtraOptions, "--cpus="+strconv.FormatFloat(float64(reservations.NanoCPUs), 'f', -1, 32))
 			}
+
+			// CDI GPU support.
+			for _, device := range reservations.Devices {
+				if strings.ToLower(device.Driver) != "cdi" {
+					continue
+				}
+				for _, deviceID := range device.IDs {
+					c.ExtraOptions = append(c.ExtraOptions, "--device="+deviceID)
+				}
+			}
 		}
 	}
 

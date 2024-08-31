@@ -194,9 +194,6 @@ services:
       - "compose2nix.systemd.service.Restart='no'"
       - "compose2nix.systemd.unit.AllowIsolate=true"
     network_mode: "container:sabnzbd"
-    runtime: nvidia
-    security_opt:
-      - label=disable
     logging:
       driver: "json-file"
       options:

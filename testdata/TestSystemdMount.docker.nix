@@ -305,8 +305,6 @@
       "--log-opt=max-file=3"
       "--log-opt=max-size=10m"
       "--network=container:sabnzbd"
-      "--runtime=nvidia"
-      "--security-opt=label=disable"
     ];
   };
   systemd.services."docker-traefik" = {
