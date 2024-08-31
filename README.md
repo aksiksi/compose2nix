@@ -177,6 +177,51 @@ You can do one of the following:
 sudo systemctl start podman-compose-myservice-root.target
 ```
 
+### Nvidia GPU Support
+
+1. Enable CDI support in your NixOS config:
+
+```nix
+{
+  hardware.nvidia-container-toolkit.enable = true;
+}
+```
+
+**Docker only:**
+
+Make sure you are running Docker 25+:
+
+```nix
+{
+  virtualisation.docker.package = pkgs.docker_25;
+}
+```
+
+2. Pass in CDI devices via either `devices` **or** `deploy` (both map to the same thing under the hood):
+
+```yaml
+services:
+  myservice:
+    # ... other fields
+
+    # Option 1
+    devices:
+      - nvidia.com/gpu=all
+    # Option 2
+    deploy:
+      resources:
+        reservations:
+          devices:
+            # Driver must be set to "cdi" - all others are ignored.
+            - driver: cdi
+              device_ids:
+                - nvidia.com/gpu=all
+
+    # Required for Podman.
+    security_opt:
+      - label=disable
+```
+
 ### NixOS Version Support Policy
 
 I always aim to support the **latest** stable version of NixOS (24.05 at the

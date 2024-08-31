@@ -1,0 +1,19 @@
+services:
+  test:
+    image: nginx:latest
+    security_opt:
+      - label=disable
+    devices:
+      - nvidia.com/gpu=abc
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: cdi
+              device_ids:
+                - nvidia.com/gpu=all
+            - driver: ignore-me
+              device_ids:
+                - unknown
+    restart: unless-stopped
+
