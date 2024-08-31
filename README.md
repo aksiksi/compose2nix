@@ -312,10 +312,13 @@ If a feature is missing, please feel free to [create an issue](https://github.co
 | [`dns`](https://docs.docker.com/compose/compose-file/05-services/#dns) | ✅ | |
 | [`cap_add/cap_drop`](https://docs.docker.com/compose/compose-file/05-services/#cap_add) | ✅ | |
 | [`logging`](https://docs.docker.com/compose/compose-file/05-services/#logging) | ✅ | |
-| [`depends_on`](https://docs.docker.com/compose/compose-file/05-services/#depends_on) | ⚠️ | Only short syntax is supported. |
+| [`depends_on`](https://docs.docker.com/compose/compose-file/05-services/#depends_on) | ⚠️  | Only short syntax is supported. |
 | [`restart`](https://docs.docker.com/compose/compose-file/05-services/#restart) | ✅ | |
 | [`deploy.restart_policy`](https://docs.docker.com/compose/compose-file/deploy/#restart_policy) | ✅ | |
-| [`deploy.resources`](https://docs.docker.com/compose/compose-file/deploy/#resources) | ✅ | |
+| [`deploy.resources.limits`](https://docs.docker.com/compose/compose-file/deploy/#resources) | ✅ | |
+| [`deploy.resources.reservations.cpus`](https://docs.docker.com/compose/compose-file/deploy/#cpus) | ✅ | |
+| [`deploy.resources.reservations.memory`](https://docs.docker.com/compose/compose-file/deploy/#memory) | ✅ | |
+| [`deploy.resources.reservations.devices`](https://docs.docker.com/compose/compose-file/deploy/#devices) | ⚠️  | Only CDI driver is supported. |
 | [`devices`](https://docs.docker.com/compose/compose-file/05-services/#devices) | ✅ | |
 | [`networks.aliases`](https://docs.docker.com/compose/compose-file/05-services/#aliases) | ✅ | |
 | [`networks.ipv*_address`](https://docs.docker.com/compose/compose-file/05-services/#ipv4_address-ipv6_address) | ✅ | |
