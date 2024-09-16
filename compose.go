@@ -448,7 +448,23 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 	for _, cap := range service.CapDrop {
 		c.ExtraOptions = append(c.ExtraOptions, "--cap-drop="+cap)
 	}
-	for _, device := range service.Devices {
+	for _, d := range service.Devices {
+		device := d.Source
+
+		// Special case: Nvidia CDI devices use short syntax.
+		if strings.HasPrefix(device, "nvidia.com") {
+			c.ExtraOptions = append(c.ExtraOptions, "--device="+device)
+			continue
+		}
+
+		// Otherwise, we default to using the long syntax.
+		// https://docs.docker.com/reference/cli/docker/container/run/#device
+		if d.Target != "" {
+			device += fmt.Sprintf(":%s", d.Target)
+		}
+		if d.Permissions != "" {
+			device += fmt.Sprintf(":%s", d.Permissions)
+		}
 		c.ExtraOptions = append(c.ExtraOptions, "--device="+device)
 	}
 	if service.Runtime != "" {
