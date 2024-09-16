@@ -14,6 +14,7 @@
     log-driver = "journald";
     autoStart = false;
     extraOptions = [
+      "--device=/dev/abc:/dev/def:rw"
       "--device=nvidia.com/gpu=abc"
       "--device=nvidia.com/gpu=all"
       "--network-alias=test"
