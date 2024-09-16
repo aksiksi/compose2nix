@@ -5,6 +5,9 @@ services:
       - label=disable
     devices:
       - nvidia.com/gpu=abc
+      - source: /dev/abc
+        target: /dev/def
+        permissions: rw
     deploy:
       resources:
         reservations:
