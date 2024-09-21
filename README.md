@@ -156,6 +156,25 @@ systemd.timers."podman-auto-update".wantedBy = [ "timers.target" ];
 
 See this page for details: https://docs.podman.io/en/latest/markdown/podman-auto-update.1.html
 
+#### Auto-start services on boot
+
+By default, all generated services will be started by systemd on boot.
+
+You can override this behavior in two different ways:
+
+1. **Disable auto-start for all services:** Re-generate your config with `-auto_start=false`.
+2. **Disable or enable auto-start for a single service:** Add a Compose label to your service like this:
+
+    ```yaml
+    services:
+      my-service:
+        labels:
+          # Enable
+          - "compose2nix.settings.autoStart=true"
+          # Disable
+          - "compose2nix.settings.autoStart=false"
+    ```
+
 #### `docker compose down`
 
 By default, this will only remove networks.

@@ -37,12 +37,6 @@
     requires = [
       "podman-network-test_default.service"
     ];
-    partOf = [
-      "podman-compose-test-root.target"
-    ];
-    wantedBy = [
-      "podman-compose-test-root.target"
-    ];
   };
   virtualisation.oci-containers.containers."test-service-b" = {
     image = "nginx:latest";
@@ -66,12 +60,6 @@
     ];
     requires = [
       "podman-network-test_default.service"
-    ];
-    partOf = [
-      "podman-compose-test-root.target"
-    ];
-    wantedBy = [
-      "podman-compose-test-root.target"
     ];
   };
 

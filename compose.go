@@ -18,6 +18,43 @@ import (
 	"github.com/compose-spec/compose-go/v2/types"
 )
 
+const (
+	composeLabelPrefix = "compose2nix"
+)
+
+var (
+	// Examples:
+	// compose2nix.settings.autoStart=true
+	compose2nixSettingsRegexp = regexp.MustCompile(fmt.Sprintf(`^%s\.(settings)\.(autoStart)$`, composeLabelPrefix))
+)
+
+func parseNixContainerLabels(c *NixContainer) error {
+	for label, v := range c.Labels {
+		m := compose2nixSettingsRegexp.FindStringSubmatch(label)
+		if len(m) == 0 {
+			continue
+		}
+		switch key := m[1]; key {
+		case "settings":
+			switch setting := m[2]; setting {
+			case "autoStart":
+				if v == "true" {
+					c.AutoStart = true
+				} else if v == "false" {
+					c.AutoStart = false
+				} else {
+					return fmt.Errorf("compose2nix.settings.autoStart must be: true or false")
+				}
+			default:
+				return fmt.Errorf("invalid setting: %q", key)
+			}
+		default:
+			return fmt.Errorf("invalid key: %q", key)
+		}
+	}
+	return nil
+}
+
 func composeEnvironmentToMap(env types.MappingWithEquals) map[string]string {
 	m := map[string]string{}
 	for k, v := range env {
@@ -154,7 +191,7 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 	}
 
 	// Post-process any Compose settings that require the full state.
-	networks, volumes = g.postProcess(composeProject, containers, networks, volumes)
+	networks, volumes = g.postProcess(containers, networks, volumes)
 
 	var version string
 	if g.WriteHeader {
@@ -175,7 +212,7 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 	}, nil
 }
 
-func (g *Generator) postProcess(composeProject *types.Project, containers []*NixContainer, networks []*NixNetwork, volumes []*NixVolume) ([]*NixNetwork, []*NixVolume) {
+func (g *Generator) postProcess(containers []*NixContainer, networks []*NixNetwork, volumes []*NixVolume) ([]*NixNetwork, []*NixVolume) {
 	// Drop any networks that are unused or external.
 	networks = slices.DeleteFunc(networks, func(n *NixNetwork) bool {
 		used := false
@@ -234,6 +271,11 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 		Volumes:       make(map[string]string),
 		SystemdConfig: NewNixContainerSystemdConfig(),
 		LogDriver:     "journald", // This is the NixOS default
+		AutoStart:     g.AutoStart,
+	}
+
+	if err := parseNixContainerLabels(c); err != nil {
+		return nil, err
 	}
 
 	if g.IncludeEnvFiles {
@@ -624,7 +666,10 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 	slices.Sort(c.Networks)
 
 	// Add systemd dependency on root target.
-	if !g.NoCreateRootTarget {
+	//
+	// NOTE(aksiksi): We must check auto-start here because the root target
+	// could have auto-start set, which would implicitly bring up the container.
+	if !g.NoCreateRootTarget && c.AutoStart {
 		c.SystemdConfig.Unit.PartOf = append(c.SystemdConfig.Unit.PartOf, fmt.Sprintf("%s.target", rootTarget(g.Runtime, g.Project)))
 		c.SystemdConfig.Unit.WantedBy = append(c.SystemdConfig.Unit.WantedBy, fmt.Sprintf("%s.target", rootTarget(g.Runtime, g.Project)))
 	}

@@ -44,12 +44,6 @@
     requires = [
       "podman-network-myproject_homenet.service"
     ];
-    partOf = [
-      "podman-compose-myproject-root.target"
-    ];
-    wantedBy = [
-      "podman-compose-myproject-root.target"
-    ];
   };
 
   # Networks

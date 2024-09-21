@@ -42,12 +42,6 @@
       "docker-network-myproject_test2.service"
       "docker-network-myproject_test3.service"
     ];
-    partOf = [
-      "docker-compose-myproject-root.target"
-    ];
-    wantedBy = [
-      "docker-compose-myproject-root.target"
-    ];
   };
 
   # Networks

@@ -189,6 +189,7 @@ type NixContainer struct {
 	SystemdConfig *NixContainerSystemdConfig
 	User          string
 	Command       []string
+	AutoStart     bool
 }
 
 func (c *NixContainer) Unit() string {

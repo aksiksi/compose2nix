@@ -33,12 +33,6 @@
     requires = [
       "podman-network-test_default.service"
     ];
-    partOf = [
-      "podman-compose-test-root.target"
-    ];
-    wantedBy = [
-      "podman-compose-test-root.target"
-    ];
   };
 
   # Networks
