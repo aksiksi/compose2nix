@@ -180,7 +180,6 @@ func (c *NixContainerSystemdConfig) ParseRestartPolicy(service *types.ServiceCon
 }
 
 func (c *NixContainerSystemdConfig) ParseSystemdLabels(service *types.ServiceConfig) error {
-	var labelsToDrop []string
 	for label, value := range service.Labels {
 		if !strings.HasPrefix(label, composeLabelPrefix) {
 			continue
@@ -198,10 +197,6 @@ func (c *NixContainerSystemdConfig) ParseSystemdLabels(service *types.ServiceCon
 		default:
 			return fmt.Errorf(`invalid systemd type %q - must be "service" or "unit"`, typ)
 		}
-		labelsToDrop = append(labelsToDrop, label)
-	}
-	for _, label := range labelsToDrop {
-		delete(service.Labels, label)
 	}
 	return nil
 }

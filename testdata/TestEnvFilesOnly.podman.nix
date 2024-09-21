@@ -80,6 +80,8 @@
       "storage:/storage:rw"
     ];
     labels = {
+      "compose2nix.systemd.service.RuntimeMaxSec" = "10";
+      "compose2nix.systemd.unit.Description" = "This is the sabnzbd container!";
       "traefik.enable" = "true";
       "traefik.http.routers.sabnzbd.middlewares" = "chain-authelia@file";
       "traefik.http.routers.sabnzbd.rule" = "Host(`hey.hello.us`) && PathPrefix(`/sabnzbd`)";
@@ -246,6 +248,8 @@
       "443:443/tcp"
     ];
     labels = {
+      "compose2nix.systemd.service.Restart" = "'no'";
+      "compose2nix.systemd.unit.AllowIsolate" = "true";
       "traefik.enable" = "true";
       "traefik.http.routers.traefik.entrypoints" = "https";
       "traefik.http.routers.traefik.middlewares" = "chain-authelia@file";
