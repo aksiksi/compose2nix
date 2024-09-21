@@ -14,20 +14,67 @@
   virtualisation.oci-containers.backend = "podman";
 
   # Containers
-  virtualisation.oci-containers.containers."test-test" = {
+  virtualisation.oci-containers.containers."test-auto-start" = {
+    image = "nginx:latest";
+    labels = {
+      "compose2nix.settings.autoStart" = "true";
+    };
+    log-driver = "journald";
+    extraOptions = [
+      "--network-alias=auto-start"
+      "--network=test_default"
+    ];
+  };
+  systemd.services."podman-test-auto-start" = {
+    serviceConfig = {
+      Restart = lib.mkOverride 500 "always";
+    };
+    after = [
+      "podman-network-test_default.service"
+    ];
+    requires = [
+      "podman-network-test_default.service"
+    ];
+    partOf = [
+      "podman-compose-test-root.target"
+    ];
+    wantedBy = [
+      "podman-compose-test-root.target"
+    ];
+  };
+  virtualisation.oci-containers.containers."test-default-no-auto-start" = {
     image = "nginx:latest";
     log-driver = "journald";
     autoStart = false;
     extraOptions = [
-      "--device=/dev/abc:/dev/def:rw"
-      "--device=nvidia.com/gpu=abc"
-      "--device=nvidia.com/gpu=all"
-      "--network-alias=test"
+      "--network-alias=default-no-auto-start"
       "--network=test_default"
-      "--security-opt=label=disable"
     ];
   };
-  systemd.services."podman-test-test" = {
+  systemd.services."podman-test-default-no-auto-start" = {
+    serviceConfig = {
+      Restart = lib.mkOverride 500 "always";
+    };
+    after = [
+      "podman-network-test_default.service"
+    ];
+    requires = [
+      "podman-network-test_default.service"
+    ];
+  };
+  virtualisation.oci-containers.containers."test-no-auto-start" = {
+    image = "nginx:latest";
+    labels = {
+      "compose2nix.settings.autoStart" = "false";
+    };
+    log-driver = "journald";
+    autoStart = false;
+    extraOptions = [
+      "--network-alias=no-auto-start"
+      "--network=test_default"
+    ];
+  };
+  systemd.services."podman-test-no-auto-start" = {
     serviceConfig = {
       Restart = lib.mkOverride 500 "always";
     };

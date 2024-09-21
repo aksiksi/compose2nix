@@ -62,12 +62,6 @@
     requires = [
       "docker-volume-myproject_books.service"
     ];
-    partOf = [
-      "docker-compose-myproject-root.target"
-    ];
-    wantedBy = [
-      "docker-compose-myproject-root.target"
-    ];
   };
   virtualisation.oci-containers.containers."myproject-sabnzbd" = {
     image = "lscr.io/linuxserver/sabnzbd";
@@ -85,6 +79,8 @@
       "storage:/storage:rw"
     ];
     labels = {
+      "compose2nix.systemd.service.RuntimeMaxSec" = "10";
+      "compose2nix.systemd.unit.Description" = "This is the sabnzbd container!";
       "traefik.enable" = "true";
       "traefik.http.routers.sabnzbd.middlewares" = "chain-authelia@file";
       "traefik.http.routers.sabnzbd.rule" = "Host(`hey.hello.us`) && PathPrefix(`/sabnzbd`)";
@@ -120,12 +116,6 @@
     requires = [
       "docker-network-myproject_default.service"
       "docker-volume-storage.service"
-    ];
-    partOf = [
-      "docker-compose-myproject-root.target"
-    ];
-    wantedBy = [
-      "docker-compose-myproject-root.target"
     ];
   };
   virtualisation.oci-containers.containers."photoprism-mariadb" = {
@@ -174,12 +164,6 @@
     requires = [
       "docker-volume-photos.service"
     ];
-    partOf = [
-      "docker-compose-myproject-root.target"
-    ];
-    wantedBy = [
-      "docker-compose-myproject-root.target"
-    ];
   };
   virtualisation.oci-containers.containers."torrent-client" = {
     image = "docker.io/haugene/transmission-openvpn";
@@ -209,6 +193,7 @@
     ];
     labels = {
       "autoheal" = "true";
+      "compose2nix.settings.autoStart" = "false";
       "traefik.enable" = "true";
       "traefik.http.routers.transmission.middlewares" = "chain-authelia@file";
       "traefik.http.routers.transmission.rule" = "Host(`hey.hello.us`) && PathPrefix(`/transmission`)";
@@ -252,12 +237,6 @@
       "docker-network-myproject_something.service"
       "docker-volume-storage.service"
     ];
-    partOf = [
-      "docker-compose-myproject-root.target"
-    ];
-    wantedBy = [
-      "docker-compose-myproject-root.target"
-    ];
   };
   virtualisation.oci-containers.containers."traefik" = {
     image = "docker.io/library/traefik";
@@ -274,6 +253,8 @@
       "443:443/tcp"
     ];
     labels = {
+      "compose2nix.systemd.service.Restart" = "'no'";
+      "compose2nix.systemd.unit.AllowIsolate" = "true";
       "traefik.enable" = "true";
       "traefik.http.routers.traefik.entrypoints" = "https";
       "traefik.http.routers.traefik.middlewares" = "chain-authelia@file";
@@ -300,12 +281,6 @@
     unitConfig = {
       AllowIsolate = lib.mkOverride 500 true;
     };
-    partOf = [
-      "docker-compose-myproject-root.target"
-    ];
-    wantedBy = [
-      "docker-compose-myproject-root.target"
-    ];
   };
 
   # Networks

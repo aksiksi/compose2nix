@@ -65,12 +65,6 @@
     requires = [
       "podman-volume-myproject_books.service"
     ];
-    partOf = [
-      "podman-compose-myproject-root.target"
-    ];
-    wantedBy = [
-      "podman-compose-myproject-root.target"
-    ];
     unitConfig.RequiresMountsFor = [
       "/var/volumes/jellyseerr"
     ];
@@ -91,6 +85,8 @@
       "storage:/storage:rw"
     ];
     labels = {
+      "compose2nix.systemd.service.RuntimeMaxSec" = "10";
+      "compose2nix.systemd.unit.Description" = "This is the sabnzbd container!";
       "traefik.enable" = "true";
       "traefik.http.routers.sabnzbd.middlewares" = "chain-authelia@file";
       "traefik.http.routers.sabnzbd.rule" = "Host(`hey.hello.us`) && PathPrefix(`/sabnzbd`)";
@@ -123,12 +119,6 @@
     requires = [
       "podman-network-myproject_default.service"
       "podman-volume-storage.service"
-    ];
-    partOf = [
-      "podman-compose-myproject-root.target"
-    ];
-    wantedBy = [
-      "podman-compose-myproject-root.target"
     ];
     unitConfig.RequiresMountsFor = [
       "/var/volumes/sabnzbd"
@@ -179,12 +169,6 @@
     requires = [
       "podman-volume-photos.service"
     ];
-    partOf = [
-      "podman-compose-myproject-root.target"
-    ];
-    wantedBy = [
-      "podman-compose-myproject-root.target"
-    ];
     unitConfig.RequiresMountsFor = [
       "/var/volumes/photoprism-mariadb"
     ];
@@ -217,6 +201,7 @@
     ];
     labels = {
       "autoheal" = "true";
+      "compose2nix.settings.autoStart" = "false";
       "traefik.enable" = "true";
       "traefik.http.routers.transmission.middlewares" = "chain-authelia@file";
       "traefik.http.routers.transmission.rule" = "Host(`hey.hello.us`) && PathPrefix(`/transmission`)";
@@ -259,12 +244,6 @@
       "podman-network-myproject_something.service"
       "podman-volume-storage.service"
     ];
-    partOf = [
-      "podman-compose-myproject-root.target"
-    ];
-    wantedBy = [
-      "podman-compose-myproject-root.target"
-    ];
     unitConfig.RequiresMountsFor = [
       "/etc/localtime"
       "/var/volumes/transmission/config"
@@ -286,6 +265,8 @@
       "443:443/tcp"
     ];
     labels = {
+      "compose2nix.systemd.service.Restart" = "'no'";
+      "compose2nix.systemd.unit.AllowIsolate" = "true";
       "traefik.enable" = "true";
       "traefik.http.routers.traefik.entrypoints" = "https";
       "traefik.http.routers.traefik.middlewares" = "chain-authelia@file";
@@ -312,12 +293,6 @@
     unitConfig = {
       AllowIsolate = lib.mkOverride 500 true;
     };
-    partOf = [
-      "podman-compose-myproject-root.target"
-    ];
-    wantedBy = [
-      "podman-compose-myproject-root.target"
-    ];
     unitConfig.RequiresMountsFor = [
       "/var/run/podman/podman.sock"
       "/var/volumes/traefik"

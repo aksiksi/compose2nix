@@ -87,6 +87,8 @@
       "storage:/storage:rw"
     ];
     labels = {
+      "compose2nix.systemd.service.RuntimeMaxSec" = "10";
+      "compose2nix.systemd.unit.Description" = "This is the sabnzbd container!";
       "traefik.enable" = "true";
       "traefik.http.routers.sabnzbd.middlewares" = "chain-authelia@file";
       "traefik.http.routers.sabnzbd.rule" = "Host(`hey.hello.us`) && PathPrefix(`/sabnzbd`)";
@@ -205,6 +207,7 @@
     ];
     labels = {
       "autoheal" = "true";
+      "compose2nix.settings.autoStart" = "false";
       "traefik.enable" = "true";
       "traefik.http.routers.transmission.middlewares" = "chain-authelia@file";
       "traefik.http.routers.transmission.rule" = "Host(`hey.hello.us`) && PathPrefix(`/transmission`)";
@@ -215,6 +218,7 @@
       "myproject-sabnzbd"
     ];
     log-driver = "journald";
+    autoStart = false;
     extraOptions = [
       "--add-host=abc:93.184.216.34"
       "--add-host=abc:::1"
@@ -246,12 +250,6 @@
       "podman-network-myproject_something.service"
       "podman-volume-storage.service"
     ];
-    partOf = [
-      "podman-compose-myproject-root.target"
-    ];
-    wantedBy = [
-      "podman-compose-myproject-root.target"
-    ];
   };
   virtualisation.oci-containers.containers."traefik" = {
     image = "docker.io/library/traefik";
@@ -268,6 +266,8 @@
       "443:443/tcp"
     ];
     labels = {
+      "compose2nix.systemd.service.Restart" = "'no'";
+      "compose2nix.systemd.unit.AllowIsolate" = "true";
       "traefik.enable" = "true";
       "traefik.http.routers.traefik.entrypoints" = "https";
       "traefik.http.routers.traefik.middlewares" = "chain-authelia@file";

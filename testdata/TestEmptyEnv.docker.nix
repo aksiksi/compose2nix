@@ -32,12 +32,6 @@
     requires = [
       "docker-network-test_default.service"
     ];
-    partOf = [
-      "docker-compose-test-root.target"
-    ];
-    wantedBy = [
-      "docker-compose-test-root.target"
-    ];
   };
   virtualisation.oci-containers.containers."test-service-b" = {
     image = "nginx:latest";
@@ -61,12 +55,6 @@
     ];
     requires = [
       "docker-network-test_default.service"
-    ];
-    partOf = [
-      "docker-compose-test-root.target"
-    ];
-    wantedBy = [
-      "docker-compose-test-root.target"
     ];
   };
 

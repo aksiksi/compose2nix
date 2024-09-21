@@ -43,12 +43,6 @@
       "podman-network-myproject_test2.service"
       "podman-network-myproject_test3.service"
     ];
-    partOf = [
-      "podman-compose-myproject-root.target"
-    ];
-    wantedBy = [
-      "podman-compose-myproject-root.target"
-    ];
   };
 
   # Networks

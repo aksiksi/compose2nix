@@ -1,4 +1,4 @@
-# Auto-generated using compose2nix v0.2.1-pre.
+# Auto-generated using compose2nix v0.2.3-pre.
 { pkgs, lib, ... }:
 
 {
@@ -45,6 +45,11 @@
       "/var/volumes/service-a:/config:rw"
       "storage:/storage:rw"
     ];
+    labels = {
+      "compose2nix.systemd.service.Restart" = "no";
+      "compose2nix.systemd.service.RuntimeMaxSec" = "360";
+      "compose2nix.systemd.unit.Description" = "This is the service-a container!";
+    };
     log-driver = "journald";
     extraOptions = [
       "--cpus=0.5"
@@ -91,6 +96,10 @@
       "myproject_books:/books:rw"
       "storage:/storage:rw"
     ];
+    labels = {
+      "compose2nix.systemd.service.RuntimeMaxSec" = "360";
+      "compose2nix.systemd.unit.AllowIsolate" = "no";
+    };
     dependsOn = [
       "myproject-service-a"
     ];

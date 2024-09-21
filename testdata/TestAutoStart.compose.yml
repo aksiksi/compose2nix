@@ -1,0 +1,15 @@
+services:
+  auto-start:
+    image: nginx:latest
+    labels:
+      - "compose2nix.settings.autoStart=true"
+    restart: unless-stopped
+  no-auto-start:
+    image: nginx:latest
+    labels:
+      - "compose2nix.settings.autoStart=false"
+    restart: unless-stopped
+  default-no-auto-start:
+    image: nginx:latest
+    restart: unless-stopped
+

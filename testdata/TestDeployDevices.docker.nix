@@ -35,12 +35,6 @@
     requires = [
       "docker-network-test_default.service"
     ];
-    partOf = [
-      "docker-compose-test-root.target"
-    ];
-    wantedBy = [
-      "docker-compose-test-root.target"
-    ];
   };
 
   # Networks
