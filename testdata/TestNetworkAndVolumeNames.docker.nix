@@ -48,12 +48,6 @@
       "docker-volume-my-volume.service"
       "docker-volume-myproject_test3.service"
     ];
-    partOf = [
-      "docker-compose-myproject-root.target"
-    ];
-    wantedBy = [
-      "docker-compose-myproject-root.target"
-    ];
   };
 
   # Networks

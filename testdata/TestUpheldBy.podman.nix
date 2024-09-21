@@ -65,14 +65,8 @@
     requires = [
       "podman-volume-myproject_books.service"
     ];
-    partOf = [
-      "podman-compose-myproject-root.target"
-    ];
     upheldBy = [
       "podman-myproject-sabnzbd.service"
-    ];
-    wantedBy = [
-      "podman-compose-myproject-root.target"
     ];
   };
   virtualisation.oci-containers.containers."myproject-sabnzbd" = {
@@ -126,12 +120,6 @@
       "podman-network-myproject_default.service"
       "podman-volume-storage.service"
     ];
-    partOf = [
-      "podman-compose-myproject-root.target"
-    ];
-    wantedBy = [
-      "podman-compose-myproject-root.target"
-    ];
   };
   virtualisation.oci-containers.containers."photoprism-mariadb" = {
     image = "docker.io/library/mariadb:10.9";
@@ -178,12 +166,6 @@
     requires = [
       "podman-volume-photos.service"
     ];
-    partOf = [
-      "podman-compose-myproject-root.target"
-    ];
-    wantedBy = [
-      "podman-compose-myproject-root.target"
-    ];
   };
   virtualisation.oci-containers.containers."torrent-client" = {
     image = "docker.io/haugene/transmission-openvpn";
@@ -213,6 +195,7 @@
     ];
     labels = {
       "autoheal" = "true";
+      "compose2nix.settings.autoStart" = "false";
       "traefik.enable" = "true";
       "traefik.http.routers.transmission.middlewares" = "chain-authelia@file";
       "traefik.http.routers.transmission.rule" = "Host(`hey.hello.us`) && PathPrefix(`/transmission`)";
@@ -255,14 +238,8 @@
       "podman-network-myproject_something.service"
       "podman-volume-storage.service"
     ];
-    partOf = [
-      "podman-compose-myproject-root.target"
-    ];
     upheldBy = [
       "podman-myproject-sabnzbd.service"
-    ];
-    wantedBy = [
-      "podman-compose-myproject-root.target"
     ];
   };
   virtualisation.oci-containers.containers."traefik" = {
@@ -308,14 +285,8 @@
     unitConfig = {
       AllowIsolate = lib.mkOverride 500 true;
     };
-    partOf = [
-      "podman-compose-myproject-root.target"
-    ];
     upheldBy = [
       "podman-sabnzbd.service"
-    ];
-    wantedBy = [
-      "podman-compose-myproject-root.target"
     ];
   };
 

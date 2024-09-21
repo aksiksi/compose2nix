@@ -62,12 +62,6 @@
     requires = [
       "docker-volume-myproject_books.service"
     ];
-    partOf = [
-      "docker-compose-myproject-root.target"
-    ];
-    wantedBy = [
-      "docker-compose-myproject-root.target"
-    ];
     unitConfig.RequiresMountsFor = [
       "/var/volumes/jellyseerr"
     ];
@@ -126,12 +120,6 @@
       "docker-network-myproject_default.service"
       "docker-volume-storage.service"
     ];
-    partOf = [
-      "docker-compose-myproject-root.target"
-    ];
-    wantedBy = [
-      "docker-compose-myproject-root.target"
-    ];
     unitConfig.RequiresMountsFor = [
       "/var/volumes/sabnzbd"
     ];
@@ -182,12 +170,6 @@
     requires = [
       "docker-volume-photos.service"
     ];
-    partOf = [
-      "docker-compose-myproject-root.target"
-    ];
-    wantedBy = [
-      "docker-compose-myproject-root.target"
-    ];
     unitConfig.RequiresMountsFor = [
       "/var/volumes/photoprism-mariadb"
     ];
@@ -220,6 +202,7 @@
     ];
     labels = {
       "autoheal" = "true";
+      "compose2nix.settings.autoStart" = "false";
       "traefik.enable" = "true";
       "traefik.http.routers.transmission.middlewares" = "chain-authelia@file";
       "traefik.http.routers.transmission.rule" = "Host(`hey.hello.us`) && PathPrefix(`/transmission`)";
@@ -262,12 +245,6 @@
     requires = [
       "docker-network-myproject_something.service"
       "docker-volume-storage.service"
-    ];
-    partOf = [
-      "docker-compose-myproject-root.target"
-    ];
-    wantedBy = [
-      "docker-compose-myproject-root.target"
     ];
     unitConfig.RequiresMountsFor = [
       "/etc/localtime"
@@ -318,12 +295,6 @@
     unitConfig = {
       AllowIsolate = lib.mkOverride 500 true;
     };
-    partOf = [
-      "docker-compose-myproject-root.target"
-    ];
-    wantedBy = [
-      "docker-compose-myproject-root.target"
-    ];
     unitConfig.RequiresMountsFor = [
       "/var/run/podman/podman.sock"
       "/var/volumes/traefik"

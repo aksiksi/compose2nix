@@ -42,12 +42,6 @@
     requires = [
       "docker-network-myproject_homenet.service"
     ];
-    partOf = [
-      "docker-compose-myproject-root.target"
-    ];
-    wantedBy = [
-      "docker-compose-myproject-root.target"
-    ];
   };
 
   # Networks

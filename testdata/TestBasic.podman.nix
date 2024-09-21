@@ -207,6 +207,7 @@
     ];
     labels = {
       "autoheal" = "true";
+      "compose2nix.settings.autoStart" = "false";
       "traefik.enable" = "true";
       "traefik.http.routers.transmission.middlewares" = "chain-authelia@file";
       "traefik.http.routers.transmission.rule" = "Host(`hey.hello.us`) && PathPrefix(`/transmission`)";
@@ -217,6 +218,7 @@
       "myproject-sabnzbd"
     ];
     log-driver = "journald";
+    autoStart = false;
     extraOptions = [
       "--add-host=abc:93.184.216.34"
       "--add-host=abc:::1"
@@ -247,12 +249,6 @@
     requires = [
       "podman-network-myproject_something.service"
       "podman-volume-storage.service"
-    ];
-    partOf = [
-      "podman-compose-myproject-root.target"
-    ];
-    wantedBy = [
-      "podman-compose-myproject-root.target"
     ];
   };
   virtualisation.oci-containers.containers."traefik" = {

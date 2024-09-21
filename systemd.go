@@ -12,8 +12,6 @@ import (
 )
 
 const (
-	composeLabelPrefix = "compose2nix"
-
 	// https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html#DefaultTimeoutStartSec=
 	defaultSystemdStopTimeout = 90 * time.Second
 )
@@ -186,7 +184,7 @@ func (c *NixContainerSystemdConfig) ParseSystemdLabels(service *types.ServiceCon
 		}
 		m := systemdLabelRegexp.FindStringSubmatch(label)
 		if len(m) == 0 {
-			return fmt.Errorf("invalid compose2nix label specified for service %q: %q", service.Name, label)
+			continue
 		}
 		typ, key := m[1], m[2]
 		switch typ {

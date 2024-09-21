@@ -92,6 +92,7 @@ services:
       - "traefik.http.routers.transmission.tls.certresolver=htpc"
       - "traefik.http.routers.transmission.middlewares=chain-authelia@file"
       - "autoheal=true"
+      - "compose2nix.settings.autoStart=false"
     healthcheck:
       disable: true
     # Restart 3 times on failure. This can happen when the VPN sub expires.
