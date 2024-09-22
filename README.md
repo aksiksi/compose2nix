@@ -53,7 +53,7 @@ Install the `compose2nix` CLI via one of the following methods:
     Optionally, you can pin to a specific version:
     <!-- LINT.OnChange(version) -->
     ```nix
-    compose2nix.url = "github:aksiksi/compose2nix/v0.2.2";
+    compose2nix.url = "github:aksiksi/compose2nix/v0.2.3";
     ```
     <!-- LINT.ThenChange(flake.nix:version,main.go:version) -->
 
