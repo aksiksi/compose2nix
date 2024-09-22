@@ -252,6 +252,9 @@ func rootTarget(runtime ContainerRuntime, project *Project) string {
 }
 
 func (c *NixContainerConfig) rootTargetTemplateFunc() string {
+	if !c.CreateRootTarget {
+		return ""
+	}
 	return rootTarget(c.Runtime, c.Project)
 }
 

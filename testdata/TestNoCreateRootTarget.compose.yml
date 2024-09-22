@@ -1,0 +1,14 @@
+services:
+  service:
+    image: nginx:latest
+    volumes:
+      - my-volume:/mnt/volume
+    networks:
+      - my-network
+
+networks:
+  my-network:
+    driver: bridge
+
+volumes:
+  my-volume:
