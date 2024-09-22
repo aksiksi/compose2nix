@@ -110,9 +110,8 @@ func TestProject(t *testing.T) {
 func TestUnusedResources(t *testing.T) {
 	composePath, _ := getPaths(t, false)
 	g := &Generator{
-		Project:            NewProject("myproject"),
-		Inputs:             []string{composePath},
-		NoCreateRootTarget: true,
+		Project: NewProject("myproject"),
+		Inputs:  []string{composePath},
 	}
 	runSubtestsWithGenerator(t, g)
 }
@@ -289,6 +288,16 @@ func TestDeployDevices(t *testing.T) {
 	g := &Generator{
 		Inputs:  []string{composePath},
 		Project: NewProject("test"),
+	}
+	runSubtestsWithGenerator(t, g)
+}
+
+func TestNoCreateRootTarget(t *testing.T) {
+	composePath, _ := getPaths(t, false)
+	g := &Generator{
+		Inputs:             []string{composePath},
+		Project:            NewProject("test"),
+		NoCreateRootTarget: true,
 	}
 	runSubtestsWithGenerator(t, g)
 }
