@@ -265,6 +265,28 @@ You can pin the Docker version to v25 like so:
 
 Discussion: https://github.com/aksiksi/compose2nix/issues/24
 
+#### Podman: Port forwarding in `internal` networks
+
+For some reason, when you run a *rootful* Podman container in a network that is marked as `internal`, port forwarding to the host does not work. Podman seems to completely isolate the network from the external world - including the host network! Note that Docker claims to support this behavior out-of-the-box ([ref](https://docs.docker.com/reference/cli/docker/network/create/#internal)).
+
+There is a workaround: remove the `internal` setting and set the network driver option `no_default_route=1` ([example](https://github.com/aksiksi/compose2nix/discussions/39#discussioncomment-10717015)).
+
+```yaml
+networks:
+  my-network:
+    driver: bridge
+    driver_opts:
+      no_default_route: 1 # <<< This is what prevents external network access.
+    ipam:
+      config:
+        - subnet: 10.8.1.0/24
+          gateway: 10.8.1.0
+```
+
+This will allow you to connect from the host, while also preventing internet access from within the container. 
+
+This is where the check is done in Netavark: [link](https://github.com/containers/netavark/blob/cebebc70daec7010c4005798a7958b3b6be7151d/src/network/bridge.rs#L756)
+
 ### Usage
 
 ```
