@@ -347,6 +347,7 @@ If a feature is missing, please feel free to [create an issue](https://github.co
 | [`image`](https://docs.docker.com/compose/compose-file/05-services/#image) | ✅ | |
 | [`container_name`](https://docs.docker.com/compose/compose-file/05-services/#container_name) | ✅ | |
 | [`environment`](https://docs.docker.com/compose/compose-file/05-services/#environment) | ✅ | |
+| [`env_file`](https://docs.docker.com/compose/compose-file/05-services/#env_file) | ✅ | |
 | [`volumes`](https://docs.docker.com/compose/compose-file/05-services/#volumes) | ✅ | |
 | [`labels`](https://docs.docker.com/compose/compose-file/05-services/#labels) | ✅ | |
 | [`ports`](https://docs.docker.com/compose/compose-file/05-services/#ports) | ✅ | |

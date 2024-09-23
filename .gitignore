@@ -3,6 +3,7 @@ bin/
 /docker-compose.nix
 out.nix*
 *.env
+!testdata/*.env
 result
 .pre-commit-config.yaml
 coverage.out
