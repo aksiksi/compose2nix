@@ -27,7 +27,7 @@
   };
   systemd.services."podman-test-auto-start" = {
     serviceConfig = {
-      Restart = lib.mkOverride 500 "always";
+      Restart = lib.mkOverride 90 "always";
     };
     after = [
       "podman-network-test_default.service"
@@ -53,7 +53,7 @@
   };
   systemd.services."podman-test-default-no-auto-start" = {
     serviceConfig = {
-      Restart = lib.mkOverride 500 "always";
+      Restart = lib.mkOverride 90 "always";
     };
     after = [
       "podman-network-test_default.service"
@@ -76,7 +76,7 @@
   };
   systemd.services."podman-test-no-auto-start" = {
     serviceConfig = {
-      Restart = lib.mkOverride 500 "always";
+      Restart = lib.mkOverride 90 "always";
     };
     after = [
       "podman-network-test_default.service"
