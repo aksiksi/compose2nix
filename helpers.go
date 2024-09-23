@@ -36,6 +36,9 @@ func mapToRepeatedKeyValFlag(flagName string, m map[string]string) []string {
 //
 // If ignoreMissing is set, any missing env files will be ignored. This is useful for cases
 // where an env file is not available during conversion to Nix.
+//
+// TODO(aksiksi): Can we use a better approach here? Do we even need to read
+// env files?
 func ReadEnvFiles(envFiles []string, mergeWithEnv, ignoreMissing bool) (env []string, _ error) {
 	for _, p := range envFiles {
 		if strings.TrimSpace(p) == "" {

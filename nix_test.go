@@ -42,11 +42,10 @@ func runSubtestsWithGenerator(t *testing.T, g *Generator) {
 	ctx := context.Background()
 
 	if g.RootPath == "" && g.GetWorkingDir == nil {
-		cwd, err := os.Getwd()
-		if err != nil {
-			t.Fatal(err)
-		}
-		g.RootPath = cwd
+		// Set root path to current directory so we can use relative paths
+		// in tests. We cannot use cwd() here because test output cannot encode
+		// absolute paths.
+		g.RootPath = "."
 	}
 
 	for _, runtime := range []ContainerRuntime{ContainerRuntimeDocker, ContainerRuntimePodman} {
@@ -156,8 +155,9 @@ func TestRemoveVolumes(t *testing.T) {
 }
 
 func TestEnvFilesOnly(t *testing.T) {
-	composePath, envFilePath := getPaths(t, true)
+	composePath, envFilePath := getPaths(t, false)
 	g := &Generator{
+		Project:         NewProject("test"),
 		Inputs:          []string{composePath},
 		EnvFiles:        []string{envFilePath},
 		IncludeEnvFiles: true,
