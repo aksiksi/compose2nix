@@ -285,7 +285,12 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 	}
 
 	if g.IncludeEnvFiles {
-		// Append to service's existing env files.
+		// Env files set on the Compose service.
+		for _, e := range service.EnvFiles {
+			c.EnvFiles = append(c.EnvFiles, e.Path)
+		}
+
+		// Env files provided via CLI.
 		c.EnvFiles = append(c.EnvFiles, g.EnvFiles...)
 	}
 	if !g.EnvFilesOnly {
@@ -669,6 +674,7 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 
 	// Sort slices now that we're done processing the container.
 	slices.Sort(c.DependsOn)
+	slices.Sort(c.EnvFiles)
 	slices.Sort(c.ExtraOptions)
 	slices.Sort(c.Networks)
 
