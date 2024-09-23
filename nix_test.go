@@ -40,6 +40,15 @@ func (t *testGetWd) GetWd() (string, error) {
 func runSubtestsWithGenerator(t *testing.T, g *Generator) {
 	t.Helper()
 	ctx := context.Background()
+
+	if g.RootPath == "" && g.GetWorkingDir == nil {
+		cwd, err := os.Getwd()
+		if err != nil {
+			t.Fatal(err)
+		}
+		g.RootPath = cwd
+	}
+
 	for _, runtime := range []ContainerRuntime{ContainerRuntimeDocker, ContainerRuntimePodman} {
 		t.Run(runtime.String(), func(t *testing.T) {
 			testName := strings.ReplaceAll(t.Name(), "/", ".")
@@ -157,19 +166,26 @@ func TestEnvFilesOnly(t *testing.T) {
 	runSubtestsWithGenerator(t, g)
 }
 
+// TODO(aksiksi): Clean this test up.
 func TestIgnoreMissingEnvFiles(t *testing.T) {
 	ctx := context.Background()
 	composePath, envFilePath := getPaths(t, true)
-	g := Generator{
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	g := &Generator{
 		Runtime:               ContainerRuntimeDocker,
+		RootPath:              cwd,
 		Inputs:                []string{composePath},
 		EnvFiles:              []string{path.Join(t.TempDir(), "bad-path"), envFilePath},
 		IncludeEnvFiles:       true,
 		EnvFilesOnly:          true,
 		IgnoreMissingEnvFiles: true,
 	}
+
 	if _, err := g.Run(ctx); err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 }
 

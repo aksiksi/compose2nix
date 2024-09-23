@@ -157,9 +157,15 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 		})
 	}
 
+	rootPath, err := g.GetRootPath()
+	if err != nil {
+		return nil, err
+	}
+
 	composeProject, err := loader.LoadWithContext(ctx, types.ConfigDetails{
 		ConfigFiles: configFiles,
 		Environment: types.NewMapping(env),
+		WorkingDir:  rootPath,
 	}, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse Compose project: %w", err)
