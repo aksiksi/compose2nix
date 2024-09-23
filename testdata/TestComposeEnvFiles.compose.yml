@@ -1,0 +1,11 @@
+services:
+  first:
+    image: nginx:latest
+    env_file:
+      - ./testdata/TestComposeEnvFiles.first.env
+      - path: ./override.env
+        required: false
+  second:
+    image: nginx:latest
+    env_file:
+      - ./testdata/TestComposeEnvFiles.second.env
