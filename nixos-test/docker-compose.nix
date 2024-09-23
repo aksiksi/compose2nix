@@ -1,4 +1,4 @@
-# Auto-generated using compose2nix v0.2.3-pre.
+# Auto-generated using compose2nix v0.2.4-pre.
 { pkgs, lib, ... }:
 
 {
@@ -20,7 +20,7 @@
   };
   systemd.services."docker-myproject-no-restart" = {
     serviceConfig = {
-      Restart = lib.mkOverride 500 "no";
+      Restart = lib.mkOverride 90 "no";
     };
     after = [
       "docker-network-myproject_default.service"
@@ -59,11 +59,11 @@
   };
   systemd.services."docker-myproject-service-a" = {
     serviceConfig = {
-      Restart = lib.mkOverride 500 "no";
-      RestartMaxDelaySec = lib.mkOverride 500 "1m";
-      RestartSec = lib.mkOverride 500 "100ms";
-      RestartSteps = lib.mkOverride 500 9;
-      RuntimeMaxSec = lib.mkOverride 500 360;
+      Restart = lib.mkOverride 90 "no";
+      RestartMaxDelaySec = lib.mkOverride 90 "1m";
+      RestartSec = lib.mkOverride 90 "100ms";
+      RestartSteps = lib.mkOverride 90 9;
+      RuntimeMaxSec = lib.mkOverride 90 360;
     };
     unitConfig = {
       Description = lib.mkOverride 500 "This is the service-a container!";
@@ -113,8 +113,8 @@
   };
   systemd.services."docker-service-b" = {
     serviceConfig = {
-      Restart = lib.mkOverride 500 "on-failure";
-      RuntimeMaxSec = lib.mkOverride 500 360;
+      Restart = lib.mkOverride 90 "on-failure";
+      RuntimeMaxSec = lib.mkOverride 90 360;
     };
     startLimitBurst = 3;
     unitConfig = {

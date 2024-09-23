@@ -41,8 +41,8 @@
   };
   systemd.services."podman-jellyseerr" = {
     serviceConfig = {
-      Restart = lib.mkOverride 500 "on-failure";
-      RestartSec = lib.mkOverride 500 "5s";
+      Restart = lib.mkOverride 90 "on-failure";
+      RestartSec = lib.mkOverride 90 "5s";
     };
     startLimitBurst = 3;
     unitConfig = {
@@ -92,8 +92,8 @@
   };
   systemd.services."podman-myproject-sabnzbd" = {
     serviceConfig = {
-      Restart = lib.mkOverride 500 "always";
-      RuntimeMaxSec = lib.mkOverride 500 10;
+      Restart = lib.mkOverride 90 "always";
+      RuntimeMaxSec = lib.mkOverride 90 10;
     };
     unitConfig = {
       Description = lib.mkOverride 500 "This is the sabnzbd container!";
@@ -139,8 +139,8 @@
   };
   systemd.services."podman-photoprism-mariadb" = {
     serviceConfig = {
-      Restart = lib.mkOverride 500 "always";
-      RestartSec = lib.mkOverride 500 "3m0s";
+      Restart = lib.mkOverride 90 "always";
+      RestartSec = lib.mkOverride 90 "3m0s";
     };
     startLimitBurst = 10;
     unitConfig = {
@@ -210,7 +210,7 @@
   };
   systemd.services."podman-torrent-client" = {
     serviceConfig = {
-      Restart = lib.mkOverride 500 "on-failure";
+      Restart = lib.mkOverride 90 "on-failure";
     };
     startLimitBurst = 3;
     unitConfig = {
@@ -263,7 +263,7 @@
   };
   systemd.services."podman-traefik" = {
     serviceConfig = {
-      Restart = lib.mkOverride 500 "no";
+      Restart = lib.mkOverride 90 "no";
     };
     unitConfig = {
       AllowIsolate = lib.mkOverride 500 true;

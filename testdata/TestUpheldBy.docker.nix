@@ -47,10 +47,10 @@
   };
   systemd.services."docker-jellyseerr" = {
     serviceConfig = {
-      Restart = lib.mkOverride 500 "on-failure";
-      RestartMaxDelaySec = lib.mkOverride 500 "1m";
-      RestartSec = lib.mkOverride 500 "100ms";
-      RestartSteps = lib.mkOverride 500 9;
+      Restart = lib.mkOverride 90 "on-failure";
+      RestartMaxDelaySec = lib.mkOverride 90 "1m";
+      RestartSec = lib.mkOverride 90 "100ms";
+      RestartSteps = lib.mkOverride 90 9;
     };
     startLimitBurst = 3;
     unitConfig = {
@@ -103,11 +103,11 @@
   };
   systemd.services."docker-myproject-sabnzbd" = {
     serviceConfig = {
-      Restart = lib.mkOverride 500 "always";
-      RestartMaxDelaySec = lib.mkOverride 500 "1m";
-      RestartSec = lib.mkOverride 500 "100ms";
-      RestartSteps = lib.mkOverride 500 9;
-      RuntimeMaxSec = lib.mkOverride 500 10;
+      Restart = lib.mkOverride 90 "always";
+      RestartMaxDelaySec = lib.mkOverride 90 "1m";
+      RestartSec = lib.mkOverride 90 "100ms";
+      RestartSteps = lib.mkOverride 90 9;
+      RuntimeMaxSec = lib.mkOverride 90 10;
     };
     unitConfig = {
       Description = lib.mkOverride 500 "This is the sabnzbd container!";
@@ -152,10 +152,10 @@
   };
   systemd.services."docker-photoprism-mariadb" = {
     serviceConfig = {
-      Restart = lib.mkOverride 500 "always";
-      RestartMaxDelaySec = lib.mkOverride 500 "1m";
-      RestartSec = lib.mkOverride 500 "100ms";
-      RestartSteps = lib.mkOverride 500 9;
+      Restart = lib.mkOverride 90 "always";
+      RestartMaxDelaySec = lib.mkOverride 90 "1m";
+      RestartSec = lib.mkOverride 90 "100ms";
+      RestartSteps = lib.mkOverride 90 9;
     };
     startLimitBurst = 10;
     unitConfig = {
@@ -226,7 +226,7 @@
   };
   systemd.services."docker-torrent-client" = {
     serviceConfig = {
-      Restart = lib.mkOverride 500 "on-failure";
+      Restart = lib.mkOverride 90 "on-failure";
     };
     startLimitBurst = 3;
     unitConfig = {
@@ -282,7 +282,7 @@
   };
   systemd.services."docker-traefik" = {
     serviceConfig = {
-      Restart = lib.mkOverride 500 "no";
+      Restart = lib.mkOverride 90 "no";
     };
     unitConfig = {
       AllowIsolate = lib.mkOverride 500 true;
