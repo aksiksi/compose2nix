@@ -36,7 +36,7 @@
   };
   systemd.services."podman-container" = {
     serviceConfig = {
-      Restart = lib.mkOverride 500 "always";
+      Restart = lib.mkOverride 90 "always";
     };
     after = [
       "podman-network-myproject_homenet.service"

@@ -24,7 +24,7 @@
   };
   systemd.services."docker-test-first" = {
     serviceConfig = {
-      Restart = lib.mkOverride 500 "no";
+      Restart = lib.mkOverride 90 "no";
     };
     after = [
       "docker-network-test_default.service"
@@ -48,7 +48,7 @@
   };
   systemd.services."docker-test-second" = {
     serviceConfig = {
-      Restart = lib.mkOverride 500 "no";
+      Restart = lib.mkOverride 90 "no";
     };
     after = [
       "docker-network-test_default.service"
