@@ -285,7 +285,8 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 	}
 
 	if g.IncludeEnvFiles {
-		c.EnvFiles = g.EnvFiles
+		// Append to service's existing env files.
+		c.EnvFiles = append(c.EnvFiles, g.EnvFiles...)
 	}
 	if !g.EnvFilesOnly {
 		c.Environment = composeEnvironmentToMap(service.Environment)
