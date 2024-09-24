@@ -48,20 +48,9 @@ in
   };
   # https://nixos.org/manual/nixos/stable/index.html#sec-nixos-tests
   testScript = ''
-    import re
-
     d = {"docker": docker, "podman": podman}
 
     start_all()
-
-    def assert_service_value(service: str, key: str, want: str) -> None:
-      out = m.succeed(f"systemctl show {service}.service")
-      pat = r"\b%s=(\S+)$" % key
-      match = re.search(pat, out, flags=re.M)
-      if not match:
-        raise Exception(f"value for \"{key}\" not found in output using pattern \"{pat}\":\n{out}")
-      got = match.group(1)
-      assert got == want, f"got: \"{key} = {got}\", want: \"{key} = {want}\""
 
     # Create required directories for Docker Compose volumes and bind mounts.
     for runtime, m in d.items():
@@ -85,11 +74,10 @@ in
       # Wait until the health check succeeds.
       m.wait_until_succeeds(f"{runtime} inspect service-b | jq .[0].State.Health.Status | grep healthy", timeout=30)
 
-      # Ensure that service-b has its restart setting overriden by this test.
-      assert_service_value(f"{runtime}-service-b", "Restart", "on-success")
-
-      # Ensure that no-restart service has restart disabled.
-      assert_service_value(f"{runtime}-myproject-no-restart", "Restart", "no")
+      # Ensure that services have correct systemd restart settings.
+      m.succeed(f"systemctl show -p Restart {runtime}-myproject-service-a.service | grep -E '=no$'")
+      m.succeed(f"systemctl show -p Restart {runtime}-service-b.service | grep -E '=on-success$'")
+      m.succeed(f"systemctl show -p Restart {runtime}-myproject-no-restart.service | grep -E '=no$'")
 
       # Stop the root unit.
       m.systemctl(f"stop {runtime}-compose-myproject-root.target")
