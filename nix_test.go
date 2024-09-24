@@ -154,6 +154,17 @@ func TestRemoveVolumes(t *testing.T) {
 	runSubtestsWithGenerator(t, g)
 }
 
+func TestEnvFiles(t *testing.T) {
+	composePath, envFilePath := getPaths(t, false)
+	g := &Generator{
+		Project:         NewProject("test"),
+		Inputs:          []string{composePath},
+		EnvFiles:        []string{envFilePath},
+		IncludeEnvFiles: true,
+	}
+	runSubtestsWithGenerator(t, g)
+}
+
 func TestEnvFilesOnly(t *testing.T) {
 	composePath, envFilePath := getPaths(t, false)
 	g := &Generator{

@@ -6,6 +6,7 @@ go 1.21
 require (
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/compose-spec/compose-go/v2 v2.2.0
+	github.com/joho/godotenv v1.5.1
 )
 
 // Test
