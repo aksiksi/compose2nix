@@ -15,6 +15,10 @@
       "DEPTH" = "10";
       "NAME" = "first";
     };
+    environmentFiles = [
+      "override.env"
+      "testdata/first.env"
+    ];
     log-driver = "journald";
     autoStart = false;
     extraOptions = [
@@ -39,6 +43,9 @@
       "DEPTH" = "20";
       "NAME" = "second";
     };
+    environmentFiles = [
+      "testdata/second.env"
+    ];
     log-driver = "journald";
     autoStart = false;
     extraOptions = [
@@ -47,6 +54,29 @@
     ];
   };
   systemd.services."docker-test-second" = {
+    serviceConfig = {
+      Restart = lib.mkOverride 90 "no";
+    };
+    after = [
+      "docker-network-test_default.service"
+    ];
+    requires = [
+      "docker-network-test_default.service"
+    ];
+  };
+  virtualisation.oci-containers.containers."test-third" = {
+    image = "nginx:latest";
+    environmentFiles = [
+      "unknown.env"
+    ];
+    log-driver = "journald";
+    autoStart = false;
+    extraOptions = [
+      "--network-alias=third"
+      "--network=test_default"
+    ];
+  };
+  systemd.services."docker-test-third" = {
     serviceConfig = {
       Restart = lib.mkOverride 90 "no";
     };

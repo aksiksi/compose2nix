@@ -65,7 +65,11 @@ func main() {
 	}
 
 	inputs := strings.Split(*inputs, ",")
-	envFiles := strings.Split(*envFiles, ",")
+
+	var envFilesList []string
+	if *envFiles != "" {
+		envFilesList = strings.Split(*envFiles, ",")
+	}
 
 	var containerRuntime ContainerRuntime
 	if *runtime == "podman" {
@@ -90,7 +94,7 @@ func main() {
 		Project:                 NewProject(*project),
 		Runtime:                 containerRuntime,
 		Inputs:                  inputs,
-		EnvFiles:                envFiles,
+		EnvFiles:                envFilesList,
 		RootPath:                *rootPath,
 		IncludeEnvFiles:         *includeEnvFiles,
 		EnvFilesOnly:            *envFilesOnly,

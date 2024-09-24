@@ -9,3 +9,8 @@ services:
     image: nginx:latest
     env_file:
       - ./testdata/second.env
+  third:
+    image: nginx:latest
+    env_file:
+      - path: ./unknown.env
+        required: false

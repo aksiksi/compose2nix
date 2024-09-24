@@ -321,8 +321,9 @@ func TestNoCreateRootTarget(t *testing.T) {
 func TestComposeEnvFiles(t *testing.T) {
 	composePath, _ := getPaths(t, false)
 	g := &Generator{
-		Inputs:  []string{composePath},
-		Project: NewProject("test"),
+		Inputs:          []string{composePath},
+		Project:         NewProject("test"),
+		IncludeEnvFiles: true,
 	}
 	runSubtestsWithGenerator(t, g)
 }
