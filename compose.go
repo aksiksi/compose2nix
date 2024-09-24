@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"os"
 	"path"
 	"regexp"
 	"slices"
@@ -144,26 +143,13 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 		})
 	}
 
-	// Workaround for https://github.com/compose-spec/compose-go/issues/489.
-	var configFiles []types.ConfigFile
-	for _, input := range g.Inputs {
-		content, err := os.ReadFile(input)
-		if err != nil {
-			return nil, fmt.Errorf("failed to read file %q: %w", input, err)
-		}
-		configFiles = append(configFiles, types.ConfigFile{
-			Filename: input,
-			Content:  content,
-		})
-	}
-
 	rootPath, err := g.GetRootPath()
 	if err != nil {
 		return nil, err
 	}
 
 	composeProject, err := loader.LoadWithContext(ctx, types.ConfigDetails{
-		ConfigFiles: configFiles,
+		ConfigFiles: types.ToConfigFiles(g.Inputs),
 		Environment: types.NewMapping(env),
 		WorkingDir:  rootPath,
 	}, opts...)
