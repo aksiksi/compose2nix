@@ -70,6 +70,9 @@ in
       m.succeed("mkdir -p /var/volumes/service-a")
       m.succeed("mkdir -p /var/volumes/service-b")
 
+      # Create env file used by service-a.
+      m.succeed("echo 'ABC=100' > /tmp/test.env")
+
     for runtime, m in d.items():
       # Wait for root Compose service to come up.
       m.wait_for_unit(f"{runtime}-compose-myproject-root.target")

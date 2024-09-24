@@ -5,6 +5,9 @@ services:
     environment:
       TZ: ${TIMEZONE}
       test.key: ABC
+    env_file:
+      - path: /tmp/test.env
+        required: false
     volumes:
       - /var/volumes/service-a:/config
       - storage:/storage

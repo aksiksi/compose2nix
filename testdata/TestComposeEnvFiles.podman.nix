@@ -20,6 +20,10 @@
       "DEPTH" = "10";
       "NAME" = "first";
     };
+    environmentFiles = [
+      "override.env"
+      "testdata/first.env"
+    ];
     log-driver = "journald";
     autoStart = false;
     extraOptions = [
@@ -44,6 +48,9 @@
       "DEPTH" = "20";
       "NAME" = "second";
     };
+    environmentFiles = [
+      "testdata/second.env"
+    ];
     log-driver = "journald";
     autoStart = false;
     extraOptions = [
@@ -52,6 +59,29 @@
     ];
   };
   systemd.services."podman-test-second" = {
+    serviceConfig = {
+      Restart = lib.mkOverride 90 "no";
+    };
+    after = [
+      "podman-network-test_default.service"
+    ];
+    requires = [
+      "podman-network-test_default.service"
+    ];
+  };
+  virtualisation.oci-containers.containers."test-third" = {
+    image = "nginx:latest";
+    environmentFiles = [
+      "unknown.env"
+    ];
+    log-driver = "journald";
+    autoStart = false;
+    extraOptions = [
+      "--network-alias=third"
+      "--network=test_default"
+    ];
+  };
+  systemd.services."podman-test-third" = {
     serviceConfig = {
       Restart = lib.mkOverride 90 "no";
     };

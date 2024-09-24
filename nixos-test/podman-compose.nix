@@ -46,6 +46,9 @@
       "TZ" = "America/New_York";
       "test.key" = "ABC";
     };
+    environmentFiles = [
+      "/tmp/test.env"
+    ];
     volumes = [
       "/var/volumes/service-a:/config:rw"
       "storage:/storage:rw"
