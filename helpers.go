@@ -1,14 +1,16 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"log"
 	"os"
 	"os/exec"
 	"slices"
 	"strings"
+
+	"github.com/joho/godotenv"
 )
 
 // mapToKeyValArray converts a map into a _sorted_ list of KEY=VAL entries.
@@ -36,27 +38,21 @@ func mapToRepeatedKeyValFlag(flagName string, m map[string]string) []string {
 //
 // If ignoreMissing is set, any missing env files will be ignored. This is useful for cases
 // where an env file is not available during conversion to Nix.
-//
-// TODO(aksiksi): Can we use a better approach here? Do we even need to read
-// env files?
 func ReadEnvFiles(envFiles []string, mergeWithEnv, ignoreMissing bool) (env []string, _ error) {
 	for _, p := range envFiles {
 		if strings.TrimSpace(p) == "" {
 			continue
 		}
-		f, err := os.Open(p)
+		envMap, err := godotenv.Read(p)
 		if err != nil {
-			if ignoreMissing {
-				log.Printf("Ignoring mising env file %s...", p)
+			if ignoreMissing && errors.Is(err, os.ErrNotExist) {
+				log.Printf("Ignoring missing env file %q...", p)
 				continue
 			}
-			return nil, fmt.Errorf("failed to open file %s: %w", p, err)
+			return nil, fmt.Errorf("failed to parse env file %q: %w", p, err)
 		}
-		defer f.Close()
-		s := bufio.NewScanner(f)
-		for s.Scan() {
-			line := s.Text()
-			env = append(env, line)
+		for k, v := range envMap {
+			env = append(env, fmt.Sprintf("%s=%s", k, v))
 		}
 	}
 
