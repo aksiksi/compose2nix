@@ -4,6 +4,7 @@ services:
     environment:
       PUID: ${PUID}
     env_file:
+      - ./testdata/input.env
       - ./testdata/first.env
       - path: ./override.env
         required: false

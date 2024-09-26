@@ -362,6 +362,7 @@ func TestComposeEnvFiles(t *testing.T) {
 	g := &Generator{
 		Inputs:          []string{composePath},
 		Project:         NewProject("test"),
+		EnvFiles:        []string{"testdata/first.env"},
 		IncludeEnvFiles: true,
 	}
 	runSubtestsWithGenerator(t, g)
