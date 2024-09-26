@@ -44,6 +44,7 @@
       "NAME" = "second";
     };
     environmentFiles = [
+      "testdata/first.env"
       "testdata/second.env"
     ];
     log-driver = "journald";
@@ -67,6 +68,7 @@
   virtualisation.oci-containers.containers."test-third" = {
     image = "nginx:latest";
     environmentFiles = [
+      "testdata/first.env"
       "unknown.env"
     ];
     log-driver = "journald";
