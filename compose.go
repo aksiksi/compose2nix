@@ -130,6 +130,19 @@ type Generator struct {
 }
 
 func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
+	rootPath, err := g.GetRootPath()
+	if err != nil {
+		return nil, err
+	}
+
+	// Transform env files into absolute paths. This ensures that we can compare
+	// them to Compose env files when building Nix containers.
+	for i, p := range g.EnvFiles {
+		if !path.IsAbs(p) {
+			g.EnvFiles[i] = path.Join(rootPath, p)
+		}
+	}
+
 	env, err := ReadEnvFiles(g.EnvFiles, !g.EnvFilesOnly, g.IgnoreMissingEnvFiles)
 	if err != nil {
 		return nil, err
@@ -141,12 +154,6 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 			o.SetProjectName(g.Project.Name, true)
 		})
 	}
-
-	rootPath, err := g.GetRootPath()
-	if err != nil {
-		return nil, err
-	}
-
 	composeProject, err := loader.LoadWithContext(ctx, types.ConfigDetails{
 		ConfigFiles: types.ToConfigFiles(g.Inputs),
 		Environment: types.NewMapping(env),
@@ -265,14 +272,18 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 		return nil, err
 	}
 
-	if g.IncludeEnvFiles {
-		// Env files set on the Compose service.
-		for _, e := range service.EnvFiles {
-			c.EnvFiles = append(c.EnvFiles, e.Path)
-		}
-
+	if g.IncludeEnvFiles || g.EnvFilesOnly {
 		// Env files provided via CLI.
 		c.EnvFiles = append(c.EnvFiles, g.EnvFiles...)
+
+		// Env files set on the Compose service.
+		for _, e := range service.EnvFiles {
+			// It's possible that an env file that was passed in via CLI is
+			// _also_ present in the Compose service (as an env_file).
+			if !slices.Contains(c.EnvFiles, e.Path) {
+				c.EnvFiles = append(c.EnvFiles, e.Path)
+			}
+		}
 	}
 	if !g.EnvFilesOnly {
 		c.Environment = composeEnvironmentToMap(service.Environment)

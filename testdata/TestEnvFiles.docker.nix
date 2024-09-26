@@ -12,9 +12,16 @@
   virtualisation.oci-containers.containers."test-first" = {
     image = "nginx:latest";
     environment = {
+      "CLOUDFLARE_API_KEY" = "yomama";
+      "CLOUDFLARE_EMAIL" = "aaa@aaa.com";
       "DEPTH" = "10";
+      "DOMAIN" = "hello.us";
+      "HOME_DOMAIN" = "hey.hello.us";
       "NAME" = "first";
+      "PGID" = "1000";
       "PUID" = "1000";
+      "THEMEPARK_THEME" = "potato";
+      "TIMEZONE" = "America/New_York";
     };
     environmentFiles = [
       "override.env"
