@@ -372,6 +372,7 @@ If a feature is missing, please feel free to [create an issue](https://github.co
 | [`runtime`](https://docs.docker.com/compose/compose-file/05-services/#runtime) | ✅ | |
 | [`security_opt`](https://docs.docker.com/compose/compose-file/05-services/#security_opt) | ✅ | |
 | [`command`](https://docs.docker.com/compose/compose-file/05-services/#command) | ✅ | |
+| [`entrypoint`](https://docs.docker.com/compose/compose-file/05-services/#entrypoint) | ✅ | |
 | [`healthcheck`](https://docs.docker.com/compose/compose-file/05-services/#healthcheck) | ✅ | |
 | [`hostname`](https://docs.docker.com/compose/compose-file/05-services/#hostname) | ✅ | |
 | [`mac_address`](https://docs.docker.com/compose/compose-file/05-services/#mac_address) | ✅ | |

@@ -37,7 +37,8 @@ func toNixValue(v any) any {
 func toNixList(s []string) string {
 	b := strings.Builder{}
 	for i, e := range s {
-		b.WriteString(fmt.Sprintf("%q", escapeNixString(e)))
+		// We purposefully do not use %q to avoid Go's built-in string escaping.
+		b.WriteString(fmt.Sprintf(`"%s"`, escapeNixString(e)))
 		if i < len(s)-1 {
 			b.WriteString(" ")
 		}

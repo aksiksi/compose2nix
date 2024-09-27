@@ -1,0 +1,17 @@
+services:
+  both:
+    image: nginx:latest
+    command: ["ls", "-la", "\"escape me please\""]
+    entrypoint:
+      ["nginx", "-g", "daemon off;", "-c", "/etc/config/nginx/conf/nginx.conf"]
+  string:
+    image: nginx:latest
+    entrypoint: "ENV_VAR=$${ABC} bash /abc.sh"
+  empty-command-and-entrypoint:
+    image: nginx:latest
+    command: []
+    entrypoint: []
+  "null-command-and-entrypoint":
+    image: nginx:latest
+    command: null
+    entrypoint: null
