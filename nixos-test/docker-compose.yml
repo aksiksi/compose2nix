@@ -43,6 +43,11 @@ services:
     restart: on-failure:3
   no-restart:
     image: docker.io/library/nginx:stable-alpine-slim
+  entrypoint:
+    image: docker.io/library/nginx:stable-alpine-slim
+    entrypoint:
+      - echo
+      - abc
 
 networks:
   something:

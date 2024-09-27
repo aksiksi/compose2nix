@@ -10,6 +10,32 @@
   virtualisation.oci-containers.backend = "docker";
 
   # Containers
+  virtualisation.oci-containers.containers."myproject-entrypoint" = {
+    image = "docker.io/library/nginx:stable-alpine-slim";
+    log-driver = "journald";
+    extraOptions = [
+      "--entrypoint=[\"echo\", \"abc\"]"
+      "--network-alias=entrypoint"
+      "--network=myproject_default"
+    ];
+  };
+  systemd.services."docker-myproject-entrypoint" = {
+    serviceConfig = {
+      Restart = lib.mkOverride 90 "no";
+    };
+    after = [
+      "docker-network-myproject_default.service"
+    ];
+    requires = [
+      "docker-network-myproject_default.service"
+    ];
+    partOf = [
+      "docker-compose-myproject-root.target"
+    ];
+    wantedBy = [
+      "docker-compose-myproject-root.target"
+    ];
+  };
   virtualisation.oci-containers.containers."myproject-no-restart" = {
     image = "docker.io/library/nginx:stable-alpine-slim";
     log-driver = "journald";

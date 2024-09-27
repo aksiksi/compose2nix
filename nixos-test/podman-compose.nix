@@ -15,6 +15,32 @@
   virtualisation.oci-containers.backend = "podman";
 
   # Containers
+  virtualisation.oci-containers.containers."myproject-entrypoint" = {
+    image = "docker.io/library/nginx:stable-alpine-slim";
+    log-driver = "journald";
+    extraOptions = [
+      "--entrypoint=[\"echo\", \"abc\"]"
+      "--network-alias=entrypoint"
+      "--network=myproject_default"
+    ];
+  };
+  systemd.services."podman-myproject-entrypoint" = {
+    serviceConfig = {
+      Restart = lib.mkOverride 90 "no";
+    };
+    after = [
+      "podman-network-myproject_default.service"
+    ];
+    requires = [
+      "podman-network-myproject_default.service"
+    ];
+    partOf = [
+      "podman-compose-myproject-root.target"
+    ];
+    wantedBy = [
+      "podman-compose-myproject-root.target"
+    ];
+  };
   virtualisation.oci-containers.containers."myproject-no-restart" = {
     image = "docker.io/library/nginx:stable-alpine-slim";
     log-driver = "journald";
