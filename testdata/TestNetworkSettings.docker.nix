@@ -9,6 +9,19 @@
   virtualisation.oci-containers.backend = "docker";
 
   # Networks
+  systemd.services."docker-network-test_default" = {
+    path = [ pkgs.docker ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStop = "docker network rm -f test_default";
+    };
+    script = ''
+      docker network inspect test_default || docker network create test_default
+    '';
+    partOf = [ "docker-compose-test-root.target" ];
+    wantedBy = [ "docker-compose-test-root.target" ];
+  };
   systemd.services."docker-network-test_nginx_net" = {
     path = [ pkgs.docker ];
     serviceConfig = {
