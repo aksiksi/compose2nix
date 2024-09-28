@@ -126,9 +126,11 @@ type Generator struct {
 	WriteHeader             bool
 	NoWriteNixSetup         bool
 	DefaultStopTimeout      time.Duration
+	IncludeBuild            bool
 	GetWorkingDir           getWorkingDir
 
 	serviceToContainerName map[string]string
+	rootPath               string
 }
 
 func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
@@ -136,6 +138,7 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 	if err != nil {
 		return nil, err
 	}
+	g.rootPath = rootPath
 
 	// Transform env files into absolute paths. This ensures that we can compare
 	// them to Compose env files when building Nix containers.
@@ -185,7 +188,7 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 
 	networks, networkMap := g.buildNixNetworks(composeProject)
 	volumes, volumeMap := g.buildNixVolumes(composeProject)
-	containers, err := g.buildNixContainers(composeProject, networkMap, volumeMap)
+	containers, builds, err := g.buildNixContainers(composeProject, networkMap, volumeMap)
 	if err != nil {
 		return nil, err
 	}
@@ -203,12 +206,14 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 		Project:          g.Project,
 		Runtime:          g.Runtime,
 		Containers:       containers,
+		Builds:           builds,
 		Networks:         networks,
 		Volumes:          volumes,
 		CreateRootTarget: !g.NoCreateRootTarget,
 		AutoStart:        g.AutoStart,
 		WriteNixSetup:    !g.NoWriteNixSetup,
 		AutoFormat:       g.AutoFormat,
+		IncludeBuild:     g.IncludeBuild,
 	}, nil
 }
 
@@ -350,20 +355,6 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 		} else {
 			// This is a bind mount.
 			sourcePath := v.Source
-
-			// Let's first check if this is a relative path. If it is, we'll
-			// prepend the root path configured if set, or the current working
-			// dir otherwise. Either way, we cannot use relative paths.
-			//
-			// TODO(aksiksi): Evaluate if erroring out is better if no root
-			// path is set.
-			if !path.IsAbs(sourcePath) {
-				root, err := g.GetRootPath()
-				if err != nil {
-					return nil, fmt.Errorf("failed to get root path for relative volume path %q: %w", sourcePath, err)
-				}
-				sourcePath = path.Join(root, sourcePath)
-			}
 
 			if g.CheckBindMounts {
 				if _, err := os.Stat(sourcePath); os.IsNotExist(err) {
@@ -719,11 +710,6 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 		}
 	}
 
-	slices.Sort(c.SystemdConfig.Unit.After)
-	slices.Sort(c.SystemdConfig.Unit.Requires)
-	slices.Sort(c.SystemdConfig.Unit.RequiresMountsFor)
-	slices.Sort(c.SystemdConfig.Unit.UpheldBy)
-
 	// systemd configs provided via labels always override everything else.
 	if err := c.SystemdConfig.ParseSystemdLabels(&service); err != nil {
 		return nil, err
@@ -732,8 +718,37 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 	return c, nil
 }
 
-func (g *Generator) buildNixContainers(composeProject *types.Project, networkMap map[string]*NixNetwork, volumeMap map[string]*NixVolume) ([]*NixContainer, error) {
-	var containers []*NixContainer
+func (g *Generator) parseServiceBuild(service types.ServiceConfig, c *NixContainer) (*NixBuild, error) {
+	cx := service.Build.Context
+	if strings.HasPrefix(cx, "http") {
+		return nil, fmt.Errorf("Git repo build context is not yet supported")
+	}
+	if !path.IsAbs(cx) {
+		cx = path.Join(g.rootPath, cx)
+	}
+
+	b := &NixBuild{
+		Runtime:     g.Runtime,
+		Context:     cx,
+		Args:        service.Build.Args,
+		Tags:        service.Build.Tags,
+		Dockerfile:  service.Build.Dockerfile,
+		ServiceName: service.Name,
+	}
+
+	if g.IncludeBuild {
+		// Add dependency on build systemd service.
+		c.SystemdConfig.Unit.After = append(c.SystemdConfig.Unit.After, b.Unit())
+		c.SystemdConfig.Unit.Requires = append(c.SystemdConfig.Unit.Requires, b.Unit())
+		if g.UseUpheldBy {
+			c.SystemdConfig.Unit.UpheldBy = append(c.SystemdConfig.Unit.UpheldBy, b.Unit())
+		}
+	}
+
+	return b, nil
+}
+
+func (g *Generator) buildNixContainers(composeProject *types.Project, networkMap map[string]*NixNetwork, volumeMap map[string]*NixVolume) (containers []*NixContainer, builds []*NixBuild, _ error) {
 	for _, s := range composeProject.Services {
 		if g.ServiceInclude != nil && !g.ServiceInclude.MatchString(s.Name) {
 			log.Printf("Skipping service %q due to include regex %q", s.Name, g.ServiceInclude.String())
@@ -741,14 +756,27 @@ func (g *Generator) buildNixContainers(composeProject *types.Project, networkMap
 		}
 		c, err := g.buildNixContainer(s, networkMap, volumeMap)
 		if err != nil {
-			return nil, fmt.Errorf("failed to build container for service %q: %w", s.Name, err)
+			return nil, nil, fmt.Errorf("failed to build container for service %q: %w", s.Name, err)
 		}
 		containers = append(containers, c)
+
+		if s.Build != nil {
+			b, err := g.parseServiceBuild(s, c)
+			if err != nil {
+				return nil, nil, fmt.Errorf("failed to parse build for service %q: %w", s.Name, err)
+			}
+			builds = append(builds, b)
+		}
+
+		c.SystemdConfig.Sort()
 	}
 	slices.SortFunc(containers, func(c1, c2 *NixContainer) int {
 		return cmp.Compare(c1.Name, c2.Name)
 	})
-	return containers, nil
+	slices.SortFunc(builds, func(c1, c2 *NixBuild) int {
+		return cmp.Compare(c1.ServiceName, c2.ServiceName)
+	})
+	return containers, builds, nil
 }
 
 func (g *Generator) networkNameToService(name string) string {

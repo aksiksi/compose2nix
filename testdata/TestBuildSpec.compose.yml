@@ -1,0 +1,29 @@
+# Adapted from: https://github.com/ente-io/ente/blob/main/server/compose.yaml
+services:
+  museum:
+    build:
+      context: .
+      args:
+        GIT_COMMIT: development-cluster
+      tags:
+        - latest
+        - non-latest
+    ports:
+      - 8080:8080 # API
+      - 2112:2112 # Prometheus metrics
+    environment:
+      # Pass-in the config to connect to the DB and MinIO
+      ENTE_CREDENTIALS_FILE: /credentials.yaml
+    volumes:
+      - custom-logs:/var/logs
+      - ./museum.yaml:/museum.yaml:ro
+      - ./scripts/compose/credentials.yaml:/credentials.yaml:ro
+      - ./data:/data:ro
+    networks:
+      - internal
+
+volumes:
+  custom-logs:
+
+networks:
+  internal:
