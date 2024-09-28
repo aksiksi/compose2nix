@@ -15,7 +15,7 @@ systemd.services."{{.Runtime}}-volume-{{.Name}}" = {
   ];
   {{- end}}
   script = ''
-    {{ .Command }}
+    {{escapeIndentedNixString .Command }}
   '';
   {{- if rootTarget}}
   {{- /* PartOf for stop/restart of root, WantedBy for start of root. */}}

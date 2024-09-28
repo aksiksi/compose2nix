@@ -576,16 +576,6 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 				if err != nil {
 					return nil, fmt.Errorf("failed to convert healthcheck command: %w", err)
 				}
-
-				// We need to escape double-quotes for Nix.
-				//
-				// We also need to escape the special "${" sequence as it is possible that this is
-				// passed in to evaluate a Bash env variable as part of the command.
-				//
-				// See: https://nixos.org/manual/nix/stable/language/values
-				cmd = strings.ReplaceAll(cmd, `"`, `\"`)
-				cmd = strings.ReplaceAll(cmd, "${", `\${`)
-
 				c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--health-cmd=%s", cmd))
 			}
 			if timeout := healthCheck.Timeout; timeout != nil {
