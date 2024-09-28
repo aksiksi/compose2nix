@@ -367,3 +367,42 @@ func TestComposeEnvFiles(t *testing.T) {
 	}
 	runSubtestsWithGenerator(t, g)
 }
+
+func TestCheckBindMounts(t *testing.T) {
+	ctx := context.Background()
+	d := t.TempDir()
+	bindMountPath := path.Join(d, "my-bind-mount")
+
+	if err := os.Mkdir(bindMountPath, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	composeFile := fmt.Sprintf(`
+services:
+  my-service:
+    image: nginx
+    volumes:
+      - %s:dest-path
+`, bindMountPath)
+
+	composePath := path.Join(d, "compose.yml")
+	f, err := os.Create(composePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	if _, err := f.Write([]byte(composeFile)); err != nil {
+		t.Fatal(err)
+	}
+
+	g := &Generator{
+		Inputs:          []string{composePath},
+		Project:         NewProject("test"),
+		RootPath:        ".",
+		CheckBindMounts: true,
+	}
+
+	if _, err := g.Run(ctx); err != nil {
+		t.Error(err)
+	}
+}
