@@ -252,6 +252,47 @@ func healthCheckCommandToString(cmd []string) (string, error) {
 	panic("unreachable")
 }
 
+// Health check.
+// https://docs.docker.com/compose/compose-file/05-services/#healthcheck
+func parseHealthCheck(c *NixContainer, service types.ServiceConfig, runtime ContainerRuntime) error {
+	if healthCheck := service.HealthCheck; healthCheck != nil {
+		// Figure out if the Dockerfile health check is disabled.
+		disable := healthCheck.Disable || (len(healthCheck.Test) > 0 && healthCheck.Test[0] == "NONE")
+		if disable {
+			c.ExtraOptions = append(c.ExtraOptions, "--no-healthcheck")
+		} else {
+			if len(healthCheck.Test) > 0 {
+				cmd, err := healthCheckCommandToString(healthCheck.Test)
+				if err != nil {
+					return fmt.Errorf("failed to convert healthcheck command: %w", err)
+				}
+				c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--health-cmd=%s", cmd))
+			}
+			if timeout := healthCheck.Timeout; timeout != nil {
+				c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--health-timeout=%v", *timeout))
+			}
+			if interval := healthCheck.Interval; interval != nil {
+				c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--health-interval=%v", *interval))
+			}
+			if retries := healthCheck.Retries; retries != nil {
+				c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--health-retries=%d", *retries))
+			}
+			if startPeriod := healthCheck.StartPeriod; startPeriod != nil {
+				c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--health-start-period=%v", *startPeriod))
+			}
+			if startInterval := healthCheck.StartInterval; startInterval != nil {
+				flagName := "health-start-interval"
+				if runtime == ContainerRuntimePodman {
+					// https://docs.podman.io/en/latest/markdown/podman-run.1.html#health-startup-interval-interval
+					flagName = "health-startup-interval"
+				}
+				c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--%s=%v", flagName, *startInterval))
+			}
+		}
+	}
+	return nil
+}
+
 func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap map[string]*NixNetwork, volumeMap map[string]*NixVolume) (*NixContainer, error) {
 	name := g.serviceToContainerName[service.Name]
 
@@ -572,38 +613,8 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 		c.ExtraOptions = append(c.ExtraOptions, mapToRepeatedKeyValFlag("--log-opt", logging.Options)...)
 	}
 
-	// Health check.
-	// https://docs.docker.com/compose/compose-file/05-services/#healthcheck
-	if healthCheck := service.HealthCheck; healthCheck != nil {
-		// Figure out if the Dockerfile health check is disabled.
-		disable := healthCheck.Disable || (len(healthCheck.Test) > 0 && healthCheck.Test[0] == "NONE")
-		if disable {
-			c.ExtraOptions = append(c.ExtraOptions, "--no-healthcheck")
-		} else {
-			if len(healthCheck.Test) > 0 {
-				cmd, err := healthCheckCommandToString(healthCheck.Test)
-				if err != nil {
-					return nil, fmt.Errorf("failed to convert healthcheck command: %w", err)
-				}
-				c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--health-cmd=%s", cmd))
-			}
-			if timeout := healthCheck.Timeout; timeout != nil {
-				c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--health-timeout=%v", *timeout))
-			}
-			if interval := healthCheck.Interval; interval != nil {
-				c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--health-interval=%v", *interval))
-			}
-			if retries := healthCheck.Retries; retries != nil {
-				c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--health-retries=%d", *retries))
-			}
-			if startPeriod := healthCheck.StartPeriod; startPeriod != nil {
-				c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--health-start-period=%v", *startPeriod))
-			}
-			// Not supported by Docker.
-			if startInterval := healthCheck.StartInterval; startInterval != nil && g.Runtime == ContainerRuntimePodman {
-				c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--health-start-interval=%v", *startInterval))
-			}
-		}
+	if err := parseHealthCheck(c, service, g.Runtime); err != nil {
+		return nil, err
 	}
 
 	// Deploy resources configuration.
