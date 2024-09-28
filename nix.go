@@ -196,17 +196,54 @@ func (c *NixContainer) Unit() string {
 	return fmt.Sprintf("%s-%s.service", c.Runtime, c.Name)
 }
 
+// https://docs.docker.com/reference/compose-file/build/
+// https://docs.docker.com/reference/cli/docker/buildx/build/
+type NixBuild struct {
+	Runtime     ContainerRuntime
+	Context     string
+	Args        map[string]*string
+	Tags        []string
+	Dockerfile  string // Relative to context path.
+	ServiceName string
+}
+
+func (b *NixBuild) Unit() string {
+	return fmt.Sprintf("podman-build-%s.service", b.ServiceName)
+}
+
+func (b *NixBuild) Command() string {
+	cmd := fmt.Sprintf("%s build", b.Runtime)
+
+	for _, tag := range b.Tags {
+		cmd += fmt.Sprintf(" -t %s", tag)
+	}
+	for name, arg := range b.Args {
+		if arg != nil {
+			cmd += fmt.Sprintf(" --build-arg %s=%s", name, *arg)
+		} else {
+			cmd += fmt.Sprintf(" --build-arg %s", name)
+		}
+	}
+	if b.Dockerfile != "" && b.Dockerfile != "Dockerfile" {
+		cmd += fmt.Sprintf(" -f %s", b.Dockerfile)
+	}
+
+	return cmd + " ."
+}
+
 type NixContainerConfig struct {
 	Version          string
 	Project          *Project
 	Runtime          ContainerRuntime
 	Containers       []*NixContainer
+	Builds           []*NixBuild
 	Networks         []*NixNetwork
 	Volumes          []*NixVolume
 	CreateRootTarget bool
 	WriteNixSetup    bool
 	AutoFormat       bool
 	AutoStart        bool
+	IncludeBuild     bool
 }
 
 func (c *NixContainerConfig) String() string {

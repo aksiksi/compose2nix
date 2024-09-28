@@ -198,3 +198,12 @@ func (c *NixContainerSystemdConfig) ParseSystemdLabels(service *types.ServiceCon
 	}
 	return nil
 }
+
+func (c *NixContainerSystemdConfig) Sort() {
+	slices.Sort(c.Unit.After)
+	slices.Sort(c.Unit.Requires)
+	slices.Sort(c.Unit.PartOf)
+	slices.Sort(c.Unit.UpheldBy)
+	slices.Sort(c.Unit.WantedBy)
+	slices.Sort(c.Unit.RequiresMountsFor)
+}

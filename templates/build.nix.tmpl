@@ -1,0 +1,18 @@
+systemd.services."{{.Runtime}}-build-{{.ServiceName}}" = {
+  {{- /* TODO: Support Git repo as a build source. */}}
+  path = [ pkgs.{{.Runtime}} pkgs.git ];
+  serviceConfig = {
+    Type = "oneshot";
+	{{- if cfg.IncludeBuild}}
+    RemainAfterExit = true;
+	{{- end}}
+  };
+  script = ''
+    cd {{.Context}}
+    {{escapeIndentedNixString .Command}}
+  '';
+  {{- if and cfg.IncludeBuild rootTarget}}
+  partOf = [ "{{rootTarget}}.target" ];
+  wantedBy = [ "{{rootTarget}}.target" ];
+  {{- end}}
+};

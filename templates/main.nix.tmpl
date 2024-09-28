@@ -55,6 +55,17 @@
   {{- end}}
   {{- end}}
 
+  {{- if .Builds}}
+
+  # Builds
+  #
+  # NOTE: These must be run manually before running any containers that require
+  # them to be present in the image store.
+  {{- range .Builds}}
+{{execTemplate "build.nix.tmpl" . | indent 2}}
+  {{- end}}
+  {{- end}}
+
   {{- if .CreateRootTarget}}
 
   # Root service

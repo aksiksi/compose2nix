@@ -38,6 +38,7 @@ var useUpheldBy = flag.Bool("use_upheld_by", false, "if set, upheldBy will be us
 var removeVolumes = flag.Bool("remove_volumes", false, "if set, volumes will be removed on systemd service stop.")
 var createRootTarget = flag.Bool("create_root_target", true, "if set, a root systemd target will be created, which when stopped tears down all resources.")
 var defaultStopTimeout = flag.Duration("default_stop_timeout", defaultSystemdStopTimeout, "default stop timeout for generated container services.")
+var build = flag.Bool("build", false, "if set, generated container build systemd services will be enabled.")
 var writeNixSetup = flag.Bool("write_nix_setup", true, "if true, Nix setup code is written to output (runtime, DNS, autoprune, etc.)")
 var autoFormat = flag.Bool("auto_format", false, `if true, Nix output will be formatted using "nixfmt" (must be present in $PATH).`)
 var version = flag.Bool("version", false, "display version and exit")
@@ -113,6 +114,7 @@ func main() {
 		NoWriteNixSetup:         !*writeNixSetup,
 		AutoFormat:              *autoFormat,
 		DefaultStopTimeout:      *defaultStopTimeout,
+		IncludeBuild:            *build,
 		GetWorkingDir:           &OsGetWd{},
 	}
 	containerConfig, err := g.Run(ctx)

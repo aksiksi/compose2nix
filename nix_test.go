@@ -406,3 +406,25 @@ services:
 		t.Error(err)
 	}
 }
+
+func TestBuildSpec(t *testing.T) {
+	composePath, _ := getPaths(t, false)
+	g := &Generator{
+		Inputs:   []string{composePath},
+		Project:  NewProject("test"),
+		RootPath: "/some/path",
+	}
+	runSubtestsWithGenerator(t, g)
+}
+
+func TestBuildSpec_BuildEnabled(t *testing.T) {
+	composePath, _ := getPaths(t, false)
+	g := &Generator{
+		Inputs:       []string{composePath},
+		Project:      NewProject("test"),
+		RootPath:     "/some/path",
+		IncludeBuild: true,
+		UseUpheldBy:  true,
+	}
+	runSubtestsWithGenerator(t, g)
+}
