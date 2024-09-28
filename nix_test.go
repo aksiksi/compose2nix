@@ -264,6 +264,16 @@ func TestNetworkAndVolumeNames(t *testing.T) {
 	runSubtestsWithGenerator(t, g)
 }
 
+func TestNetworkSettings(t *testing.T) {
+	composePath, _ := getPaths(t, false)
+	g := &Generator{
+		Project:                 NewProject("test"),
+		Inputs:                  []string{composePath},
+		GenerateUnusedResources: true,
+	}
+	runSubtestsWithGenerator(t, g)
+}
+
 func TestRelativeServiceVolumes(t *testing.T) {
 	composePath, _ := getPaths(t, false)
 	g := &Generator{

@@ -743,6 +743,9 @@ func (g *Generator) buildNixNetworks(composeProject *types.Project) ([]*NixNetwo
 		if network.Internal {
 			n.ExtraOptions = append(n.ExtraOptions, "--internal")
 		}
+		if enableIPv6 := network.EnableIPv6; enableIPv6 != nil && *enableIPv6 {
+			n.ExtraOptions = append(n.ExtraOptions, "--ipv6")
+		}
 
 		// IPAM configuration.
 		// https://docs.docker.com/compose/compose-file/06-networks/#ipam
