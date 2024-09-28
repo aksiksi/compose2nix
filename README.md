@@ -372,6 +372,7 @@ If a feature is missing, please feel free to [create an issue](https://github.co
 | [`runtime`](https://docs.docker.com/compose/compose-file/05-services/#runtime) | ✅ | |
 | [`security_opt`](https://docs.docker.com/compose/compose-file/05-services/#security_opt) | ✅ | |
 | [`command`](https://docs.docker.com/compose/compose-file/05-services/#command) | ✅ | |
+| [`entrypoint`](https://docs.docker.com/compose/compose-file/05-services/#entrypoint) | ✅ | |
 | [`healthcheck`](https://docs.docker.com/compose/compose-file/05-services/#healthcheck) | ✅ | |
 | [`hostname`](https://docs.docker.com/compose/compose-file/05-services/#hostname) | ✅ | |
 | [`mac_address`](https://docs.docker.com/compose/compose-file/05-services/#mac_address) | ✅ | |
@@ -384,6 +385,7 @@ If a feature is missing, please feel free to [create an issue](https://github.co
 | [`name`](https://docs.docker.com/compose/compose-file/06-networks/#name) | ✅ |
 | [`driver`](https://docs.docker.com/compose/compose-file/06-networks/#driver) | ✅ |
 | [`driver_opts`](https://docs.docker.com/compose/compose-file/06-networks/#driver_opts) | ✅ |
+| [`enable_ipv6`](https://docs.docker.com/compose/compose-file/06-networks/#enable_ipv6) | ✅ |
 | [`ipam`](https://docs.docker.com/compose/compose-file/06-networks/#ipam) | ✅ |
 | [`external`](https://docs.docker.com/compose/compose-file/06-networks/#external) | ✅ |
 | [`internal`](https://docs.docker.com/compose/compose-file/06-networks/#internal) | ✅ |

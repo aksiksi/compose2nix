@@ -144,6 +144,16 @@ func TestUpheldBy(t *testing.T) {
 	runSubtestsWithGenerator(t, g)
 }
 
+func TestCommandAndEntrypoint(t *testing.T) {
+	composePath, envFilePath := getPaths(t, false)
+	g := &Generator{
+		Project:  NewProject("test"),
+		Inputs:   []string{composePath},
+		EnvFiles: []string{envFilePath},
+	}
+	runSubtestsWithGenerator(t, g)
+}
+
 func TestRemoveVolumes(t *testing.T) {
 	composePath, envFilePath := getPaths(t, true)
 	g := &Generator{
@@ -250,6 +260,16 @@ func TestNetworkAndVolumeNames(t *testing.T) {
 	composePath, _ := getPaths(t, false)
 	g := &Generator{
 		Inputs: []string{composePath},
+	}
+	runSubtestsWithGenerator(t, g)
+}
+
+func TestNetworkSettings(t *testing.T) {
+	composePath, _ := getPaths(t, false)
+	g := &Generator{
+		Project:                 NewProject("test"),
+		Inputs:                  []string{composePath},
+		GenerateUnusedResources: true,
 	}
 	runSubtestsWithGenerator(t, g)
 }

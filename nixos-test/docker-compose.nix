@@ -10,6 +10,32 @@
   virtualisation.oci-containers.backend = "docker";
 
   # Containers
+  virtualisation.oci-containers.containers."myproject-entrypoint" = {
+    image = "docker.io/library/nginx:stable-alpine-slim";
+    log-driver = "journald";
+    extraOptions = [
+      "--entrypoint=[\"echo\", \"abc\"]"
+      "--network-alias=entrypoint"
+      "--network=myproject_default"
+    ];
+  };
+  systemd.services."docker-myproject-entrypoint" = {
+    serviceConfig = {
+      Restart = lib.mkOverride 90 "no";
+    };
+    after = [
+      "docker-network-myproject_default.service"
+    ];
+    requires = [
+      "docker-network-myproject_default.service"
+    ];
+    partOf = [
+      "docker-compose-myproject-root.target"
+    ];
+    wantedBy = [
+      "docker-compose-myproject-root.target"
+    ];
+  };
   virtualisation.oci-containers.containers."myproject-no-restart" = {
     image = "docker.io/library/nginx:stable-alpine-slim";
     log-driver = "journald";
@@ -150,6 +176,19 @@
   };
 
   # Networks
+  systemd.services."docker-network-myproject_another" = {
+    path = [ pkgs.docker ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStop = "docker network rm -f myproject_another";
+    };
+    script = ''
+      docker network inspect myproject_another || docker network create myproject_another --driver=bridge --ipv6
+    '';
+    partOf = [ "docker-compose-myproject-root.target" ];
+    wantedBy = [ "docker-compose-myproject-root.target" ];
+  };
   systemd.services."docker-network-myproject_default" = {
     path = [ pkgs.docker ];
     serviceConfig = {
