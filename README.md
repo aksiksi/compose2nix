@@ -385,6 +385,7 @@ If a feature is missing, please feel free to [create an issue](https://github.co
 | [`name`](https://docs.docker.com/compose/compose-file/06-networks/#name) | ✅ |
 | [`driver`](https://docs.docker.com/compose/compose-file/06-networks/#driver) | ✅ |
 | [`driver_opts`](https://docs.docker.com/compose/compose-file/06-networks/#driver_opts) | ✅ |
+| [`enable_ipv6`](https://docs.docker.com/compose/compose-file/06-networks/#enable_ipv6) | ✅ |
 | [`ipam`](https://docs.docker.com/compose/compose-file/06-networks/#ipam) | ✅ |
 | [`external`](https://docs.docker.com/compose/compose-file/06-networks/#external) | ✅ |
 | [`internal`](https://docs.docker.com/compose/compose-file/06-networks/#internal) | ✅ |

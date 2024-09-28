@@ -58,6 +58,9 @@ networks:
     labels:
       - "test-label=okay"
       - "escape-me=''hello''"
+  another:
+    driver: bridge
+    enable_ipv6: true
 
 volumes:
   storage:

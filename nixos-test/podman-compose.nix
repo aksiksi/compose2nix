@@ -178,6 +178,19 @@
   };
 
   # Networks
+  systemd.services."podman-network-myproject_another" = {
+    path = [ pkgs.podman ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStop = "podman network rm -f myproject_another";
+    };
+    script = ''
+      podman network inspect myproject_another || podman network create myproject_another --driver=bridge --ipv6
+    '';
+    partOf = [ "podman-compose-myproject-root.target" ];
+    wantedBy = [ "podman-compose-myproject-root.target" ];
+  };
   systemd.services."podman-network-myproject_default" = {
     path = [ pkgs.podman ];
     serviceConfig = {

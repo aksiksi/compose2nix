@@ -1,0 +1,10 @@
+networks:
+  nginx_net:
+    driver: bridge
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: "2001:1111:3000::/64"
+  other:
+    ipam:
+      driver: dhcp

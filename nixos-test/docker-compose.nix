@@ -176,6 +176,19 @@
   };
 
   # Networks
+  systemd.services."docker-network-myproject_another" = {
+    path = [ pkgs.docker ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStop = "docker network rm -f myproject_another";
+    };
+    script = ''
+      docker network inspect myproject_another || docker network create myproject_another --driver=bridge --ipv6
+    '';
+    partOf = [ "docker-compose-myproject-root.target" ];
+    wantedBy = [ "docker-compose-myproject-root.target" ];
+  };
   systemd.services."docker-network-myproject_default" = {
     path = [ pkgs.docker ];
     serviceConfig = {
