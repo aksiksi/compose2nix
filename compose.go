@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"path"
 	"regexp"
 	"slices"
@@ -117,6 +118,7 @@ type Generator struct {
 	UseComposeLogDriver     bool
 	GenerateUnusedResources bool
 	CheckSystemdMounts      bool
+	CheckBindMounts         bool
 	UseUpheldBy             bool
 	RemoveVolumes           bool
 	NoCreateRootTarget      bool
@@ -361,6 +363,12 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 					return nil, fmt.Errorf("failed to get root path for relative volume path %q: %w", sourcePath, err)
 				}
 				sourcePath = path.Join(root, sourcePath)
+			}
+
+			if g.CheckBindMounts {
+				if _, err := os.Stat(sourcePath); os.IsNotExist(err) {
+					return nil, fmt.Errorf("service %q: bind mount source path %q does not exist", service.Name, sourcePath)
+				}
 			}
 
 			// Replace the source path in the volume string.
