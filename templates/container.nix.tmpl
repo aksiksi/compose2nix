@@ -4,7 +4,7 @@ virtualisation.oci-containers.containers."{{.Name}}" = {
   {{- if .Environment}}
   environment = {
     {{- range $k, $v := .Environment}}
-    "{{$k}}" = "{{$v}}";
+    "{{$k}}" = "{{escapeNixString $v}}";
     {{- end}}
   };
   {{- end}}
@@ -40,7 +40,7 @@ virtualisation.oci-containers.containers."{{.Name}}" = {
   {{- if .Labels}}
   labels = {
     {{- range $k, $v := .Labels}}
-    "{{$k}}" = "{{$v}}";
+    "{{$k}}" = "{{escapeNixString $v}}";
     {{- end}}
   };
   {{- end}}
@@ -68,7 +68,7 @@ virtualisation.oci-containers.containers."{{.Name}}" = {
   {{- if .ExtraOptions}}
   extraOptions = [
     {{- range .ExtraOptions}}
-    "{{.}}"
+    "{{escapeNixString .}}"
     {{- end}}
   ];
   {{- end}}

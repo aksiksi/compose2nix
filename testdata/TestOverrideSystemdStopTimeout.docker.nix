@@ -70,7 +70,7 @@
       "DOCKER_MODS" = "ghcr.io/gilbn/theme.park:sabnzbd";
       "PGID" = "1000";
       "PUID" = "1000";
-      "TP_DOMAIN" = "hey.hello.us\/themepark";
+      "TP_DOMAIN" = "hey.hello.us\\/themepark";
       "TP_HOTIO" = "false";
       "TP_THEME" = "potato";
       "TZ" = "America/New_York";

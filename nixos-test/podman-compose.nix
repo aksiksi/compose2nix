@@ -57,6 +57,7 @@
       "compose2nix.systemd.service.Restart" = "no";
       "compose2nix.systemd.service.RuntimeMaxSec" = "360";
       "compose2nix.systemd.unit.Description" = "This is the service-a container!";
+      "escape-me" = "\"hello\"";
     };
     log-driver = "journald";
     extraOptions = [
@@ -172,7 +173,7 @@
       ExecStop = "podman network rm -f myproject_something";
     };
     script = ''
-      podman network inspect myproject_something || podman network create myproject_something --subnet=192.168.8.0/24 --gateway=192.168.8.1 --label=test-label=okay
+      podman network inspect myproject_something || podman network create myproject_something --subnet=192.168.8.0/24 --gateway=192.168.8.1 --label=escape-me='''hello''' --label=test-label=okay
     '';
     partOf = [ "podman-compose-myproject-root.target" ];
     wantedBy = [ "podman-compose-myproject-root.target" ];
@@ -204,7 +205,7 @@
       "/mnt/media"
     ];
     script = ''
-      podman volume inspect storage || podman volume create storage --opt=device=/mnt/media --opt=o=bind --opt=type=none
+      podman volume inspect storage || podman volume create storage --opt=device=/mnt/media --opt=o=bind --opt=type=none --label=escape-me='''hello'''
     '';
     partOf = [ "podman-compose-myproject-root.target" ];
     wantedBy = [ "podman-compose-myproject-root.target" ];

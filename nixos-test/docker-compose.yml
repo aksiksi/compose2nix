@@ -19,6 +19,7 @@ services:
       - 'compose2nix.systemd.service.Restart=no'
       - "compose2nix.systemd.service.RuntimeMaxSec=360"
       - "compose2nix.systemd.unit.Description=This is the service-a container!"
+      - "escape-me=\"hello\""
     restart: unless-stopped
   service-b:
     image: docker.io/library/nginx:stable-alpine-slim
@@ -51,6 +52,7 @@ networks:
           gateway: 192.168.8.1
     labels:
       - "test-label=okay"
+      - "escape-me=''hello''"
 
 volumes:
   storage:
@@ -59,6 +61,8 @@ volumes:
       type: none
       device: /mnt/media
       o: bind
+    labels:
+      - "escape-me=''hello''"
   books:
     driver_opts:
       type: none
