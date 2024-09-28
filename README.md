@@ -196,6 +196,29 @@ You can do one of the following:
 sudo systemctl start podman-compose-myservice-root.target
 ```
 
+#### Compose Build spec
+
+`compose2nix` has basic support for the Build spec. See [Supported Compose Features] below for details.
+
+By default, a systemd service will be generated for _each_ container build. This is a
+one-shot service that simply runs the build when started.
+
+For example, if you have a service named `my-service` with a `build` set:
+
+```
+sudo systemctl start podman-build-my-service.service
+```
+
+Note that, until this is run, the container for `my-service` will **not be able to start** due to the missing image.
+
+##### Auto-build
+
+If you run the CLI with `-build=true`, the systemd service will be marked as a dependency for the service
+container. This means that the build will be run before the container is started.
+
+However, it is important to note that the build will be re-run on every restart of the root target or system.
+This will result in the build image being updated (potentially).
+
 ### Nvidia GPU Support
 
 1. Enable CDI support in your NixOS config:
@@ -336,7 +359,7 @@ Usage of compose2nix:
     	if true, Nix setup code is written to output (runtime, DNS, autoprune, etc.) (default true)
 ```
 
-### Supported Docker Compose Features
+### Supported Compose Features
 
 If a feature is missing, please feel free to [create an issue](https://github.com/aksiksi/compose2nix/issues/new). In theory, any Compose feature can be supported because `compose2nix` uses the same library as the Docker CLI under the hood.
 
@@ -399,6 +422,16 @@ If a feature is missing, please feel free to [create an issue](https://github.co
 | [`labels`](https://docs.docker.com/compose/compose-file/07-volumes/#labels) | ✅ |
 | [`name`](https://docs.docker.com/compose/compose-file/07-volumes/#name) | ✅ |
 | [`external`](https://docs.docker.com/compose/compose-file/07-volumes/#external) | ✅ |
+
+#### [`build`](https://docs.docker.com/reference/compose-file/build/)
+
+|   |     | Notes |
+|---|:---:|-------|
+| [`args`](https://docs.docker.com/reference/compose-file/build/#args) | ✅ | |
+| [`tags`](https://docs.docker.com/reference/compose-file/build/#tags) | ✅ |
+| [`context`](https://docs.docker.com/reference/compose-file/build/#context) | ⚠️  | Git repo is not supported |
+| [`network`](https://docs.docker.com/reference/compose-file/build/#network) | ❌ |
+| [`image`+`build`](https://docs.docker.com/reference/compose-file/build/#using-build-and-image) | ❌ |
 
 #### Misc
 
