@@ -135,7 +135,7 @@
     user = "1000:1000";
     log-driver = "journald";
     extraOptions = [
-      "--health-cmd=[\"curl\",\"-f\",\"http://localhost\"]"
+      "--health-cmd=[\"curl\", \"-f\", \"http://localhost\"]"
       "--health-interval=1m30s"
       "--health-retries=3"
       "--health-start-period=40s"

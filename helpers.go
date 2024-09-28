@@ -31,6 +31,17 @@ func mapToRepeatedKeyValFlag(flagName string, m map[string]string) []string {
 	return arr
 }
 
+func sliceToStringArray(s []string) string {
+	b := strings.Builder{}
+	b.WriteString("[")
+	for i := range s {
+		// We purposefully do not use %q to avoid Go's built-in string escaping.
+		// Otherwise, we'd escape " characters a 2nd time for Nix.
+		s[i] = fmt.Sprintf(`"%s"`, s[i])
+	}
+	return fmt.Sprintf("[%s]", strings.Join(s, ", "))
+}
+
 // ReadEnvFiles reads the given set of env files into a list of KEY=VAL entries.
 //
 // If mergeWithEnv is set, the running env is merged with the provided env files. Any

@@ -33,7 +33,7 @@ virtualisation.oci-containers.containers."{{.Name}}" = {
   ];
   {{- end}}
 
-  {{- if .Command}}
+  {{- if ne .Command nil}}
   cmd = {{toNixList .Command}};
   {{- end}}
 

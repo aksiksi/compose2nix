@@ -3,7 +3,6 @@ package main
 import (
 	"cmp"
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"path"
@@ -241,11 +240,7 @@ func healthCheckCommandToString(cmd []string) (string, error) {
 	case "CMD-SHELL":
 		return cmd[1], nil
 	case "CMD":
-		j, err := json.Marshal(cmd[1:])
-		if err != nil {
-			return "", fmt.Errorf("failed to convert %v to JSON: %w", cmd[1:], err)
-		}
-		return string(j), nil
+		return sliceToStringArray(cmd[1:]), nil
 	}
 	panic("unreachable")
 }
@@ -329,6 +324,9 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 
 	if !service.Command.IsZero() {
 		c.Command = service.Command
+	}
+	if entrypoint := service.Entrypoint; !entrypoint.IsZero() {
+		c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--entrypoint=%s", sliceToStringArray(entrypoint)))
 	}
 
 	// Figure out explicit dependencies for this container.
@@ -744,6 +742,9 @@ func (g *Generator) buildNixNetworks(composeProject *types.Project) ([]*NixNetwo
 
 		if network.Internal {
 			n.ExtraOptions = append(n.ExtraOptions, "--internal")
+		}
+		if enableIPv6 := network.EnableIPv6; enableIPv6 != nil && *enableIPv6 {
+			n.ExtraOptions = append(n.ExtraOptions, "--ipv6")
 		}
 
 		// IPAM configuration.

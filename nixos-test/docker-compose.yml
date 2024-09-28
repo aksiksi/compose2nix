@@ -43,6 +43,11 @@ services:
     restart: on-failure:3
   no-restart:
     image: docker.io/library/nginx:stable-alpine-slim
+  entrypoint:
+    image: docker.io/library/nginx:stable-alpine-slim
+    entrypoint:
+      - echo
+      - abc
 
 networks:
   something:
@@ -53,6 +58,9 @@ networks:
     labels:
       - "test-label=okay"
       - "escape-me=''hello''"
+  another:
+    driver: bridge
+    enable_ipv6: true
 
 volumes:
   storage:
