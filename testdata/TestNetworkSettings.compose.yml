@@ -8,3 +8,6 @@ networks:
   other:
     ipam:
       driver: dhcp
+  default:
+    ipam:
+      driver: default

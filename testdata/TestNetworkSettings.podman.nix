@@ -14,6 +14,19 @@
   virtualisation.oci-containers.backend = "podman";
 
   # Networks
+  systemd.services."podman-network-test_default" = {
+    path = [ pkgs.podman ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStop = "podman network rm -f test_default";
+    };
+    script = ''
+      podman network inspect test_default || podman network create test_default
+    '';
+    partOf = [ "podman-compose-test-root.target" ];
+    wantedBy = [ "podman-compose-test-root.target" ];
+  };
   systemd.services."podman-network-test_nginx_net" = {
     path = [ pkgs.podman ];
     serviceConfig = {

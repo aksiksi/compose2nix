@@ -751,7 +751,10 @@ func (g *Generator) buildNixNetworks(composeProject *types.Project) ([]*NixNetwo
 		// https://docs.docker.com/compose/compose-file/06-networks/#ipam
 		// https://docs.docker.com/reference/cli/docker/network/create/
 		// https://docs.podman.io/en/latest/markdown/podman-network-create.1.html
-		if network.Ipam.Driver != "" {
+
+		// If driver is set to "default", we'll omit it and fallback to the
+		// runtime.
+		if network.Ipam.Driver != "" && network.Ipam.Driver != "default" {
 			n.IpamDriver = network.Ipam.Driver
 		}
 		for _, ipamConfig := range network.Ipam.Config {
