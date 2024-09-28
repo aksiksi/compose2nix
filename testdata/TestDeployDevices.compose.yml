@@ -19,4 +19,14 @@ services:
               device_ids:
                 - unknown
     restart: unless-stopped
+  deploy-nvidia:
+    image: nginx:latest
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities:
+                - gpu
 

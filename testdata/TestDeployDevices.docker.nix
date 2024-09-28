@@ -9,6 +9,27 @@
   virtualisation.oci-containers.backend = "docker";
 
   # Containers
+  virtualisation.oci-containers.containers."test-deploy-nvidia" = {
+    image = "nginx:latest";
+    log-driver = "journald";
+    autoStart = false;
+    extraOptions = [
+      "--device=nvidia.com/gpu=all"
+      "--network-alias=deploy-nvidia"
+      "--network=test_default"
+    ];
+  };
+  systemd.services."docker-test-deploy-nvidia" = {
+    serviceConfig = {
+      Restart = lib.mkOverride 90 "no";
+    };
+    after = [
+      "docker-network-test_default.service"
+    ];
+    requires = [
+      "docker-network-test_default.service"
+    ];
+  };
   virtualisation.oci-containers.containers."test-test" = {
     image = "nginx:latest";
     log-driver = "journald";

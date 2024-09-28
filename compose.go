@@ -648,7 +648,16 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 
 			// CDI GPU support.
 			for _, device := range reservations.Devices {
-				if strings.ToLower(device.Driver) != "cdi" {
+				driver := strings.ToLower(device.Driver)
+				if driver != "cdi" && driver != "nvidia" {
+					continue
+				}
+				if driver == "nvidia" {
+					// Pass in all GPUs in CDI format.
+					//
+					// TODO(aksiksi): Maybe we can do something better here?
+					c.ExtraOptions = append(c.ExtraOptions, "--device=nvidia.com/gpu=all")
+					log.Printf("WARNING: \"driver: nvidia\" is implicitly converted to CDI that matches all GPUs")
 					continue
 				}
 				for _, deviceID := range device.IDs {
