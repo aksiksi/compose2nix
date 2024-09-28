@@ -141,6 +141,7 @@
       "--health-cmd=[\"curl\", \"-f\", \"http://localhost\"]"
       "--health-interval=1m30s"
       "--health-retries=3"
+      "--health-start-interval=5s"
       "--health-start-period=40s"
       "--health-timeout=10s"
       "--log-opt=compress=true"
