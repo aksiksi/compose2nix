@@ -46,17 +46,17 @@
       Restart = lib.mkOverride 90 "no";
     };
     after = [
-      "podman-build-museum.service"
+      "podman-build-test-museum.service"
       "podman-network-test_internal.service"
       "podman-volume-test_custom-logs.service"
     ];
     requires = [
-      "podman-build-museum.service"
+      "podman-build-test-museum.service"
       "podman-network-test_internal.service"
       "podman-volume-test_custom-logs.service"
     ];
     upheldBy = [
-      "podman-build-museum.service"
+      "podman-build-test-museum.service"
     ];
   };
 
@@ -90,13 +90,11 @@
   };
 
   # Builds
-  #
-  # NOTE: These must be run manually before running any containers that require
-  # them to be present in the image store.
-  systemd.services."podman-build-museum" = {
+  systemd.services."podman-build-test-museum" = {
     path = [ pkgs.podman pkgs.git ];
     serviceConfig = {
       Type = "oneshot";
+      RuntimeDirectory = "podman-build-test-museum";
       RemainAfterExit = true;
     };
     script = ''

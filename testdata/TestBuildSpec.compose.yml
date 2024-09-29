@@ -21,6 +21,13 @@ services:
       - ./data:/data:ro
     networks:
       - internal
+  prefetcharr:
+    image: prefetcharr
+    build: https://github.com/p-hueber/prefetcharr.git
+    environment:
+      - JELLYFIN_URL=http://example.com/jellyfin
+    volumes:
+      - /path/to/log/dir:/log
 
 volumes:
   custom-logs:

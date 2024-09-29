@@ -44,8 +44,47 @@
       "docker-volume-test_custom-logs.service"
     ];
   };
+  virtualisation.oci-containers.containers."test-prefetcharr" = {
+    image = "prefetcharr";
+    environment = {
+      "JELLYFIN_URL" = "http://example.com/jellyfin";
+    };
+    volumes = [
+      "/path/to/log/dir:/log:rw"
+    ];
+    log-driver = "journald";
+    autoStart = false;
+    extraOptions = [
+      "--network-alias=prefetcharr"
+      "--network=test_default"
+    ];
+  };
+  systemd.services."docker-test-prefetcharr" = {
+    serviceConfig = {
+      Restart = lib.mkOverride 90 "no";
+    };
+    after = [
+      "docker-network-test_default.service"
+    ];
+    requires = [
+      "docker-network-test_default.service"
+    ];
+  };
 
   # Networks
+  systemd.services."docker-network-test_default" = {
+    path = [ pkgs.docker ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStop = "docker network rm -f test_default";
+    };
+    script = ''
+      docker network inspect test_default || docker network create test_default
+    '';
+    partOf = [ "docker-compose-test-root.target" ];
+    wantedBy = [ "docker-compose-test-root.target" ];
+  };
   systemd.services."docker-network-test_internal" = {
     path = [ pkgs.docker ];
     serviceConfig = {
@@ -75,17 +114,28 @@
   };
 
   # Builds
-  #
-  # NOTE: These must be run manually before running any containers that require
-  # them to be present in the image store.
-  systemd.services."docker-build-museum" = {
+  systemd.services."docker-build-test-museum" = {
     path = [ pkgs.docker pkgs.git ];
     serviceConfig = {
       Type = "oneshot";
+      RuntimeDirectory = "docker-build-test-museum";
     };
     script = ''
       cd /some/path
       docker build -t latest -t non-latest --build-arg GIT_COMMIT=development-cluster .
+    '';
+  };
+  systemd.services."docker-build-test-prefetcharr" = {
+    path = [ pkgs.docker pkgs.git ];
+    serviceConfig = {
+      Type = "oneshot";
+      RuntimeDirectory = "docker-build-test-prefetcharr";
+    };
+    script = ''
+      cd /var/run/docker-build-test-prefetcharr
+      rm -rf *
+      git clone https://github.com/p-hueber/prefetcharr.git .
+      docker build -t prefetcharr .
     '';
   };
 

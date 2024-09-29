@@ -1,14 +1,21 @@
-systemd.services."{{.Runtime}}-build-{{.ServiceName}}" = {
+systemd.services."{{.UnitName}}" = {
   {{- /* TODO: Support Git repo as a build source. */}}
   path = [ pkgs.{{.Runtime}} pkgs.git ];
   serviceConfig = {
     Type = "oneshot";
-	{{- if cfg.IncludeBuild}}
+    RuntimeDirectory = "{{.UnitName}}";
+    {{- if cfg.IncludeBuild}}
     RemainAfterExit = true;
-	{{- end}}
+    {{- end}}
   };
   script = ''
+    {{- if .IsGitRepo}}
+    cd /var/run/{{.UnitName}}
+    rm -rf *
+    git clone {{.Context}} .
+    {{- else}}
     cd {{.Context}}
+    {{- end}}
     {{escapeIndentedNixString .Command}}
   '';
   {{- if and cfg.IncludeBuild rootTarget}}

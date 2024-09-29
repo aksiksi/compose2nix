@@ -720,20 +720,30 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 
 func (g *Generator) parseServiceBuild(service types.ServiceConfig, c *NixContainer) (*NixBuild, error) {
 	cx := service.Build.Context
+	isGitRepo := false
+
 	if strings.HasPrefix(cx, "http") {
-		return nil, fmt.Errorf("Git repo build context is not yet supported")
-	}
-	if !path.IsAbs(cx) {
+		// Process this as a Git repo.
+		isGitRepo = true
+	} else if !path.IsAbs(cx) {
 		cx = path.Join(g.rootPath, cx)
 	}
 
+	// Always prepend the image name to the list of specified tags.
+	tags := service.Build.Tags
+	if service.Image != "" {
+		tags = slices.Insert(tags, 0, service.Image)
+	}
+
 	b := &NixBuild{
-		Runtime:     g.Runtime,
-		Context:     cx,
-		Args:        service.Build.Args,
-		Tags:        service.Build.Tags,
-		Dockerfile:  service.Build.Dockerfile,
-		ServiceName: service.Name,
+		Runtime:       g.Runtime,
+		Context:       cx,
+		PullPolicy:    NewServicePullPolicy(service.PullPolicy),
+		IsGitRepo:     isGitRepo,
+		Args:          service.Build.Args,
+		Tags:          tags,
+		Dockerfile:    service.Build.Dockerfile,
+		ContainerName: c.Name,
 	}
 
 	if g.IncludeBuild {
@@ -774,7 +784,7 @@ func (g *Generator) buildNixContainers(composeProject *types.Project, networkMap
 		return cmp.Compare(c1.Name, c2.Name)
 	})
 	slices.SortFunc(builds, func(c1, c2 *NixBuild) int {
-		return cmp.Compare(c1.ServiceName, c2.ServiceName)
+		return cmp.Compare(c1.ContainerName, c2.ContainerName)
 	})
 	return containers, builds, nil
 }
