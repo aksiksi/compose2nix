@@ -10,7 +10,7 @@
 
   # Containers
   virtualisation.oci-containers.containers."test-museum" = {
-    image = "";
+    image = "compose2nix-test-museum";
     environment = {
       "ENTE_CREDENTIALS_FILE" = "/credentials.yaml";
     };
@@ -89,7 +89,7 @@
     };
     script = ''
       cd /some/path
-      docker build --build-arg GIT_COMMIT=development-cluster -f path/Dockerfile .
+      docker build -t compose2nix-test-museum --build-arg GIT_COMMIT=development-cluster -f path/Dockerfile .
     '';
     partOf = [ "docker-compose-test-root.target" ];
     wantedBy = [ "docker-compose-test-root.target" ];
