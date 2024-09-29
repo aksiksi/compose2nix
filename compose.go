@@ -729,10 +729,16 @@ func (g *Generator) parseServiceBuild(service types.ServiceConfig, c *NixContain
 		cx = path.Join(g.rootPath, cx)
 	}
 
-	// Always prepend the image name to the list of specified tags.
 	tags := service.Build.Tags
 	if service.Image != "" {
+		// Always prepend the image name to the list of specified tags.
 		tags = slices.Insert(tags, 0, service.Image)
+	} else {
+		// If no image is set on the service, we'll add a custom tag and point
+		// the image to it.
+		imageName := fmt.Sprintf("compose2nix-%s", c.Name)
+		tags = append(tags, imageName)
+		c.Image = imageName
 	}
 
 	b := &NixBuild{

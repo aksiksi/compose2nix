@@ -20,7 +20,7 @@
 
   # Containers
   virtualisation.oci-containers.containers."test-museum" = {
-    image = "";
+    image = "compose2nix-test-museum";
     environment = {
       "ENTE_CREDENTIALS_FILE" = "/credentials.yaml";
     };
@@ -132,7 +132,7 @@
     };
     script = ''
       cd /some/path
-      podman build -t latest -t non-latest --build-arg GIT_COMMIT=development-cluster .
+      podman build -t latest -t non-latest -t compose2nix-test-museum --build-arg GIT_COMMIT=development-cluster .
     '';
   };
   systemd.services."podman-build-test-prefetcharr" = {

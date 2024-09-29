@@ -20,7 +20,7 @@
 
   # Containers
   virtualisation.oci-containers.containers."test-museum" = {
-    image = "";
+    image = "compose2nix-test-museum";
     environment = {
       "ENTE_CREDENTIALS_FILE" = "/credentials.yaml";
     };
@@ -99,7 +99,7 @@
     };
     script = ''
       cd /some/path
-      podman build --build-arg GIT_COMMIT=development-cluster -f path/Dockerfile .
+      podman build -t compose2nix-test-museum --build-arg GIT_COMMIT=development-cluster -f path/Dockerfile .
     '';
     partOf = [ "podman-compose-test-root.target" ];
     wantedBy = [ "podman-compose-test-root.target" ];
