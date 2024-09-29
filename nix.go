@@ -196,19 +196,52 @@ func (c *NixContainer) Unit() string {
 	return fmt.Sprintf("%s-%s.service", c.Runtime, c.Name)
 }
 
+// https://docs.docker.com/reference/compose-file/services/#pull_policy
+type ServicePullPolicy int
+
+const (
+	ServicePullPolicyInvalid ServicePullPolicy = iota
+	ServicePullPolicyAlways
+	ServicePullPolicyNever
+	ServicePullPolicyMissing
+	ServicePullPolicyBuild
+	ServicePullPolicyUnset
+)
+
+func NewServicePullPolicy(s string) ServicePullPolicy {
+	switch strings.TrimSpace(s) {
+	case "always":
+		return ServicePullPolicyAlways
+	case "never":
+		return ServicePullPolicyNever
+	case "missing", "if_not_present":
+		return ServicePullPolicyMissing
+	case "build":
+		return ServicePullPolicyBuild
+	default:
+		return ServicePullPolicyUnset
+	}
+}
+
 // https://docs.docker.com/reference/compose-file/build/
 // https://docs.docker.com/reference/cli/docker/buildx/build/
 type NixBuild struct {
-	Runtime     ContainerRuntime
-	Context     string
-	Args        map[string]*string
-	Tags        []string
-	Dockerfile  string // Relative to context path.
-	ServiceName string
+	Runtime       ContainerRuntime
+	Context       string
+	PullPolicy    ServicePullPolicy
+	IsGitRepo     bool
+	Args          map[string]*string
+	Tags          []string
+	Dockerfile    string // Relative to context path.
+	ContainerName string // Name of the resolved Nix container.
+}
+
+func (b *NixBuild) UnitName() string {
+	return fmt.Sprintf("%s-build-%s", b.Runtime, b.ContainerName)
 }
 
 func (b *NixBuild) Unit() string {
-	return fmt.Sprintf("podman-build-%s.service", b.ServiceName)
+	return b.UnitName() + ".service"
 }
 
 func (b *NixBuild) Command() string {

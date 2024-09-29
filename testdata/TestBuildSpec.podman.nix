@@ -54,8 +54,47 @@
       "podman-volume-test_custom-logs.service"
     ];
   };
+  virtualisation.oci-containers.containers."test-prefetcharr" = {
+    image = "prefetcharr";
+    environment = {
+      "JELLYFIN_URL" = "http://example.com/jellyfin";
+    };
+    volumes = [
+      "/path/to/log/dir:/log:rw"
+    ];
+    log-driver = "journald";
+    autoStart = false;
+    extraOptions = [
+      "--network-alias=prefetcharr"
+      "--network=test_default"
+    ];
+  };
+  systemd.services."podman-test-prefetcharr" = {
+    serviceConfig = {
+      Restart = lib.mkOverride 90 "no";
+    };
+    after = [
+      "podman-network-test_default.service"
+    ];
+    requires = [
+      "podman-network-test_default.service"
+    ];
+  };
 
   # Networks
+  systemd.services."podman-network-test_default" = {
+    path = [ pkgs.podman ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStop = "podman network rm -f test_default";
+    };
+    script = ''
+      podman network inspect test_default || podman network create test_default
+    '';
+    partOf = [ "podman-compose-test-root.target" ];
+    wantedBy = [ "podman-compose-test-root.target" ];
+  };
   systemd.services."podman-network-test_internal" = {
     path = [ pkgs.podman ];
     serviceConfig = {
@@ -85,17 +124,28 @@
   };
 
   # Builds
-  #
-  # NOTE: These must be run manually before running any containers that require
-  # them to be present in the image store.
-  systemd.services."podman-build-museum" = {
+  systemd.services."podman-build-test-museum" = {
     path = [ pkgs.podman pkgs.git ];
     serviceConfig = {
       Type = "oneshot";
+      RuntimeDirectory = "podman-build-test-museum";
     };
     script = ''
       cd /some/path
       podman build -t latest -t non-latest --build-arg GIT_COMMIT=development-cluster .
+    '';
+  };
+  systemd.services."podman-build-test-prefetcharr" = {
+    path = [ pkgs.podman pkgs.git ];
+    serviceConfig = {
+      Type = "oneshot";
+      RuntimeDirectory = "podman-build-test-prefetcharr";
+    };
+    script = ''
+      cd /var/run/podman-build-test-prefetcharr
+      rm -rf *
+      git clone https://github.com/p-hueber/prefetcharr.git .
+      podman build -t prefetcharr .
     '';
   };
 

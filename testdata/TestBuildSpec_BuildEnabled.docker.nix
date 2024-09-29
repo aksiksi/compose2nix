@@ -36,17 +36,17 @@
       Restart = lib.mkOverride 90 "no";
     };
     after = [
+      "docker-build-test-museum.service"
       "docker-network-test_internal.service"
       "docker-volume-test_custom-logs.service"
-      "podman-build-museum.service"
     ];
     requires = [
+      "docker-build-test-museum.service"
       "docker-network-test_internal.service"
       "docker-volume-test_custom-logs.service"
-      "podman-build-museum.service"
     ];
     upheldBy = [
-      "podman-build-museum.service"
+      "docker-build-test-museum.service"
     ];
   };
 
@@ -80,13 +80,11 @@
   };
 
   # Builds
-  #
-  # NOTE: These must be run manually before running any containers that require
-  # them to be present in the image store.
-  systemd.services."docker-build-museum" = {
+  systemd.services."docker-build-test-museum" = {
     path = [ pkgs.docker pkgs.git ];
     serviceConfig = {
       Type = "oneshot";
+      RuntimeDirectory = "docker-build-test-museum";
       RemainAfterExit = true;
     };
     script = ''
