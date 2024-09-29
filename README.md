@@ -9,6 +9,10 @@ A tool to automatically generate a NixOS config from a Docker Compose project.
 
 ## Overview
 
+### Intro video
+
+[![Rambly introduction video](https://img.youtube.com/vi/hCAFyzJ81Pg/hqdefault.jpg)](https://youtu.be/hCAFyzJ81Pg)
+
 ### Why?
 
 Running a Docker Compose stack/project on NixOS is not well supported. One approach is to define a systemd service that runs `docker-compose up` on start and `docker compose down` on stop.
