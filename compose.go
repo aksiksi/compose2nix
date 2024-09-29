@@ -738,7 +738,7 @@ func (g *Generator) parseServiceBuild(service types.ServiceConfig, c *NixContain
 		// the image to it.
 		imageName := fmt.Sprintf("compose2nix-%s", c.Name)
 		tags = append(tags, imageName)
-		c.Image = imageName
+		c.Image = fmt.Sprintf("localhost/%s", imageName)
 	}
 
 	b := &NixBuild{

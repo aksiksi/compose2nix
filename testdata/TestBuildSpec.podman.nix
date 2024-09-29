@@ -20,7 +20,7 @@
 
   # Containers
   virtualisation.oci-containers.containers."test-museum" = {
-    image = "compose2nix-test-museum";
+    image = "localhost/compose2nix-test-museum";
     environment = {
       "ENTE_CREDENTIALS_FILE" = "/credentials.yaml";
     };
@@ -128,7 +128,7 @@
     path = [ pkgs.podman pkgs.git ];
     serviceConfig = {
       Type = "oneshot";
-      RuntimeDirectory = "podman-build-test-museum";
+      TimeoutSec = 300;
     };
     script = ''
       cd /some/path
@@ -139,13 +139,10 @@
     path = [ pkgs.podman pkgs.git ];
     serviceConfig = {
       Type = "oneshot";
-      RuntimeDirectory = "podman-build-test-prefetcharr";
+      TimeoutSec = 300;
     };
     script = ''
-      cd /var/run/podman-build-test-prefetcharr
-      rm -rf *
-      git clone https://github.com/p-hueber/prefetcharr.git .
-      podman build -t prefetcharr .
+      podman build -t prefetcharr https://github.com/p-hueber/prefetcharr.git
     '';
   };
 
