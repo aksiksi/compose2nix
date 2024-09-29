@@ -10,7 +10,7 @@
 
   # Containers
   virtualisation.oci-containers.containers."test-museum" = {
-    image = "compose2nix-test-museum";
+    image = "localhost/compose2nix-test-museum";
     environment = {
       "ENTE_CREDENTIALS_FILE" = "/credentials.yaml";
     };
@@ -84,8 +84,8 @@
     path = [ pkgs.docker pkgs.git ];
     serviceConfig = {
       Type = "oneshot";
-      RuntimeDirectory = "docker-build-test-museum";
       RemainAfterExit = true;
+      TimeoutSec = 300;
     };
     script = ''
       cd /some/path

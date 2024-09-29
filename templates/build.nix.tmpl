@@ -3,17 +3,13 @@ systemd.services."{{.UnitName}}" = {
   path = [ pkgs.{{.Runtime}} pkgs.git ];
   serviceConfig = {
     Type = "oneshot";
-    RuntimeDirectory = "{{.UnitName}}";
     {{- if cfg.IncludeBuild}}
     RemainAfterExit = true;
     {{- end}}
+    TimeoutSec = 300;
   };
   script = ''
-    {{- if .IsGitRepo}}
-    cd /var/run/{{.UnitName}}
-    rm -rf *
-    git clone {{.Context}} .
-    {{- else}}
+    {{- if not .IsGitRepo}}
     cd {{.Context}}
     {{- end}}
     {{escapeIndentedNixString .Command}}

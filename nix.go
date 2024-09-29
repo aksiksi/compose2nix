@@ -197,6 +197,7 @@ func (c *NixContainer) Unit() string {
 }
 
 // https://docs.docker.com/reference/compose-file/services/#pull_policy
+// https://docs.podman.io/en/latest/markdown/podman-build.1.html#pull-policy
 type ServicePullPolicy int
 
 const (
@@ -261,7 +262,13 @@ func (b *NixBuild) Command() string {
 		cmd += fmt.Sprintf(" -f %s", b.Dockerfile)
 	}
 
-	return cmd + " ."
+	if b.IsGitRepo {
+		cmd += " " + b.Context
+	} else {
+		cmd += " ."
+	}
+
+	return cmd
 }
 
 type NixContainerConfig struct {

@@ -20,7 +20,7 @@
 
   # Containers
   virtualisation.oci-containers.containers."test-museum" = {
-    image = "compose2nix-test-museum";
+    image = "localhost/compose2nix-test-museum";
     environment = {
       "ENTE_CREDENTIALS_FILE" = "/credentials.yaml";
     };
@@ -94,8 +94,8 @@
     path = [ pkgs.podman pkgs.git ];
     serviceConfig = {
       Type = "oneshot";
-      RuntimeDirectory = "podman-build-test-museum";
       RemainAfterExit = true;
+      TimeoutSec = 300;
     };
     script = ''
       cd /some/path
