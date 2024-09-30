@@ -88,7 +88,7 @@ systemd.services."{{.Runtime}}-{{.Name}}" = {
   {{- if .SystemdConfig.Unit.Options}}
   unitConfig = {
     {{- range $k, $v := .SystemdConfig.Unit.Options}}
-    {{$k}} = lib.mkOverride 500 {{toNixValue $v}};
+    {{$k}} = lib.mkOverride 90 {{toNixValue $v}};
     {{- end}}
   };
   {{- end}}
