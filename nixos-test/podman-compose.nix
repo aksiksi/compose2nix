@@ -1,4 +1,4 @@
-# Auto-generated using compose2nix v0.2.4-pre.
+# Auto-generated using compose2nix v0.3.1-pre.
 { pkgs, lib, ... }:
 
 {
@@ -103,7 +103,7 @@
       RuntimeMaxSec = lib.mkOverride 90 360;
     };
     unitConfig = {
-      Description = lib.mkOverride 500 "This is the service-a container!";
+      Description = lib.mkOverride 90 "This is the service-a container!";
     };
     after = [
       "podman-network-myproject_default.service"
@@ -155,8 +155,8 @@
     };
     startLimitBurst = 3;
     unitConfig = {
-      AllowIsolate = lib.mkOverride 500 "no";
-      StartLimitIntervalSec = lib.mkOverride 500 "infinity";
+      AllowIsolate = lib.mkOverride 90 "no";
+      StartLimitIntervalSec = lib.mkOverride 90 "infinity";
     };
     after = [
       "podman-network-myproject_something.service"

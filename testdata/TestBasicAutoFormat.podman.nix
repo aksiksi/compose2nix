@@ -63,7 +63,7 @@
     };
     startLimitBurst = 3;
     unitConfig = {
-      StartLimitIntervalSec = lib.mkOverride 500 120;
+      StartLimitIntervalSec = lib.mkOverride 90 120;
     };
     after = [ "podman-volume-myproject_books.service" ];
     requires = [ "podman-volume-myproject_books.service" ];
@@ -110,7 +110,7 @@
       RuntimeMaxSec = lib.mkOverride 90 10;
     };
     unitConfig = {
-      Description = lib.mkOverride 500 "This is the sabnzbd container!";
+      Description = lib.mkOverride 90 "This is the sabnzbd container!";
     };
     after = [
       "podman-network-myproject_default.service"
@@ -159,7 +159,7 @@
     };
     startLimitBurst = 10;
     unitConfig = {
-      StartLimitIntervalSec = lib.mkOverride 500 "infinity";
+      StartLimitIntervalSec = lib.mkOverride 90 "infinity";
     };
     after = [ "podman-volume-photos.service" ];
     requires = [ "podman-volume-photos.service" ];
@@ -223,7 +223,7 @@
     };
     startLimitBurst = 3;
     unitConfig = {
-      StartLimitIntervalSec = lib.mkOverride 500 "infinity";
+      StartLimitIntervalSec = lib.mkOverride 90 "infinity";
     };
     after = [
       "podman-network-myproject_something.service"
@@ -272,7 +272,7 @@
       Restart = lib.mkOverride 90 "no";
     };
     unitConfig = {
-      AllowIsolate = lib.mkOverride 500 true;
+      AllowIsolate = lib.mkOverride 90 true;
     };
     partOf = [ "podman-compose-myproject-root.target" ];
     wantedBy = [ "podman-compose-myproject-root.target" ];
