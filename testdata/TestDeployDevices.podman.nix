@@ -24,6 +24,7 @@
     log-driver = "journald";
     autoStart = false;
     extraOptions = [
+      "--cpus=0.5"
       "--device=nvidia.com/gpu=all"
       "--network-alias=deploy-nvidia"
       "--network=test_default"

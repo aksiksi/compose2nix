@@ -623,17 +623,15 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 			}
 			// Name is misleading - this actually is the exact number passed in with "cpus".
 			if limits.NanoCPUs != 0 {
-				c.ExtraOptions = append(c.ExtraOptions, "--cpu-quota="+strconv.FormatFloat(float64(limits.NanoCPUs), 'f', -1, 32))
+				c.ExtraOptions = append(c.ExtraOptions, "--cpus="+strconv.FormatFloat(float64(limits.NanoCPUs), 'f', -1, 32))
 			}
 		}
 		if reservations := deploy.Resources.Reservations; reservations != nil {
 			if reservations.MemoryBytes != 0 {
 				c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--memory-reservation=%db", reservations.MemoryBytes))
 			}
-			// Name is misleading - this actually is the exact number passed in with "cpus".
-			if reservations.NanoCPUs != 0 {
-				c.ExtraOptions = append(c.ExtraOptions, "--cpus="+strconv.FormatFloat(float64(reservations.NanoCPUs), 'f', -1, 32))
-			}
+
+			// CPU reservation is a Docker Swarm option.
 
 			// CDI GPU support.
 			for _, device := range reservations.Devices {

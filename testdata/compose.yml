@@ -126,7 +126,7 @@ services:
           cpus: 1.5
           memory: 1000M
         reservations:
-          cpus: 1.0
+          cpus: 1.0 # ignored
           memory: 500M
     logging:
       driver: "json-file"

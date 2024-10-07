@@ -13,7 +13,7 @@ services:
       - storage:/storage
     deploy:
       resources:
-        reservations:
+        limits:
           cpus: "0.5"
     labels:
       - 'compose2nix.systemd.service.Restart=no'

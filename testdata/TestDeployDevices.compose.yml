@@ -29,4 +29,6 @@ services:
               count: 1
               capabilities:
                 - gpu
+        limits:
+          cpus: '0.50'
 
