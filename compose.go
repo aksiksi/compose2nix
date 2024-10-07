@@ -598,18 +598,16 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 	if service.LogDriver != "" {
 		if service.LogDriver != "json-file" || g.UseComposeLogDriver {
 			c.LogDriver = service.LogDriver
+			c.ExtraOptions = append(c.ExtraOptions, mapToRepeatedKeyValFlag("--log-opt", service.LogOpt)...)
 		}
-		// Log options are always passed through.
-		c.ExtraOptions = append(c.ExtraOptions, mapToRepeatedKeyValFlag("--log-opt", service.LogOpt)...)
 	}
 	// New logging setting always overrides the legacy setting.
 	// https://docs.docker.com/compose/compose-file/compose-file-v3/#logging
 	if logging := service.Logging; logging != nil {
 		if logging.Driver != "json-file" || g.UseComposeLogDriver {
 			c.LogDriver = logging.Driver
+			c.ExtraOptions = append(c.ExtraOptions, mapToRepeatedKeyValFlag("--log-opt", logging.Options)...)
 		}
-		// Log options are always passed through.
-		c.ExtraOptions = append(c.ExtraOptions, mapToRepeatedKeyValFlag("--log-opt", logging.Options)...)
 	}
 
 	if err := parseHealthCheck(c, service, g.Runtime); err != nil {
