@@ -44,8 +44,7 @@
     dependsOn = [ "myproject-sabnzbd" ];
     log-driver = "journald";
     extraOptions = [
-      "--cpu-quota=1.5"
-      "--cpus=1"
+      "--cpus=1.5"
       "--dns=1.1.1.1"
       "--health-cmd=curl -f http://localhost/\${POTATO}"
       "--memory-reservation=524288000b"
