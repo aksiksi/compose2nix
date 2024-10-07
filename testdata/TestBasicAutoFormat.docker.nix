@@ -38,9 +38,6 @@
       "--cpus=1"
       "--dns=1.1.1.1"
       "--health-cmd=curl -f http://localhost/\${POTATO}"
-      "--log-opt=compress=true"
-      "--log-opt=max-file=3"
-      "--log-opt=max-size=10m"
       "--memory-reservation=524288000b"
       "--memory=1048576000b"
       "--network=container:myproject-sabnzbd"
@@ -89,9 +86,6 @@
     extraOptions = [
       "--health-cmd=curl -f http://localhost/"
       "--hostname=sabnzbd"
-      "--log-opt=compress=true"
-      "--log-opt=max-file=3"
-      "--log-opt=max-size=10m"
       "--network-alias=sabnzbd"
       "--network=myproject_default"
     ];
@@ -141,9 +135,6 @@
       "--health-start-interval=5s"
       "--health-start-period=40s"
       "--health-timeout=10s"
-      "--log-opt=compress=true"
-      "--log-opt=max-file=3"
-      "--log-opt=max-size=10m"
       "--network=host"
     ];
   };
@@ -258,12 +249,7 @@
     };
     dependsOn = [ "sabnzbd" ];
     log-driver = "journald";
-    extraOptions = [
-      "--log-opt=compress=true"
-      "--log-opt=max-file=3"
-      "--log-opt=max-size=10m"
-      "--network=container:sabnzbd"
-    ];
+    extraOptions = [ "--network=container:sabnzbd" ];
   };
   systemd.services."docker-traefik" = {
     serviceConfig = {
