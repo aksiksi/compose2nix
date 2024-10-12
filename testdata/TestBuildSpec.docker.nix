@@ -122,7 +122,7 @@
     };
     script = ''
       cd /some/path
-      docker build -t compose2nix/test-museum -t latest -t non-latest --build-arg GIT_COMMIT=development-cluster .
+      docker build -t compose2nix/test-museum -t compose2nix/test-museum:latest -t compose2nix/test-museum:non-latest --build-arg GIT_COMMIT=development-cluster .
     '';
   };
   systemd.services."docker-build-test-prefetcharr" = {

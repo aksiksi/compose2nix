@@ -725,15 +725,30 @@ func (g *Generator) parseServiceBuild(service types.ServiceConfig, c *NixContain
 		cx = path.Join(g.rootPath, cx)
 	}
 
-	tags := service.Build.Tags
+	var imageName string
 	if c.Image != "" {
-		// Always prepend the image name to the list of specified tags.
-		tags = slices.Insert(tags, 0, service.Image)
+		imageName = c.Image
 	} else {
-		// If no image is set on the service, we'll add a custom tag and point
-		// the image to it.
-		imageName := fmt.Sprintf("compose2nix/%s", c.Name)
-		tags = slices.Insert(tags, 0, imageName)
+		// If no image is set on the service, we'll define an image name based
+		// on the container name.
+		imageName = fmt.Sprintf("compose2nix/%s", c.Name)
+	}
+
+	// Always use the image name as a tag.
+	tags := []string{imageName}
+	// Apply additional tags on top, prefixed with the image name.
+	for _, tag := range service.Build.Tags {
+		tags = append(tags, fmt.Sprintf("%s:%s", imageName, tag))
+	}
+
+	// Set the image on the container.
+	if g.Runtime == ContainerRuntimePodman {
+		// Podman automatically prepends a registry name of "localhost" to any
+		// tag we set.
+		//
+		// See: https://docs.podman.io/en/latest/markdown/podman-build.1.html#tag-t-imagename
+		c.Image = fmt.Sprintf("localhost/%s", imageName)
+	} else {
 		c.Image = imageName
 	}
 

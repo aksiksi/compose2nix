@@ -20,7 +20,7 @@
 
   # Containers
   virtualisation.oci-containers.containers."test-museum" = {
-    image = "compose2nix/test-museum";
+    image = "localhost/compose2nix/test-museum";
     environment = {
       "ENTE_CREDENTIALS_FILE" = "/credentials.yaml";
     };
@@ -55,7 +55,7 @@
     ];
   };
   virtualisation.oci-containers.containers."test-prefetcharr" = {
-    image = "prefetcharr";
+    image = "localhost/prefetcharr";
     environment = {
       "JELLYFIN_URL" = "http://example.com/jellyfin";
     };
@@ -132,7 +132,7 @@
     };
     script = ''
       cd /some/path
-      podman build -t compose2nix/test-museum -t latest -t non-latest --build-arg GIT_COMMIT=development-cluster .
+      podman build -t compose2nix/test-museum -t compose2nix/test-museum:latest -t compose2nix/test-museum:non-latest --build-arg GIT_COMMIT=development-cluster .
     '';
   };
   systemd.services."podman-build-test-prefetcharr" = {
