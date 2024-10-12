@@ -403,6 +403,7 @@ If a feature is missing, please feel free to [create an issue](https://github.co
 | [`healthcheck`](https://docs.docker.com/compose/compose-file/05-services/#healthcheck) | ✅ | |
 | [`hostname`](https://docs.docker.com/compose/compose-file/05-services/#hostname) | ✅ | |
 | [`mac_address`](https://docs.docker.com/compose/compose-file/05-services/#mac_address) | ✅ | |
+| [`user`](https://docs.docker.com/compose/compose-file/05-services/#user) | ✅ | |
 
 #### [`networks`](https://docs.docker.com/compose/compose-file/06-networks/)
 
