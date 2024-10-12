@@ -39,7 +39,14 @@ Install the `compose2nix` CLI via one of the following methods:
 
 1. Run using `nix run` (**recommended**):
     ```
+    # Latest
     nix run github:aksiksi/compose2nix -- -h
+
+    # Specific version
+    nix run github:aksiksi/compose2nix/v0.3.0 -- -h
+
+    # Specific commit
+    nix run github:aksiksi/compose2nix/0c38d282d6662fc902fca7ef5b33e889f9e3e59a -- -h
     ```
 2. Install from `nixpkgs`:
     ```
@@ -55,11 +62,9 @@ Install the `compose2nix` CLI via one of the following methods:
     ```
 
     Optionally, you can pin to a specific version:
-    <!-- LINT.OnChange(version) -->
     ```nix
     compose2nix.url = "github:aksiksi/compose2nix/v0.3.0";
     ```
-    <!-- LINT.ThenChange(flake.nix:version,main.go:version) -->
 
     You can then install the package by adding the following to your NixOS config:
     ```nix
