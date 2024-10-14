@@ -40,6 +40,10 @@
           # Add a Git pre-commit hook.
           shellHook = onchg.shellHook.${system};
         };
+        ci = pkgs.mkShell {
+          # We already have Go installed.
+          buildInputs = [ pkgs.nixfmt-rfc-style ];
+        };
       }
     );
 
