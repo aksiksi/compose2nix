@@ -12,7 +12,7 @@ flake:
 
 # Updates nixpkgs, Go module deps, and runs tests.
 update-deps:
-	go get -u ./...
+	go get -u github.com/Masterminds/sprig/v3 github.com/compose-spec/compose-go/v2 github.com/joho/godotenv
 	go mod tidy
 	nix flake lock --update-input nixpkgs
 	make flake

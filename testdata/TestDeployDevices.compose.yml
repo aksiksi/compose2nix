@@ -15,9 +15,13 @@ services:
             - driver: cdi
               device_ids:
                 - nvidia.com/gpu=all
+              capabilities:
+                - gpu
             - driver: ignore-me
               device_ids:
                 - unknown
+              capabilities:
+                - gpu
     restart: unless-stopped
   deploy-nvidia:
     image: nginx:latest
