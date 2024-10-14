@@ -37,7 +37,7 @@ jobs:
         nix_path: nixpkgs=channel:nixos-unstable
     - uses: DeterminateSystems/magic-nix-cache-action@main
     - name: Run tests with nixfmt
-      run: nix develop --command make coverage
+      run: nix develop .#ci --command make coverage
     - name: Upload coverage
       uses: codecov/codecov-action@v4
       with:
