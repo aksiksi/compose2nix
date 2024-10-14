@@ -10,8 +10,6 @@ let
     sha256 = "sha256-yRDW3G/JA4WjVOul4zCHE/Xnpk+7qPGtkueiFje6EOE=";
   };
   common = {
-    # Container DNS.
-    networking.firewall.allowedUDPPorts = [ 53 ];
     virtualisation.graphics = false;
     virtualisation.oci-containers.containers."myproject-service-a".imageFile = nginxImage;
     virtualisation.oci-containers.containers."service-b".imageFile = nginxImage;

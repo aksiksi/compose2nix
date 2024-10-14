@@ -6,7 +6,7 @@ export TIMEZONE="America/New_York"
 make build
 bin/compose2nix \
   -runtime=docker \
-  -inputs=nixos-test/docker-compose.yml \
+  -inputs=nixos-test/compose.yml \
   -output=nixos-test/docker-compose.nix \
   -check_systemd_mounts \
   -include_env_files=true \
@@ -14,7 +14,7 @@ bin/compose2nix \
   -use_upheld_by
 bin/compose2nix \
   -runtime=podman \
-  -inputs=nixos-test/docker-compose.yml \
+  -inputs=nixos-test/compose.yml \
   -output=nixos-test/podman-compose.nix \
   -check_systemd_mounts \
   -include_env_files=true \
