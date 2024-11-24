@@ -41,7 +41,9 @@
       "traefik.http.routers.jellyseerr.rule" = "Host(`requests.hello.us`)";
       "traefik.http.routers.jellyseerr.tls.certresolver" = "htpc";
     };
-    dependsOn = [ "myproject-sabnzbd" ];
+    dependsOn = [
+      "myproject-sabnzbd"
+    ];
     log-driver = "journald";
     extraOptions = [
       "--cpus=1.5"
@@ -61,10 +63,18 @@
     unitConfig = {
       StartLimitIntervalSec = lib.mkOverride 90 120;
     };
-    after = [ "podman-volume-myproject_books.service" ];
-    requires = [ "podman-volume-myproject_books.service" ];
-    partOf = [ "podman-compose-myproject-root.target" ];
-    wantedBy = [ "podman-compose-myproject-root.target" ];
+    after = [
+      "podman-volume-myproject_books.service"
+    ];
+    requires = [
+      "podman-volume-myproject_books.service"
+    ];
+    partOf = [
+      "podman-compose-myproject-root.target"
+    ];
+    wantedBy = [
+      "podman-compose-myproject-root.target"
+    ];
   };
   virtualisation.oci-containers.containers."myproject-sabnzbd" = {
     image = "lscr.io/linuxserver/sabnzbd";
@@ -113,8 +123,12 @@
       "podman-network-myproject_default.service"
       "podman-volume-storage.service"
     ];
-    partOf = [ "podman-compose-myproject-root.target" ];
-    wantedBy = [ "podman-compose-myproject-root.target" ];
+    partOf = [
+      "podman-compose-myproject-root.target"
+    ];
+    wantedBy = [
+      "podman-compose-myproject-root.target"
+    ];
   };
   virtualisation.oci-containers.containers."photoprism-mariadb" = {
     image = "docker.io/library/mariadb:10.9";
@@ -151,10 +165,18 @@
     unitConfig = {
       StartLimitIntervalSec = lib.mkOverride 90 "infinity";
     };
-    after = [ "podman-volume-photos.service" ];
-    requires = [ "podman-volume-photos.service" ];
-    partOf = [ "podman-compose-myproject-root.target" ];
-    wantedBy = [ "podman-compose-myproject-root.target" ];
+    after = [
+      "podman-volume-photos.service"
+    ];
+    requires = [
+      "podman-volume-photos.service"
+    ];
+    partOf = [
+      "podman-compose-myproject-root.target"
+    ];
+    wantedBy = [
+      "podman-compose-myproject-root.target"
+    ];
   };
   virtualisation.oci-containers.containers."torrent-client" = {
     image = "docker.io/haugene/transmission-openvpn";
@@ -179,7 +201,9 @@
       "/var/volumes/transmission/scripts:/scripts:rw"
       "storage:/storage:rw"
     ];
-    ports = [ "9091:9091/tcp" ];
+    ports = [
+      "9091:9091/tcp"
+    ];
     labels = {
       "autoheal" = "true";
       "compose2nix.settings.autoStart" = "false";
@@ -189,7 +213,9 @@
       "traefik.http.routers.transmission.tls.certresolver" = "htpc";
       "traefik.http.services.transmission.loadbalancer.server.port" = "9091";
     };
-    dependsOn = [ "myproject-sabnzbd" ];
+    dependsOn = [
+      "myproject-sabnzbd"
+    ];
     log-driver = "journald";
     autoStart = false;
     extraOptions = [
@@ -248,9 +274,13 @@
       "traefik.http.routers.traefik.service" = "api@internal";
       "traefik.http.routers.traefik.tls.certresolver" = "htpc";
     };
-    dependsOn = [ "sabnzbd" ];
+    dependsOn = [
+      "sabnzbd"
+    ];
     log-driver = "journald";
-    extraOptions = [ "--network=container:sabnzbd" ];
+    extraOptions = [
+      "--network=container:sabnzbd"
+    ];
   };
   systemd.services."podman-traefik" = {
     serviceConfig = {
@@ -259,8 +289,12 @@
     unitConfig = {
       AllowIsolate = lib.mkOverride 90 true;
     };
-    partOf = [ "podman-compose-myproject-root.target" ];
-    wantedBy = [ "podman-compose-myproject-root.target" ];
+    partOf = [
+      "podman-compose-myproject-root.target"
+    ];
+    wantedBy = [
+      "podman-compose-myproject-root.target"
+    ];
   };
 
   # Networks
