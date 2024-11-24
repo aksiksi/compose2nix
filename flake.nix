@@ -1,6 +1,3 @@
-# References:
-# https://nixos.org/manual/nixos/stable/#sec-writing-modules
-# https://nixos.org/manual/nixpkgs/stable/#ssec-language-go
 {
   description = "A tool to automatically generate a NixOS config from a Docker Compose project.";
 
