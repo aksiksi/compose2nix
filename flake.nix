@@ -27,7 +27,7 @@
           inherit pname;
           inherit version;
           src = ./.;
-          vendorHash = "sha256-kiUXgbXJg4x89k2SXf/1e1DLB04ETS+Qp2gx8uJA2DU=";
+          vendorHash = "sha256-fqJTZPDaWJB05nyLPif968Ek2pJQzkKpr6lrdgSY9MM=";
         };
       }
     );
