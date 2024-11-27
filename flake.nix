@@ -5,9 +5,12 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     onchg.url = "github:aksiksi/onchg-rs";
     onchg.inputs.nixpkgs.follows = "nixpkgs";
+
+    alejandra.url = "github:kamadorueda/alejandra/3.1.0";
+    alejandra.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nixpkgs, onchg, ... }: let
+  outputs = { self, nixpkgs, onchg, alejandra, ... }: let
     supportedSystems = [ "x86_64-linux" "x86_64-darwin" "aarch64-linux" "aarch64-darwin" ];
     forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
     pkgsFor = system: nixpkgs.legacyPackages.${system};
@@ -17,6 +20,8 @@
     version = "0.3.2-pre";
     # LINT.ThenChange(main.go:version)
   in {
+    # Formatter to be used by helped func
+
     # Nix package
     packages = forAllSystems (system:
       let pkgs = pkgsFor system; in {
@@ -33,7 +38,7 @@
     devShells = forAllSystems (system:
       let pkgs = pkgsFor system; in {
         default = pkgs.mkShell {
-          buildInputs = [ pkgs.go pkgs.gopls pkgs.nixfmt-rfc-style ];
+          buildInputs = [ pkgs.go pkgs.gopls pkgs.nixfmt-rfc-style alejandra.defaultPackage.${system} ];
           # Add a Git pre-commit hook.
           shellHook = onchg.shellHook.${system};
         };
