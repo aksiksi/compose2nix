@@ -283,6 +283,29 @@ deprecated once the option is stable.
 
 ### Known Issues
 
+#### Manually stopping containers with UpheldBy
+
+systemd does not differentiate between a manual unit stop and a unit stopped due
+to a failure (i.e., in failed state). This means that if you stop a unit, it
+will automatically be started by the service(s) it depends on.
+
+Suppose you have the following Compose file:
+
+```yaml
+services:
+  app:
+    image: myname/app
+    depends_on:
+      - db
+  db:
+    image: postgres
+```
+
+If you *manually stop* the `app` systemd unit, the `db` unit will
+**automatically* restart it due to the `UpheldBy` setting.
+
+Discussion with the systemd team: https://github.com/systemd/systemd/issues/35636
+
 #### Docker & multiple networks
 
 If you are using the Docker runtime and a Compose service connects to multiple networks, you'll need to use v25+. Otherwise, the container service will fail to start.
