@@ -687,8 +687,10 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 		c.SystemdConfig.Unit.WantedBy = append(c.SystemdConfig.Unit.WantedBy, fmt.Sprintf("%s.target", rootTarget(g.Runtime, g.Project)))
 	}
 
-	// UpheldBy is only supported in NixOS 24.05+, which is why we have this
+	// Unfortunately, UpheldBy does not work as expected, so we're keeping it
 	// behind a flag.
+	//
+	// Refer to the "Known Issues" section in the README for details.
 	if g.UseUpheldBy {
 		// Set UpheldBy for this service's dependencies. This ensures that, when
 		// the dependency comes up, this container will also be started - and
