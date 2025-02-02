@@ -1,6 +1,8 @@
 {{- if .Version -}}
 # Auto-generated using compose2nix v{{.Version}}.
-{ pkgs, lib, ... }:
+{{end -}}
+{{- if eq (.Runtime | printf "%s") "podman" -}}
+{ pkgs, lib, config, ... }:
 {{- else -}}
 { pkgs, lib, ... }:
 {{- end}}
@@ -13,17 +15,16 @@
     autoPrune.enable = true;
     {{- if eq (.Runtime | printf "%s") "podman"}}
     dockerCompat = true;
-    defaultNetwork.settings = {
-      # Required for container networking to be able to use names.
-      dns_enabled = true;
-    };
     {{- end}}
   };
   {{- if eq (.Runtime | printf "%s") "podman"}}
 
-  # Enable container name DNS for non-default Podman networks.
-  # https://github.com/NixOS/nixpkgs/issues/226365
-  networking.firewall.interfaces."podman+".allowedUDPPorts = [ 53 ];
+  # Enable container name DNS for all Podman networks.
+  networking.firewall.interfaces = let
+    matchAll = if !config.networking.nftables.enable then "podman+" else "podman*";
+  in {
+    "${matchAll}".allowedUDPPorts = [ 53 ];
+  };
 
   virtualisation.oci-containers.backend = "{{.Runtime}}";
   {{- else}}

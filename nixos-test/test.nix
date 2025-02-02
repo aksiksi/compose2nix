@@ -77,6 +77,10 @@ in
       m.succeed(f"systemctl show -p Restart {runtime}-service-b.service | grep -E '=on-success$'")
       m.succeed(f"systemctl show -p Restart {runtime}-myproject-no-restart.service | grep -E '=no$'")
 
+      # Ensure we can reach a container in the same network. Regression test
+      # for DNS settings, especially for Podman.
+      m.succeed(f"{runtime} exec -it myproject-service-a wget http://no-restart")
+
       # Stop the root unit.
       m.systemctl(f"stop {runtime}-compose-myproject-root.target")
   '';
