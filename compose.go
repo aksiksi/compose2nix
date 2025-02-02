@@ -351,6 +351,9 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 				// Add systemd dependencies on volume(s).
 				c.SystemdConfig.Unit.After = append(c.SystemdConfig.Unit.After, g.volumeNameToService(volume.Name))
 				c.SystemdConfig.Unit.Requires = append(c.SystemdConfig.Unit.Requires, g.volumeNameToService(volume.Name))
+				if g.UseUpheldBy {
+					c.SystemdConfig.Unit.UpheldBy = append(c.SystemdConfig.Unit.UpheldBy, g.volumeNameToService(volume.Name))
+				}
 			}
 		} else {
 			// This is a bind mount.
@@ -430,6 +433,7 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 			// project.
 			targetContainerName := strings.TrimSpace(strings.Split(networkMode, ":")[1])
 			c.ExtraOptions = append(c.ExtraOptions, "--network=container:"+targetContainerName)
+			// TODO(aksiksi): Should we even be doing this?
 			if !slices.Contains(c.DependsOn, targetContainerName) {
 				c.DependsOn = append(c.DependsOn, targetContainerName)
 			}
@@ -453,6 +457,9 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 			// Add systemd dependencies on network.
 			c.SystemdConfig.Unit.After = append(c.SystemdConfig.Unit.After, g.networkNameToService(networkName))
 			c.SystemdConfig.Unit.Requires = append(c.SystemdConfig.Unit.Requires, g.networkNameToService(networkName))
+			if g.UseUpheldBy {
+				c.SystemdConfig.Unit.UpheldBy = append(c.SystemdConfig.Unit.UpheldBy, g.networkNameToService(networkName))
+			}
 		}
 
 		// If we don't have any additional config set on this network, stop here.
@@ -704,7 +711,7 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 		//
 		// For further discussion, see: https://github.com/aksiksi/compose2nix/issues/19
 		for _, containerName := range c.DependsOn {
-			c.SystemdConfig.Unit.UpheldBy = append(c.SystemdConfig.Unit.UpheldBy, fmt.Sprintf("%s-%s.service", g.Runtime, containerName))
+			c.SystemdConfig.Unit.UpheldBy = append(c.SystemdConfig.Unit.UpheldBy, g.containerNameToService(containerName))
 		}
 	}
 
@@ -806,6 +813,10 @@ func (g *Generator) buildNixContainers(composeProject *types.Project, networkMap
 		return cmp.Compare(c1.ContainerName, c2.ContainerName)
 	})
 	return containers, builds, nil
+}
+
+func (g *Generator) containerNameToService(name string) string {
+	return fmt.Sprintf("%s-%s.service", g.Runtime, name)
 }
 
 func (g *Generator) networkNameToService(name string) string {

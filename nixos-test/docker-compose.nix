@@ -32,6 +32,9 @@
     partOf = [
       "docker-compose-myproject-root.target"
     ];
+    upheldBy = [
+      "docker-network-myproject_default.service"
+    ];
     wantedBy = [
       "docker-compose-myproject-root.target"
     ];
@@ -56,6 +59,9 @@
     ];
     partOf = [
       "docker-compose-myproject-root.target"
+    ];
+    upheldBy = [
+      "docker-network-myproject_default.service"
     ];
     wantedBy = [
       "docker-compose-myproject-root.target"
@@ -108,6 +114,10 @@
     ];
     partOf = [
       "docker-compose-myproject-root.target"
+    ];
+    upheldBy = [
+      "docker-network-myproject_default.service"
+      "docker-volume-storage.service"
     ];
     wantedBy = [
       "docker-compose-myproject-root.target"
@@ -166,6 +176,9 @@
     ];
     upheldBy = [
       "docker-myproject-service-a.service"
+      "docker-network-myproject_something.service"
+      "docker-volume-myproject_books.service"
+      "docker-volume-storage.service"
     ];
     wantedBy = [
       "docker-compose-myproject-root.target"

@@ -56,6 +56,8 @@
     ];
     upheldBy = [
       "podman-build-test-museum.service"
+      "podman-network-test_internal.service"
+      "podman-volume-test_custom-logs.service"
     ];
   };
 

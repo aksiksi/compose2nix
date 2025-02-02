@@ -60,6 +60,7 @@
     ];
     upheldBy = [
       "docker-myproject-sabnzbd.service"
+      "docker-volume-myproject_books.service"
     ];
   };
   virtualisation.oci-containers.containers."myproject-sabnzbd" = {
@@ -113,6 +114,10 @@
       "docker-network-myproject_default.service"
       "docker-volume-storage.service"
     ];
+    upheldBy = [
+      "docker-network-myproject_default.service"
+      "docker-volume-storage.service"
+    ];
   };
   virtualisation.oci-containers.containers."photoprism-mariadb" = {
     image = "docker.io/library/mariadb:10.9";
@@ -156,6 +161,9 @@
       "docker-volume-photos.service"
     ];
     requires = [
+      "docker-volume-photos.service"
+    ];
+    upheldBy = [
       "docker-volume-photos.service"
     ];
   };
@@ -233,6 +241,8 @@
     ];
     upheldBy = [
       "docker-myproject-sabnzbd.service"
+      "docker-network-myproject_something.service"
+      "docker-volume-storage.service"
     ];
   };
   virtualisation.oci-containers.containers."traefik" = {
