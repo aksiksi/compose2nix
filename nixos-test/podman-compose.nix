@@ -10,7 +10,6 @@
   };
 
   # Enable container name DNS for all Podman networks.
-  # See: https://github.com/NixOS/nixpkgs/issues/226365
   networking.firewall.interfaces = let
     matchAll = if !config.networking.nftables.enable then "podman+" else "podman*";
   in {
@@ -42,6 +41,9 @@
     partOf = [
       "podman-compose-myproject-root.target"
     ];
+    upheldBy = [
+      "podman-network-myproject_default.service"
+    ];
     wantedBy = [
       "podman-compose-myproject-root.target"
     ];
@@ -66,6 +68,9 @@
     ];
     partOf = [
       "podman-compose-myproject-root.target"
+    ];
+    upheldBy = [
+      "podman-network-myproject_default.service"
     ];
     wantedBy = [
       "podman-compose-myproject-root.target"
@@ -115,6 +120,10 @@
     ];
     partOf = [
       "podman-compose-myproject-root.target"
+    ];
+    upheldBy = [
+      "podman-network-myproject_default.service"
+      "podman-volume-storage.service"
     ];
     wantedBy = [
       "podman-compose-myproject-root.target"
@@ -173,6 +182,9 @@
     ];
     upheldBy = [
       "podman-myproject-service-a.service"
+      "podman-network-myproject_something.service"
+      "podman-volume-myproject_books.service"
+      "podman-volume-storage.service"
     ];
     wantedBy = [
       "podman-compose-myproject-root.target"

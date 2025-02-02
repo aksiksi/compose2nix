@@ -47,6 +47,8 @@
     ];
     upheldBy = [
       "docker-build-test-museum.service"
+      "docker-network-test_internal.service"
+      "docker-volume-test_custom-logs.service"
     ];
   };
 
