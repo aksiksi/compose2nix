@@ -67,6 +67,7 @@
     ];
     upheldBy = [
       "podman-myproject-sabnzbd.service"
+      "podman-volume-myproject_books.service"
     ];
   };
   virtualisation.oci-containers.containers."myproject-sabnzbd" = {
@@ -117,6 +118,10 @@
       "podman-network-myproject_default.service"
       "podman-volume-storage.service"
     ];
+    upheldBy = [
+      "podman-network-myproject_default.service"
+      "podman-volume-storage.service"
+    ];
   };
   virtualisation.oci-containers.containers."photoprism-mariadb" = {
     image = "docker.io/library/mariadb:10.9";
@@ -158,6 +163,9 @@
       "podman-volume-photos.service"
     ];
     requires = [
+      "podman-volume-photos.service"
+    ];
+    upheldBy = [
       "podman-volume-photos.service"
     ];
   };
@@ -234,6 +242,8 @@
     ];
     upheldBy = [
       "podman-myproject-sabnzbd.service"
+      "podman-network-myproject_something.service"
+      "podman-volume-storage.service"
     ];
   };
   virtualisation.oci-containers.containers."traefik" = {
