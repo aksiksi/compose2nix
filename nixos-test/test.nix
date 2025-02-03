@@ -81,6 +81,13 @@ in
       # for DNS settings, especially for Podman.
       m.succeed(f"{runtime} exec -it myproject-service-a wget http://no-restart")
 
+      # Verify UpheldBy behavior by stopping the volume service and ensuring
+      # that the container goes down, then comes up after the volume is started.
+      m.systemctl(f"stop {runtime}-volume-storage.service")
+      m.wait_until_fails(f"{runtime}-myproject-service-a.service")
+      m.systemctl(f"start {runtime}-volume-storage.service")
+      m.wait_for_unit(f"{runtime}-myproject-service-a.service")
+
       # Stop the root unit.
       m.systemctl(f"stop {runtime}-compose-myproject-root.target")
   '';
