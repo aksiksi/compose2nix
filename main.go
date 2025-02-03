@@ -40,7 +40,7 @@ var createRootTarget = flag.Bool("create_root_target", true, "if set, a root sys
 var defaultStopTimeout = flag.Duration("default_stop_timeout", defaultSystemdStopTimeout, "default stop timeout for generated container services.")
 var build = flag.Bool("build", false, "if set, generated container build systemd services will be enabled.")
 var writeNixSetup = flag.Bool("write_nix_setup", true, "if true, Nix setup code is written to output (runtime, DNS, autoprune, etc.)")
-var autoFormat = flag.Bool("auto_format", false, `if true, Nix output will be formatted using "nixfmt" (must be present in $PATH).`)
+var formatter = flag.String("formatter", "", `if specified, Nix output will be formatted by formatter specified, supported are nixfmt and alejandra (must be present in $PATH).`)
 var version = flag.Bool("version", false, "display version and exit")
 
 type OsGetWd struct{}
@@ -51,7 +51,7 @@ func (*OsGetWd) GetWd() (string, error) {
 
 func main() {
 	flag.Parse()
-
+	fmt.Println(*formatter)
 	if *version {
 		fmt.Printf("compose2nix v%s\n", appVersion)
 		return
@@ -90,6 +90,9 @@ func main() {
 		}
 		serviceIncludeRegexp = pat
 	}
+	if *formatter != "" && (strings.TrimSpace(*formatter) != "nixfmt" && strings.TrimSpace(*formatter) != "alejandra") {
+		log.Fatal("Invalid formatter provided, needs to be either nixfmt or alejandra")
+	}
 
 	start := time.Now()
 	g := Generator{
@@ -112,7 +115,8 @@ func main() {
 		NoCreateRootTarget:      !*createRootTarget,
 		WriteHeader:             true,
 		NoWriteNixSetup:         !*writeNixSetup,
-		AutoFormat:              *autoFormat,
+		AutoFormat:              *formatter != "",
+		Formatter:               *formatter,
 		DefaultStopTimeout:      *defaultStopTimeout,
 		IncludeBuild:            *build,
 		GetWorkingDir:           &OsGetWd{},

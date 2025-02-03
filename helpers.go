@@ -76,14 +76,15 @@ func ReadEnvFiles(envFiles []string, mergeWithEnv, ignoreMissing bool) (env []st
 
 // formatNixCode will format Nix code by calling 'nixfmt' and passing in the
 // given code via stdin.
-func formatNixCode(contents []byte) ([]byte, error) {
+func formatNixCode(contents []byte, formatter string) ([]byte, error) {
+	//
 	// Check for existence of 'nixfmt' in $PATH.
-	nixfmtPath, err := exec.LookPath("nixfmt")
+	formatterPath, err := exec.LookPath(formatter)
 	if err != nil {
-		return nil, fmt.Errorf("'nixfmt' not found in $PATH: %w", err)
+		return nil, fmt.Errorf("%w not found in $PATH: %w", formatter, err)
 	}
 
-	cmd := exec.Command(nixfmtPath)
+	cmd := exec.Command(formatterPath)
 	cmd.Stdin = bytes.NewBuffer(contents)
 
 	// Overwrite contents with formatted output.

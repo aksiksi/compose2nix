@@ -281,6 +281,7 @@ type NixContainerConfig struct {
 	Volumes          []*NixVolume
 	CreateRootTarget bool
 	WriteNixSetup    bool
+	Formatter        string
 	AutoFormat       bool
 	AutoStart        bool
 	IncludeBuild     bool
@@ -310,7 +311,7 @@ func (c *NixContainerConfig) Write(out io.Writer) error {
 	config := []byte(c.String())
 
 	if c.AutoFormat {
-		formatted, err := formatNixCode(config)
+		formatted, err := formatNixCode(config, c.Formatter)
 		if err != nil {
 			return err
 		}
