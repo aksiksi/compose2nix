@@ -11,7 +11,9 @@ bin/compose2nix \
   -check_systemd_mounts \
   -include_env_files=true \
   -generate_unused_resources=true \
-  -use_upheld_by
+  -use_upheld_by \
+  -option_prefix "custom.prefix" \
+  -enable_option=true
 bin/compose2nix \
   -runtime=podman \
   -inputs=nixos-test/compose.yml \
@@ -20,4 +22,3 @@ bin/compose2nix \
   -include_env_files=true \
   -generate_unused_resources=true \
   -use_upheld_by
-

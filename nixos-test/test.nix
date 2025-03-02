@@ -21,28 +21,37 @@ in
 {
   name = "basic";
   nodes = {
-    docker = { pkgs, lib, ... }: {
-      imports = [
-        ./docker-compose.nix
-      ];
-      # Override restart value and ensure it takes effect.
-      systemd.services."docker-service-b" = {
-        serviceConfig = {
-          Restart = lib.mkForce "on-success";
+    docker =
+      { pkgs, lib, ... }:
+      {
+        imports = [
+          ./docker-compose.nix
+        ];
+
+        custom.prefix.myproject.enable = true;
+
+        # Override restart value and ensure it takes effect.
+        systemd.services."docker-service-b" = {
+          serviceConfig = {
+            Restart = lib.mkForce "on-success";
+          };
         };
-      };
-    } // common;
-    podman = { pkgs, lib, ... }: {
-      imports = [
-        ./podman-compose.nix
-      ];
-      # Override restart value and ensure it takes effect.
-      systemd.services."podman-service-b" = {
-        serviceConfig = {
-          Restart = lib.mkForce "on-success";
+      }
+      // common;
+    podman =
+      { pkgs, lib, ... }:
+      {
+        imports = [
+          ./podman-compose.nix
+        ];
+        # Override restart value and ensure it takes effect.
+        systemd.services."podman-service-b" = {
+          serviceConfig = {
+            Restart = lib.mkForce "on-success";
+          };
         };
-      };
-    } // common;
+      }
+      // common;
   };
   # https://nixos.org/manual/nixos/stable/index.html#sec-nixos-tests
   testScript = ''
