@@ -284,6 +284,7 @@ type NixContainerConfig struct {
 	AutoFormat       bool
 	AutoStart        bool
 	IncludeBuild     bool
+	Option           string
 }
 
 func (c *NixContainerConfig) String() string {

@@ -8,6 +8,17 @@
 {{- end}}
 
 {
+{{- if .Option -}}
+  options.{{.Option}} = lib.mkOption {
+    type = lib.types.bool;
+    default = lib.mkDefault false;
+    description = "Enable {{.Project.Name}}";
+  };
+
+  config = lib.mkMerge [
+    (lib.mkIf config.{{.Option}} {
+{{end -}}
+  
   {{- if .WriteNixSetup}}
   # Runtime
   virtualisation.{{.Runtime}} = {
@@ -78,4 +89,8 @@
     {{- end}}
   };
   {{- end}}
+{{- if .Option -}}
+    })
+  ];  
+{{end -}}
 }

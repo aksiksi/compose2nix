@@ -128,6 +128,7 @@ type Generator struct {
 	DefaultStopTimeout      time.Duration
 	IncludeBuild            bool
 	GetWorkingDir           getWorkingDir
+	OptionPrefix            string
 
 	serviceToContainerName map[string]string
 	rootPath               string
@@ -201,6 +202,11 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 		version = appVersion
 	}
 
+	var option string = ""
+	if g.OptionPrefix != "" {
+		option = fmt.Sprintf("%s.%s", g.OptionPrefix, g.Project.Name)
+	}
+
 	return &NixContainerConfig{
 		Version:          version,
 		Project:          g.Project,
@@ -214,6 +220,7 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 		WriteNixSetup:    !g.NoWriteNixSetup,
 		AutoFormat:       g.AutoFormat,
 		IncludeBuild:     g.IncludeBuild,
+		Option:           option,
 	}, nil
 }
 

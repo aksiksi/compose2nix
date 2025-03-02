@@ -41,6 +41,7 @@ var defaultStopTimeout = flag.Duration("default_stop_timeout", defaultSystemdSto
 var build = flag.Bool("build", false, "if set, generated container build systemd services will be enabled.")
 var writeNixSetup = flag.Bool("write_nix_setup", true, "if true, Nix setup code is written to output (runtime, DNS, autoprune, etc.)")
 var autoFormat = flag.Bool("auto_format", false, `if true, Nix output will be formatted using "nixfmt" (must be present in $PATH).`)
+var optionPrefix = flag.String("option_prefix", "", "Prefix of the option to generate. If empty, no option will be generated. (e.g. custom.containers)")
 var version = flag.Bool("version", false, "display version and exit")
 
 type OsGetWd struct{}
@@ -116,6 +117,7 @@ func main() {
 		DefaultStopTimeout:      *defaultStopTimeout,
 		IncludeBuild:            *build,
 		GetWorkingDir:           &OsGetWd{},
+		OptionPrefix:            *optionPrefix,
 	}
 	containerConfig, err := g.Run(ctx)
 	if err != nil {
