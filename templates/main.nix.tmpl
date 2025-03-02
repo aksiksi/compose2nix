@@ -11,7 +11,7 @@
 {{- if .Option -}}
   options.{{.Option}} = lib.mkOption {
     type = lib.types.bool;
-    default = lib.mkDefault false;
+    default = false;
     description = "Enable {{.Project.Name}}";
   };
 
