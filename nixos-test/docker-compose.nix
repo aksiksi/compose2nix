@@ -1,7 +1,14 @@
 # Auto-generated using compose2nix v0.3.2-pre.
-{ pkgs, lib, ... }:
+{ pkgs, lib, config, ... }:
 
 {
+  options.custom.prefix.myproject = {
+    enable = lib.mkEnableOption "Enable myproject";
+  };
+  
+  config = lib.mkMerge [
+    (lib.mkIf config.custom.prefix.myproject.enable {
+
   # Runtime
   virtualisation.docker = {
     enable = true;
@@ -270,4 +277,6 @@
     };
     wantedBy = [ "multi-user.target" ];
   };
+      })
+    ];
 }

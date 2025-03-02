@@ -2,6 +2,13 @@
 { pkgs, lib, config, ... }:
 
 {
+  options.custom.prefix.myproject = {
+    enable = lib.mkEnableOption "Enable myproject";
+  };
+  
+  config = lib.mkMerge [
+    (lib.mkIf config.custom.prefix.myproject.enable {
+
   # Runtime
   virtualisation.podman = {
     enable = true;
@@ -276,4 +283,6 @@
     };
     wantedBy = [ "multi-user.target" ];
   };
+      })
+    ];
 }

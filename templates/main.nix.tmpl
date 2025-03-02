@@ -1,7 +1,7 @@
 {{- if .Version -}}
 # Auto-generated using compose2nix v{{.Version}}.
 {{end -}}
-{{- if eq (.Runtime | printf "%s") "podman" -}}
+{{- if or (eq (.Runtime | printf "%s") "podman") .EnableOption -}}
 { pkgs, lib, config, ... }:
 {{- else -}}
 { pkgs, lib, ... }:
@@ -12,9 +12,9 @@
   options.{{.Option}} = {
     enable = lib.mkEnableOption "Enable {{.Project.Name}}";
   };
-  
+
   config = lib.mkMerge [
-    (lib.mkIf config.{{.Option}} {
+    (lib.mkIf config.{{.Option}}.enable {
 {{end -}}
 
   {{- if .WriteNixSetup}}

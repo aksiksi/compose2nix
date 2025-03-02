@@ -115,6 +115,29 @@ func TestProject(t *testing.T) {
 	runSubtestsWithGenerator(t, g)
 }
 
+func TestEnableOption(t *testing.T) {
+	composePath, envFilePath := getPaths(t, true)
+	g := &Generator{
+		Project:      NewProject("myproject"),
+		Inputs:       []string{composePath},
+		EnvFiles:     []string{envFilePath},
+		EnableOption: true,
+	}
+	runSubtestsWithGenerator(t, g)
+}
+
+func TestOptionPrefix(t *testing.T) {
+	composePath, envFilePath := getPaths(t, true)
+	g := &Generator{
+		Project:      NewProject("myproject"),
+		Inputs:       []string{composePath},
+		EnvFiles:     []string{envFilePath},
+		OptionPrefix: "custom.containers",
+		EnableOption: true,
+	}
+	runSubtestsWithGenerator(t, g)
+}
+
 func TestUnusedResources(t *testing.T) {
 	composePath, _ := getPaths(t, false)
 	g := &Generator{
