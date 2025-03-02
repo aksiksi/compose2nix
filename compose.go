@@ -129,6 +129,7 @@ type Generator struct {
 	IncludeBuild            bool
 	GetWorkingDir           getWorkingDir
 	OptionPrefix            string
+	EnableOption            bool
 
 	serviceToContainerName map[string]string
 	rootPath               string
@@ -203,7 +204,9 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 	}
 
 	var option string = ""
-	if g.OptionPrefix != "" {
+	if g.OptionPrefix == "" {
+		option = g.Project.Name
+	} else {
 		option = fmt.Sprintf("%s.%s", g.OptionPrefix, g.Project.Name)
 	}
 
@@ -221,6 +224,7 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 		AutoFormat:       g.AutoFormat,
 		IncludeBuild:     g.IncludeBuild,
 		Option:           option,
+		EnableOption:     g.EnableOption,
 	}, nil
 }
 
