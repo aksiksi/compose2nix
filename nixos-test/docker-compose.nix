@@ -5,7 +5,7 @@
   options.custom.prefix.myproject = {
     enable = lib.mkEnableOption "Enable myproject";
   };
-  
+
   config = lib.mkMerge [
     (lib.mkIf config.custom.prefix.myproject.enable {
 
@@ -277,6 +277,6 @@
     };
     wantedBy = [ "multi-user.target" ];
   };
-      })
-    ];
+    })
+  ];
 }
