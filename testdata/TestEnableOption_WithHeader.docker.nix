@@ -1,3 +1,4 @@
+# Auto-generated using compose2nix v0.3.2-pre.
 { pkgs, lib, config, ... }:
 
 {
@@ -9,20 +10,11 @@
     (lib.mkIf config.myproject.enable {
 
   # Runtime
-  virtualisation.podman = {
+  virtualisation.docker = {
     enable = true;
     autoPrune.enable = true;
-    dockerCompat = true;
   };
-
-  # Enable container name DNS for all Podman networks.
-  networking.firewall.interfaces = let
-    matchAll = if !config.networking.nftables.enable then "podman+" else "podman*";
-  in {
-    "${matchAll}".allowedUDPPorts = [ 53 ];
-  };
-
-  virtualisation.oci-containers.backend = "podman";
+  virtualisation.oci-containers.backend = "docker";
 
   # Containers
   virtualisation.oci-containers.containers."jellyseerr" = {
@@ -57,20 +49,22 @@
       "--network=container:myproject-sabnzbd"
     ];
   };
-  systemd.services."podman-jellyseerr" = {
+  systemd.services."docker-jellyseerr" = {
     serviceConfig = {
       Restart = lib.mkOverride 90 "on-failure";
-      RestartSec = lib.mkOverride 90 "5s";
+      RestartMaxDelaySec = lib.mkOverride 90 "1m";
+      RestartSec = lib.mkOverride 90 "100ms";
+      RestartSteps = lib.mkOverride 90 9;
     };
     startLimitBurst = 3;
     unitConfig = {
       StartLimitIntervalSec = lib.mkOverride 90 120;
     };
     after = [
-      "podman-volume-myproject_books.service"
+      "docker-volume-myproject_books.service"
     ];
     requires = [
-      "podman-volume-myproject_books.service"
+      "docker-volume-myproject_books.service"
     ];
   };
   virtualisation.oci-containers.containers."myproject-sabnzbd" = {
@@ -105,21 +99,24 @@
       "--network=myproject_default"
     ];
   };
-  systemd.services."podman-myproject-sabnzbd" = {
+  systemd.services."docker-myproject-sabnzbd" = {
     serviceConfig = {
       Restart = lib.mkOverride 90 "always";
+      RestartMaxDelaySec = lib.mkOverride 90 "1m";
+      RestartSec = lib.mkOverride 90 "100ms";
+      RestartSteps = lib.mkOverride 90 9;
       RuntimeMaxSec = lib.mkOverride 90 10;
     };
     unitConfig = {
       Description = lib.mkOverride 90 "This is the sabnzbd container!";
     };
     after = [
-      "podman-network-myproject_default.service"
-      "podman-volume-storage.service"
+      "docker-network-myproject_default.service"
+      "docker-volume-storage.service"
     ];
     requires = [
-      "podman-network-myproject_default.service"
-      "podman-volume-storage.service"
+      "docker-network-myproject_default.service"
+      "docker-volume-storage.service"
     ];
   };
   virtualisation.oci-containers.containers."photoprism-mariadb" = {
@@ -143,26 +140,28 @@
       "--health-cmd=[\"curl\", \"-f\", \"http://localhost\"]"
       "--health-interval=1m30s"
       "--health-retries=3"
+      "--health-start-interval=5s"
       "--health-start-period=40s"
-      "--health-startup-interval=5s"
       "--health-timeout=10s"
       "--network=host"
     ];
   };
-  systemd.services."podman-photoprism-mariadb" = {
+  systemd.services."docker-photoprism-mariadb" = {
     serviceConfig = {
       Restart = lib.mkOverride 90 "always";
-      RestartSec = lib.mkOverride 90 "3m0s";
+      RestartMaxDelaySec = lib.mkOverride 90 "1m";
+      RestartSec = lib.mkOverride 90 "100ms";
+      RestartSteps = lib.mkOverride 90 9;
     };
     startLimitBurst = 10;
     unitConfig = {
       StartLimitIntervalSec = lib.mkOverride 90 "infinity";
     };
     after = [
-      "podman-volume-photos.service"
+      "docker-volume-photos.service"
     ];
     requires = [
-      "podman-volume-photos.service"
+      "docker-volume-photos.service"
     ];
   };
   virtualisation.oci-containers.containers."torrent-client" = {
@@ -212,15 +211,16 @@
       "--device=/dev/net/tun:/dev/net/tun:rwm"
       "--dns=8.8.4.4"
       "--dns=8.8.8.8"
+      "--network-alias=my-torrent-client"
       "--network-alias=transmission"
-      "--network=myproject_something:alias=my-torrent-client"
+      "--network=myproject_something"
       "--no-healthcheck"
       "--privileged"
       "--shm-size=67108864"
       "--sysctl=net.ipv6.conf.all.disable_ipv6=0"
     ];
   };
-  systemd.services."podman-torrent-client" = {
+  systemd.services."docker-torrent-client" = {
     serviceConfig = {
       Restart = lib.mkOverride 90 "on-failure";
     };
@@ -229,12 +229,12 @@
       StartLimitIntervalSec = lib.mkOverride 90 "infinity";
     };
     after = [
-      "podman-network-myproject_something.service"
-      "podman-volume-storage.service"
+      "docker-network-myproject_something.service"
+      "docker-volume-storage.service"
     ];
     requires = [
-      "podman-network-myproject_something.service"
-      "podman-volume-storage.service"
+      "docker-network-myproject_something.service"
+      "docker-volume-storage.service"
     ];
   };
   virtualisation.oci-containers.containers."traefik" = {
@@ -270,7 +270,7 @@
       "--network=container:sabnzbd"
     ];
   };
-  systemd.services."podman-traefik" = {
+  systemd.services."docker-traefik" = {
     serviceConfig = {
       Restart = lib.mkOverride 90 "no";
     };
@@ -280,75 +280,75 @@
   };
 
   # Networks
-  systemd.services."podman-network-myproject_default" = {
-    path = [ pkgs.podman ];
+  systemd.services."docker-network-myproject_default" = {
+    path = [ pkgs.docker ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "podman network rm -f myproject_default";
+      ExecStop = "docker network rm -f myproject_default";
     };
     script = ''
-      podman network inspect myproject_default || podman network create myproject_default
+      docker network inspect myproject_default || docker network create myproject_default
     '';
-    partOf = [ "podman-compose-myproject-root.target" ];
-    wantedBy = [ "podman-compose-myproject-root.target" ];
+    partOf = [ "docker-compose-myproject-root.target" ];
+    wantedBy = [ "docker-compose-myproject-root.target" ];
   };
-  systemd.services."podman-network-myproject_something" = {
-    path = [ pkgs.podman ];
+  systemd.services."docker-network-myproject_something" = {
+    path = [ pkgs.docker ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "podman network rm -f myproject_something";
+      ExecStop = "docker network rm -f myproject_something";
     };
     script = ''
-      podman network inspect myproject_something || podman network create myproject_something --label=test-label=okay
+      docker network inspect myproject_something || docker network create myproject_something --label=test-label=okay
     '';
-    partOf = [ "podman-compose-myproject-root.target" ];
-    wantedBy = [ "podman-compose-myproject-root.target" ];
+    partOf = [ "docker-compose-myproject-root.target" ];
+    wantedBy = [ "docker-compose-myproject-root.target" ];
   };
 
   # Volumes
-  systemd.services."podman-volume-myproject_books" = {
-    path = [ pkgs.podman ];
+  systemd.services."docker-volume-myproject_books" = {
+    path = [ pkgs.docker ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
     };
     script = ''
-      podman volume inspect myproject_books || podman volume create myproject_books --opt=device=/mnt/media/Books --opt=o=bind --opt=type=none
+      docker volume inspect myproject_books || docker volume create myproject_books --opt=device=/mnt/media/Books --opt=o=bind --opt=type=none
     '';
-    partOf = [ "podman-compose-myproject-root.target" ];
-    wantedBy = [ "podman-compose-myproject-root.target" ];
+    partOf = [ "docker-compose-myproject-root.target" ];
+    wantedBy = [ "docker-compose-myproject-root.target" ];
   };
-  systemd.services."podman-volume-photos" = {
-    path = [ pkgs.podman ];
+  systemd.services."docker-volume-photos" = {
+    path = [ pkgs.docker ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
     };
     script = ''
-      podman volume inspect photos || podman volume create photos --opt=device=/mnt/photos --opt=o=bind --opt=type=none --label=test-label=okay
+      docker volume inspect photos || docker volume create photos --opt=device=/mnt/photos --opt=o=bind --opt=type=none --label=test-label=okay
     '';
-    partOf = [ "podman-compose-myproject-root.target" ];
-    wantedBy = [ "podman-compose-myproject-root.target" ];
+    partOf = [ "docker-compose-myproject-root.target" ];
+    wantedBy = [ "docker-compose-myproject-root.target" ];
   };
-  systemd.services."podman-volume-storage" = {
-    path = [ pkgs.podman ];
+  systemd.services."docker-volume-storage" = {
+    path = [ pkgs.docker ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
     };
     script = ''
-      podman volume inspect storage || podman volume create storage --opt=device=/mnt/media --opt=o=bind --opt=type=none
+      docker volume inspect storage || docker volume create storage --opt=device=/mnt/media --opt=o=bind --opt=type=none
     '';
-    partOf = [ "podman-compose-myproject-root.target" ];
-    wantedBy = [ "podman-compose-myproject-root.target" ];
+    partOf = [ "docker-compose-myproject-root.target" ];
+    wantedBy = [ "docker-compose-myproject-root.target" ];
   };
 
   # Root service
   # When started, this will automatically create all resources and start
   # the containers. When stopped, this will teardown all resources.
-  systemd.targets."podman-compose-myproject-root" = {
+  systemd.targets."docker-compose-myproject-root" = {
     unitConfig = {
       Description = "Root target generated by compose2nix.";
     };

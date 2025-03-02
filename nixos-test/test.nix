@@ -16,7 +16,6 @@ let
     virtualisation.oci-containers.containers."myproject-no-restart".imageFile = nginxImage;
     environment.systemPackages = [ pkgs.jq ];
     system.stateVersion = "23.05";
-    custom.prefix.myproject.enable = true;
   };
 in
 {
@@ -28,6 +27,9 @@ in
         imports = [
           ./docker-compose.nix
         ];
+
+        custom.prefix.myproject.enable = true;
+
         # Override restart value and ensure it takes effect.
         systemd.services."docker-service-b" = {
           serviceConfig = {

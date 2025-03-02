@@ -126,6 +126,18 @@ func TestEnableOption(t *testing.T) {
 	runSubtestsWithGenerator(t, g)
 }
 
+func TestEnableOption_WithHeader(t *testing.T) {
+	composePath, envFilePath := getPaths(t, true)
+	g := &Generator{
+		Project:      NewProject("myproject"),
+		Inputs:       []string{composePath},
+		EnvFiles:     []string{envFilePath},
+		EnableOption: true,
+		WriteHeader:  true,
+	}
+	runSubtestsWithGenerator(t, g)
+}
+
 func TestOptionPrefix(t *testing.T) {
 	composePath, envFilePath := getPaths(t, true)
 	g := &Generator{

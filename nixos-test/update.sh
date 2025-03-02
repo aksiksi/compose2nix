@@ -21,6 +21,4 @@ bin/compose2nix \
   -check_systemd_mounts \
   -include_env_files=true \
   -generate_unused_resources=true \
-  -use_upheld_by \
-  -option_prefix "custom.prefix" \
-  -enable_option=true
+  -use_upheld_by
