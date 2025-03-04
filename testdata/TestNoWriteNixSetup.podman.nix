@@ -2,6 +2,7 @@
 
 {
 
+
   # Containers
   virtualisation.oci-containers.containers."jellyseerr" = {
     image = "docker.io/fallenbagel/jellyseerr:latest";

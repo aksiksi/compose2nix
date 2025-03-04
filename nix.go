@@ -291,9 +291,10 @@ type NixContainerConfig struct {
 func (c *NixContainerConfig) String() string {
 	s := strings.Builder{}
 	internalFuncMap := template.FuncMap{
-		"cfg":          c.configTemplateFunc,
-		"execTemplate": execTemplate(nixTemplates),
-		"rootTarget":   c.rootTargetTemplateFunc,
+		"cfg":            c.configTemplateFunc,
+		"execTemplate":   execTemplate(nixTemplates),
+		"indentNonEmpty": indentNonEmpty,
+		"rootTarget":     c.rootTargetTemplateFunc,
 	}
 	nixTemplates := template.Must(nixTemplates.Funcs(internalFuncMap).ParseFS(templateFS, "templates/*.tmpl"))
 	if err := nixTemplates.ExecuteTemplate(&s, "main.nix.tmpl", c); err != nil {

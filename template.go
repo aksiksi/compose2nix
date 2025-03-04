@@ -21,6 +21,20 @@ func execTemplate(t *template.Template) func(string, any) (string, error) {
 	}
 }
 
+// indentNonEmpty indents the given text by the provided number of spaces while
+// skipping empty lines.
+func indentNonEmpty(spaces int, text string) string {
+	pad := strings.Repeat(" ", spaces)
+	lines := strings.Split(text, "\n")
+	for i, line := range lines {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+		lines[i] = pad + line
+	}
+	return strings.Join(lines, "\n")
+}
+
 func derefInt(v *int) int {
 	return *v
 }
