@@ -43,6 +43,7 @@ type Args struct {
 	autoFormat              bool
 	optionPrefix            string
 	enableOption            bool
+	rootlessUser            string
 	version                 bool
 }
 
@@ -74,6 +75,7 @@ func registerFlags() *Args {
 	flag.BoolVar(&args.autoFormat, "auto_format", false, `if true, Nix output will be formatted using "nixfmt" (must be present in $PATH).`)
 	flag.StringVar(&args.optionPrefix, "option_prefix", "", "Prefix for the option. If empty, the project name will be used as the option name. (e.g. custom.containers)")
 	flag.BoolVar(&args.enableOption, "enable_option", false, "generate args NixOS module option. this allows you to enable or disable the generated module from within your NixOS config. by default, the option will be named \"options.[project_name]\", but you can add args prefix using the \"option_prefix\" flag.")
+	flag.StringVar(&args.rootlessUser, "rootless_user", "", "run all generated NixOS containers in rootless mode as this user. only supported with Podman.")
 	flag.BoolVar(&args.version, "version", false, "display version and exit")
 	return &args
 }
@@ -119,6 +121,10 @@ func main() {
 		log.Fatalf("Invalid --runtime: %q", args.runtime)
 	}
 
+	if args.rootlessUser != "" && containerRuntime != ContainerRuntimePodman {
+		log.Fatal("Rootless mode only supported with Podman runtime")
+	}
+
 	var serviceIncludeRegexp *regexp.Regexp
 	if args.serviceInclude != "" {
 		pat, err := regexp.Compile(args.serviceInclude)
@@ -154,6 +160,7 @@ func main() {
 		IncludeBuild:            args.build,
 		GetWorkingDir:           &OsGetWd{},
 		OptionPrefix:            args.optionPrefix,
+		RootlessUser:            args.rootlessUser,
 		EnableOption:            args.enableOption,
 	}
 	containerConfig, err := g.Run(ctx)

@@ -130,6 +130,7 @@ type Generator struct {
 	GetWorkingDir           getWorkingDir
 	OptionPrefix            string
 	EnableOption            bool
+	RootlessUser            string
 
 	serviceToContainerName map[string]string
 	rootPath               string
@@ -210,6 +211,11 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 		option = fmt.Sprintf("%s.%s", g.OptionPrefix, g.Project.Name)
 	}
 
+	if g.RootlessUser != "" && g.Runtime != ContainerRuntimePodman {
+		g.RootlessUser = ""
+		log.Print("ignoring rootless user setting; only supported with Podman")
+	}
+
 	return &NixContainerConfig{
 		Version:          version,
 		Project:          g.Project,
@@ -224,6 +230,7 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 		AutoFormat:       g.AutoFormat,
 		IncludeBuild:     g.IncludeBuild,
 		Option:           option,
+		RootlessUser:     g.RootlessUser,
 		EnableOption:     g.EnableOption,
 	}, nil
 }

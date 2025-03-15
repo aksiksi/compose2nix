@@ -29,4 +29,9 @@ nixos-test:
 	./nixos-test/update.sh
 	nix build -L .#checks.x86_64-linux.integrationTest
 
+nixos-test-interactive:
+	./nixos-test/update.sh
+	nix build -L .#checks.x86_64-linux.integrationTest.driverInteractive
+	./result/bin/nixos-test-driver
+
 .PHONY: build coverage flake nixos-test test

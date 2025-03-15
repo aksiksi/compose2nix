@@ -65,6 +65,13 @@ virtualisation.oci-containers.containers."{{.Name}}" = {
   autoStart = false;
   {{- end}}
 
+  {{- if cfg.RootlessUser}}
+  podman = {
+    sdnotify = "container";
+    user = "{{cfg.RootlessUser}}";
+  };
+
+  {{- end}}
   {{- if .ExtraOptions}}
   extraOptions = [
     {{- range .ExtraOptions}}
@@ -73,7 +80,7 @@ virtualisation.oci-containers.containers."{{.Name}}" = {
   ];
   {{- end}}
 };
-systemd.services."{{.Runtime}}-{{.Name}}" = {
+systemd.{{if cfg.RootlessUser}}user.{{end}}services."{{.Runtime}}-{{.Name}}" = {
   {{- if .SystemdConfig.Service}}
   serviceConfig = {
     {{- range $k, $v := .SystemdConfig.Service.Options}}

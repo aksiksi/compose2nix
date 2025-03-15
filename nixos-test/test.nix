@@ -1,3 +1,4 @@
+# https://nixos.org/manual/nixos/stable/index.html#sec-nixos-tests
 { pkgs, ... }:
 
 let
@@ -52,15 +53,31 @@ in
         };
       }
       // common;
+    podman_rootless =
+      { pkgs, lib, ... }:
+      {
+        imports = [
+          ./podman-rootless-compose.nix
+        ];
+        users.users.aksiksi.isNormalUser = true;
+      }
+      // common;
   };
-  # https://nixos.org/manual/nixos/stable/index.html#sec-nixos-tests
+  # Type checking fails due to nested list of dicts.
+  skipTypeCheck = true;
   testScript = ''
-    d = {"docker": docker, "podman": podman}
+    d = [
+      # { "runtime": "docker", "m": docker, "user": None },
+      # { "runtime": "podman", "m": podman, "user": None },
+      { "runtime": "podman", "m": podman_rootless, "user": "aksiksi" },
+    ]
 
     start_all()
 
-    # Create required directories for Docker Compose volumes and bind mounts.
-    for runtime, m in d.items():
+    for info in d:
+      m, user = info["m"], info["user"]
+
+      # Create required directories for Docker Compose volumes and bind mounts.
       m.succeed("mkdir -p /mnt/media")
       m.succeed("mkdir -p /mnt/media/Books")
       m.succeed("mkdir -p /var/volumes/service-a")
@@ -68,23 +85,31 @@ in
 
       # Create env file used by service-a.
       m.succeed("echo 'ABC=100' > /tmp/test.env")
+      if user:
+        m.succeed(f"chown {user} /tmp/test.env")
 
-    for runtime, m in d.items():
+    for info in d:
+      runtime, m, user = info["runtime"], info["m"], info["user"]
+
+      _, stdout = m.execute(f"systemctl list-units | grep {runtime}")
+      print(stdout)
+
       # Wait for root Compose service to come up.
-      m.wait_for_unit(f"{runtime}-compose-myproject-root.target")
+      m.wait_for_unit(f"{runtime}-compose-myproject-root.target", user=user)
 
       # Wait for container services.
-      m.wait_for_unit(f"{runtime}-myproject-service-a.service")
-      m.wait_for_unit(f"{runtime}-service-b.service")
-      m.wait_for_unit(f"{runtime}-myproject-no-restart.service")
+      m.wait_for_unit(f"{runtime}-myproject-service-a.service", user=user)
+      m.wait_for_unit(f"{runtime}-service-b.service", user=user)
+      m.wait_for_unit(f"{runtime}-myproject-no-restart.service", user=user)
 
       # Wait until the health check succeeds.
       m.wait_until_succeeds(f"{runtime} inspect service-b | jq .[0].State.Health.Status | grep healthy", timeout=30)
 
       # Ensure that services have correct systemd restart settings.
-      m.succeed(f"systemctl show -p Restart {runtime}-myproject-service-a.service | grep -E '=no$'")
-      m.succeed(f"systemctl show -p Restart {runtime}-service-b.service | grep -E '=on-success$'")
-      m.succeed(f"systemctl show -p Restart {runtime}-myproject-no-restart.service | grep -E '=no$'")
+      user_flag = f"--user {user}" if user else ""
+      m.succeed(f"systemctl show {user_flag} -p Restart {runtime}-myproject-service-a.service | grep -E '=no$'")
+      m.succeed(f"systemctl show {user_flag} -p Restart {runtime}-service-b.service | grep -E '=on-success$'")
+      m.succeed(f"systemctl show {user_flag} -p Restart {runtime}-myproject-no-restart.service | grep -E '=no$'")
 
       # Ensure we can reach a container in the same network. Regression test
       # for DNS settings, especially for Podman.
@@ -92,12 +117,20 @@ in
 
       # Verify UpheldBy behavior by stopping the volume service and ensuring
       # that the container goes down, then comes up after the volume is started.
-      m.systemctl(f"stop {runtime}-volume-storage.service")
-      m.wait_until_fails(f"{runtime}-myproject-service-a.service")
-      m.systemctl(f"start {runtime}-volume-storage.service")
-      m.wait_for_unit(f"{runtime}-myproject-service-a.service")
+      m.systemctl(f"stop {runtime}-volume-storage.service", user=user)
+      try:
+        m.wait_for_unit(f"{runtime}-myproject-service-a.service", user=user, timeout=60)
+        assert False, f'expecting unit "{runtime}-myproject-service-a.service" to go inactive'
+      except Exception as e:
+        assert f'unit "{runtime}-myproject-service-a.service" is inactive' in str(e)
+
+      m.systemctl(f"start {runtime}-volume-storage.service", user=user)
+      m.wait_for_unit(f"{runtime}-myproject-service-a.service", user=user)
 
       # Stop the root unit.
-      m.systemctl(f"stop {runtime}-compose-myproject-root.target")
+      m.systemctl(f"stop {runtime}-compose-myproject-root.target", user=user)
+
+      # Shutdown the machine.
+      m.shutdown()
   '';
 }
