@@ -4,6 +4,9 @@ systemd.services."{{.Runtime}}-network-{{.Name}}" = {
     Type = "oneshot";
     RemainAfterExit = true;
     ExecStop = "{{.Runtime}} network rm -f {{.Name}}";
+    {{- if cfg.RootlessUser}}
+    User = "{{cfg.RootlessUser}}";
+    {{- end}}
   };
   script = ''
     {{escapeIndentedNixString .Command }}

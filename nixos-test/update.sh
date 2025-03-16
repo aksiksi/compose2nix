@@ -22,3 +22,12 @@ bin/compose2nix \
   -include_env_files=true \
   -generate_unused_resources=true \
   -use_upheld_by
+bin/compose2nix \
+  -runtime=podman \
+  -inputs=nixos-test/compose.yml \
+  -output=nixos-test/podman-rootless-compose.nix \
+  -check_systemd_mounts \
+  -include_env_files=true \
+  -generate_unused_resources=true \
+  -rootless_user=aksiksi \
+  -use_upheld_by

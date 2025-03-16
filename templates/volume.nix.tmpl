@@ -6,6 +6,9 @@ systemd.services."{{.Runtime}}-volume-{{.Name}}" = {
     {{- if .RemoveOnStop}}
     ExecStop = "{{.Runtime}} volume rm -f {{.Name}}";
     {{- end}}
+    {{- if cfg.RootlessUser}}
+    User = "{{cfg.RootlessUser}}";
+    {{- end}}
   };
   {{- if .RequiresMountsFor}}
   unitConfig.RequiresMountsFor = [

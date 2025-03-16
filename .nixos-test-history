@@ -1,0 +1,67 @@
+
+# 2025-03-15 13:18:41.849600
++machines
+
+# 2025-03-15 13:18:49.605682
++m = machines[2]
+
+# 2025-03-15 13:18:53.237419
++m.start()
+
+# 2025-03-15 13:21:38.176532
++m = machines[2]
+
+# 2025-03-15 13:21:38.805139
++m
+
+# 2025-03-15 13:24:15.211661
++m.log_serial
+
+# 2025-03-15 13:24:17.272897
++m.log_serial()
+
+# 2025-03-15 13:26:23.162905
++m.start()
+
+# 2025-03-15 13:27:38.100280
++m.systemctl('status')
+
+# 2025-03-15 13:28:13.872995
++podman-myproject-service-a.service
+
+# 2025-03-15 13:28:31.370429
++m.systemctl('status podman-myproject-service-a.service')
+
+# 2025-03-15 13:28:44.132217
++print(m.systemctl('status podman-myproject-service-a.service'))
+
+# 2025-03-15 13:30:35.955956
++m.execute('journalctl -u podman-myproject-service-a')
+
+# 2025-03-15 13:31:11.902779
++print(m.execute('journalctl -u podman-myproject-service-a')[1])
+
+# 2025-03-15 13:32:32.527265
++q
+
+# 2025-03-15 13:32:53.445095
++print(m.execute('podman version')[1])
++print(m.execute('podman ps')[1])
+
+# 2025-03-15 13:33:57.923375
++print(m.execute('ls $HOME/.local/share/containers/storage/volumes')[1])
+
+# 2025-03-15 13:34:15.722102
++print(m.execute('ls /home/aksiksi/.local/share/containers/storage/volumes')[1])
+
+# 2025-03-15 13:35:20.184094
++print(m.execute('systemctl list-units | grep podman')[1])
+
+# 2025-03-15 13:36:20.741511
++print(m.execute('systemctl status linger-users.service')[1])
+
+# 2025-03-15 13:37:00.458304
++print(m.execute('su - aksiksi')[1])
+
+# 2025-03-15 13:37:35.129818
++print(m.execute('systemctl status --user aksiksi linger-users.service')[1])

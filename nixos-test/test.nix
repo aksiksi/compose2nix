@@ -1,3 +1,4 @@
+# https://nixos.org/manual/nixos/stable/index.html#sec-nixos-tests
 { pkgs, ... }:
 
 let
@@ -52,15 +53,45 @@ in
         };
       }
       // common;
+    podman_rootless =
+      { pkgs, lib, ... }:
+      {
+        imports = [
+          ./podman-rootless-compose.nix
+        ];
+        users.groups.aksiksi = {};
+        users.users.aksiksi = {
+          isSystemUser = true;
+          group = "aksiksi";
+          home = "/home/aksiksi";
+          createHome = true;
+          subUidRanges = [ { count = 65536; startUid = 2147483646; } ];
+          subGidRanges = [ { count = 65536; startGid = 2147483647; } ];
+        };
+        systemd.services."podman-service-b" = {
+          serviceConfig = {
+            Restart = lib.mkForce "on-success";
+          };
+        };
+      }
+      // common;
   };
-  # https://nixos.org/manual/nixos/stable/index.html#sec-nixos-tests
+  # Type checking fails due to nested list of dicts.
+  skipTypeCheck = true;
   testScript = ''
-    d = {"docker": docker, "podman": podman}
+    d = [
+      # { "runtime": "docker", "m": docker, "user": None },
+      # { "runtime": "podman", "m": podman, "user": None },
+      { "runtime": "podman", "m": podman_rootless, "user": "aksiksi" },
+    ]
 
-    start_all()
+    # start_all()
 
-    # Create required directories for Docker Compose volumes and bind mounts.
-    for runtime, m in d.items():
+    for info in d:
+      m, user = info["m"], info["user"]
+      m.start()
+
+      # Create required directories for Docker Compose volumes and bind mounts.
       m.succeed("mkdir -p /mnt/media")
       m.succeed("mkdir -p /mnt/media/Books")
       m.succeed("mkdir -p /var/volumes/service-a")
@@ -68,10 +99,19 @@ in
 
       # Create env file used by service-a.
       m.succeed("echo 'ABC=100' > /tmp/test.env")
+      if user:
+        m.succeed(f"chown {user} /tmp/test.env")
 
-    for runtime, m in d.items():
+    for info in d:
+      runtime, m = info["runtime"], info["m"]
+
+      print(m.execute(f"systemctl list-units | grep {runtime}")[1])
+
       # Wait for root Compose service to come up.
       m.wait_for_unit(f"{runtime}-compose-myproject-root.target")
+
+      print(m.systemctl("status podman-myproject-service-a.service")[1])
+      print(m.systemctl("cat podman-myproject-service-a.service")[1])
 
       # Wait for container services.
       m.wait_for_unit(f"{runtime}-myproject-service-a.service")
@@ -93,11 +133,19 @@ in
       # Verify UpheldBy behavior by stopping the volume service and ensuring
       # that the container goes down, then comes up after the volume is started.
       m.systemctl(f"stop {runtime}-volume-storage.service")
-      m.wait_until_fails(f"{runtime}-myproject-service-a.service")
+      try:
+        m.wait_for_unit(f"{runtime}-myproject-service-a.service", timeout=60)
+        assert False, f'expecting unit "{runtime}-myproject-service-a.service" to go inactive'
+      except Exception as e:
+        assert f'unit "{runtime}-myproject-service-a.service" is inactive' in str(e)
+
       m.systemctl(f"start {runtime}-volume-storage.service")
       m.wait_for_unit(f"{runtime}-myproject-service-a.service")
 
       # Stop the root unit.
       m.systemctl(f"stop {runtime}-compose-myproject-root.target")
+
+      # Shutdown the machine.
+      m.shutdown()
   '';
 }

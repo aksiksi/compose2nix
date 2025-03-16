@@ -285,6 +285,7 @@ type NixContainerConfig struct {
 	AutoStart        bool
 	IncludeBuild     bool
 	Option           string
+	RootlessUser     string
 	EnableOption     bool
 }
 

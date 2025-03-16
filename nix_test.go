@@ -50,6 +50,7 @@ func runSubtestsWithGenerator(t *testing.T, g *Generator) {
 
 	for _, runtime := range []ContainerRuntime{ContainerRuntimeDocker, ContainerRuntimePodman} {
 		t.Run(runtime.String(), func(t *testing.T) {
+			g := *g // make a copy for the subtest
 			testName := strings.ReplaceAll(t.Name(), "/", ".")
 			outFilePath := path.Join("testdata", fmt.Sprintf("%s.nix", testName))
 			g.Runtime = runtime
@@ -460,6 +461,16 @@ func TestBuildSpec_BuildEnabled(t *testing.T) {
 		RootPath:     "/some/path",
 		IncludeBuild: true,
 		UseUpheldBy:  true,
+	}
+	runSubtestsWithGenerator(t, g)
+}
+
+func TestRootless(t *testing.T) {
+	composePath, envFilePath := getPaths(t, true)
+	g := &Generator{
+		Inputs:       []string{composePath},
+		EnvFiles:     []string{envFilePath},
+		RootlessUser: "aksiksi",
 	}
 	runSubtestsWithGenerator(t, g)
 }
