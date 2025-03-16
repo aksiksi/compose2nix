@@ -80,7 +80,7 @@ virtualisation.oci-containers.containers."{{.Name}}" = {
   ];
   {{- end}}
 };
-systemd.{{if cfg.RootlessUser}}user.{{end}}services."{{.Runtime}}-{{.Name}}" = {
+systemd.services."{{.Runtime}}-{{.Name}}" = {
   {{- if .SystemdConfig.Service}}
   serviceConfig = {
     {{- range $k, $v := .SystemdConfig.Service.Options}}

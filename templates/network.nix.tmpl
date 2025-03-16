@@ -1,9 +1,12 @@
-systemd{{if cfg.RootlessUser}}.user{{end}}.services."{{.Runtime}}-network-{{.Name}}" = {
+systemd.services."{{.Runtime}}-network-{{.Name}}" = {
   path = [ pkgs.{{.Runtime}} ];
   serviceConfig = {
     Type = "oneshot";
     RemainAfterExit = true;
     ExecStop = "{{.Runtime}} network rm -f {{.Name}}";
+    {{- if cfg.RootlessUser}}
+    User = "{{cfg.RootlessUser}}";
+    {{- end}}
   };
   script = ''
     {{escapeIndentedNixString .Command }}

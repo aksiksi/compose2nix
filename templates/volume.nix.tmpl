@@ -1,10 +1,13 @@
-systemd{{if cfg.RootlessUser}}.user{{end}}.services."{{.Runtime}}-volume-{{.Name}}" = {
+systemd.services."{{.Runtime}}-volume-{{.Name}}" = {
   path = [ pkgs.{{.Runtime}} ];
   serviceConfig = {
     Type = "oneshot";
     RemainAfterExit = true;
     {{- if .RemoveOnStop}}
     ExecStop = "{{.Runtime}} volume rm -f {{.Name}}";
+    {{- end}}
+    {{- if cfg.RootlessUser}}
+    User = "{{cfg.RootlessUser}}";
     {{- end}}
   };
   {{- if .RequiresMountsFor}}

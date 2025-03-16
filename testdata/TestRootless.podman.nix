@@ -17,7 +17,7 @@
 
   # Enable systemd lingering for rootless user.
   users.users.aksiksi.linger = true;
-  environment.systemPackages = [ pkgs.shadow ];
+  #environment.systemPackages = [ pkgs.shadow ];
 
   virtualisation.oci-containers.backend = "podman";
 
@@ -58,7 +58,7 @@
       "--network=container:myproject-sabnzbd"
     ];
   };
-  systemd.user.services."podman-jellyseerr" = {
+  systemd.services."podman-jellyseerr" = {
     serviceConfig = {
       Restart = lib.mkOverride 90 "on-failure";
       RestartSec = lib.mkOverride 90 "5s";
@@ -110,7 +110,7 @@
       "--network=myproject_default"
     ];
   };
-  systemd.user.services."podman-myproject-sabnzbd" = {
+  systemd.services."podman-myproject-sabnzbd" = {
     serviceConfig = {
       Restart = lib.mkOverride 90 "always";
       RuntimeMaxSec = lib.mkOverride 90 10;
@@ -158,7 +158,7 @@
       "--network=host"
     ];
   };
-  systemd.user.services."podman-photoprism-mariadb" = {
+  systemd.services."podman-photoprism-mariadb" = {
     serviceConfig = {
       Restart = lib.mkOverride 90 "always";
       RestartSec = lib.mkOverride 90 "3m0s";
@@ -233,7 +233,7 @@
       "--sysctl=net.ipv6.conf.all.disable_ipv6=0"
     ];
   };
-  systemd.user.services."podman-torrent-client" = {
+  systemd.services."podman-torrent-client" = {
     serviceConfig = {
       Restart = lib.mkOverride 90 "on-failure";
     };
@@ -287,7 +287,7 @@
       "--network=container:sabnzbd"
     ];
   };
-  systemd.user.services."podman-traefik" = {
+  systemd.services."podman-traefik" = {
     serviceConfig = {
       Restart = lib.mkOverride 90 "no";
     };
@@ -297,12 +297,13 @@
   };
 
   # Networks
-  systemd.user.services."podman-network-myproject_default" = {
+  systemd.services."podman-network-myproject_default" = {
     path = [ pkgs.podman ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
       ExecStop = "podman network rm -f myproject_default";
+      User = "aksiksi";
     };
     script = ''
       podman network inspect myproject_default || podman network create myproject_default
@@ -310,12 +311,13 @@
     partOf = [ "podman-compose-myproject-root.target" ];
     wantedBy = [ "podman-compose-myproject-root.target" ];
   };
-  systemd.user.services."podman-network-myproject_something" = {
+  systemd.services."podman-network-myproject_something" = {
     path = [ pkgs.podman ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
       ExecStop = "podman network rm -f myproject_something";
+      User = "aksiksi";
     };
     script = ''
       podman network inspect myproject_something || podman network create myproject_something --label=test-label=okay
@@ -325,11 +327,12 @@
   };
 
   # Volumes
-  systemd.user.services."podman-volume-myproject_books" = {
+  systemd.services."podman-volume-myproject_books" = {
     path = [ pkgs.podman ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
+      User = "aksiksi";
     };
     script = ''
       podman volume inspect myproject_books || podman volume create myproject_books --opt=device=/mnt/media/Books --opt=o=bind --opt=type=none
@@ -337,11 +340,12 @@
     partOf = [ "podman-compose-myproject-root.target" ];
     wantedBy = [ "podman-compose-myproject-root.target" ];
   };
-  systemd.user.services."podman-volume-photos" = {
+  systemd.services."podman-volume-photos" = {
     path = [ pkgs.podman ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
+      User = "aksiksi";
     };
     script = ''
       podman volume inspect photos || podman volume create photos --opt=device=/mnt/photos --opt=o=bind --opt=type=none --label=test-label=okay
@@ -349,11 +353,12 @@
     partOf = [ "podman-compose-myproject-root.target" ];
     wantedBy = [ "podman-compose-myproject-root.target" ];
   };
-  systemd.user.services."podman-volume-storage" = {
+  systemd.services."podman-volume-storage" = {
     path = [ pkgs.podman ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
+      User = "aksiksi";
     };
     script = ''
       podman volume inspect storage || podman volume create storage --opt=device=/mnt/media --opt=o=bind --opt=type=none
