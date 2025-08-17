@@ -1,6 +1,8 @@
-{ pkgs, config, lib, ... } @ args:
+{ pkgs, config, lib, inputs, ... } @ args:
 with lib; let
   importCompose = { name, path, convertOptions ? {} }: let
+    system = pkgs.stdenv.buildPlatform.system;
+    pkgs' = with inputs; import nixpkgs { inherit system; };
     options = convertOptions // {
       runtime = config.virtualisation.oci-containers.backend;
       write_nix_setup = false;
@@ -13,10 +15,10 @@ with lib; let
     asArgs = options: map asArg (attrsToList options);
     drv = derivation {
       name = "${name}-compose.nix";
-      system = pkgs.system;
-      builder = "${pkgs.bash}/bin/bash";
+      inherit system;
+      builder = "${pkgs'.bash}/bin/bash";
       args = [ "-c" ''
-        exec ${pkgs.compose2nix}/bin/compose2nix "$@" -output="$out"
+        exec ${pkgs'.compose2nix}/bin/compose2nix "$@" -output="$out"
       '' "_" ] ++ (asArgs options);
     };
   in import drv;

@@ -1,7 +1,13 @@
 {
-  inputs = {};
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+  };
 
-  outputs = { ... }: {
-    nixosModules.compose-containers = import ./modules/compose-containers.nix;
+  outputs = { self, nixpkgs, ... }: {
+    nixosModules.compose-containers = { pkgs, config, lib, ... } @ args: let
+      inputs = { inherit nixpkgs; compose2nix = self; };
+      args' = args // { inherit inputs; };
+      module = import ./modules/compose-containers.nix;
+    in module args';
   };
 }
