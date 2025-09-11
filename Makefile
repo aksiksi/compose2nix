@@ -14,7 +14,7 @@ flake:
 update-deps:
 	go get -u github.com/Masterminds/sprig/v3 github.com/compose-spec/compose-go/v2 github.com/joho/godotenv
 	go mod tidy
-	nix flake lock --update-input nixpkgs
+	nix flake update nixpkgs
 	make flake
 	make shell
 	make test

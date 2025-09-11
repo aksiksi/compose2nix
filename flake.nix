@@ -24,7 +24,7 @@
           inherit pname;
           inherit version;
           src = ./.;
-          vendorHash = "sha256-fqJTZPDaWJB05nyLPif968Ek2pJQzkKpr6lrdgSY9MM=";
+          vendorHash = "sha256-ckN4nK2A0micl+iBtvxwf5iMchrcGdC0xzjQta6Jges=";
         };
       }
     );
@@ -35,7 +35,7 @@
         default = pkgs.mkShell {
           buildInputs = [ pkgs.go pkgs.gopls pkgs.nixfmt-rfc-style ];
           # Add a Git pre-commit hook.
-          shellHook = onchg.shellHook.${system};
+          # shellHook = onchg.shellHook.${system};
         };
         ci = pkgs.mkShell {
           # We already have Go installed.
