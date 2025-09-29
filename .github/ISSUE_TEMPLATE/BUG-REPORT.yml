@@ -1,0 +1,41 @@
+name: "Bug Report"
+description: File a bug report.
+title: "[BUG] - <title>"
+labels: ["bug", "triage"]
+body:
+  body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: checkboxes
+    id: existing_issue
+    attributes:
+      label: Is there an existing issue for this?
+      description: Please search to see if an issue already exists for the bug you encountered.
+      options:
+      - label: I have searched the existing issues
+        required: true
+  - type: input
+    id: version
+    attributes:
+      label: "compose2nix version"
+      description: Please enter the version of `compose2nix` you hit this with (from `compose2nix --version`)
+      placeholder: ex. v0.3.2
+    validations:
+      required: true
+  - type: textarea
+    id: current_behavior
+    attributes:
+      label: Current behavior
+      description: A concise description of what you're experiencing.
+    validations:
+      required: false
+  - type: textarea
+    id: expected_behavior
+    attributes:
+      label: Expected behavior
+      description: A concise description of what you expected to happen.
+    validations:
+      required: false
+

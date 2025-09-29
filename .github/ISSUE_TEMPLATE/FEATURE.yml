@@ -1,0 +1,38 @@
+name: "Feature request"
+description: Create a new ticket for a new feature request
+title: "[FEATURE] - <title>"
+labels: [
+  "feature",
+  "triage"
+]
+body:
+  body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this feature request!
+  - type: textarea
+    id: summary
+    attributes:
+      label: "Summary"
+      description: Provide a brief explanation of the feature
+      placeholder: Describe in a few lines your feature request
+    validations:
+      required: true
+  - type: textarea
+    id: basic_example
+    attributes:
+      label: "Basic example"
+      description: Indicate here some basic examples of your feature.
+      placeholder: A few specific words about your feature request.
+    validations:
+      required: true
+  - type: textarea
+    id: reference_issues
+    attributes:
+      label: "Reference issues"
+      description: Common issues
+      placeholder: "#Issues IDs"
+    validations:
+      required: false
+
