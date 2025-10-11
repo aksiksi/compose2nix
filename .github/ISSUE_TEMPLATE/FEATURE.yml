@@ -6,7 +6,6 @@ labels: [
   "triage"
 ]
 body:
-  body:
   - type: markdown
     attributes:
       value: |
