@@ -190,6 +190,7 @@ type NixContainer struct {
 	User          string
 	Command       []string
 	AutoStart     bool
+	SopsSecrets   []string
 }
 
 func (c *NixContainer) Unit() string {
@@ -286,6 +287,16 @@ type NixContainerConfig struct {
 	IncludeBuild     bool
 	Option           string
 	EnableOption     bool
+	SopsConfig       *SopsConfig
+}
+
+func (c *NixContainerConfig) HasSopsSecrets() bool {
+	for _, container := range c.Containers {
+		if len(container.SopsSecrets) > 0 {
+			return true
+		}
+	}
+	return false
 }
 
 func (c *NixContainerConfig) String() string {

@@ -1,7 +1,7 @@
 {{- if .Version -}}
 # Auto-generated using compose2nix v{{.Version}}.
 {{end -}}
-{{- if or (eq (.Runtime | printf "%s") "podman") .EnableOption -}}
+{{- if or (eq (.Runtime | printf "%s") "podman") .EnableOption .HasSopsSecrets -}}
 { pkgs, lib, config, ... }:
 {{- else -}}
 { pkgs, lib, ... }:

@@ -112,6 +112,52 @@ By default, the tool looks for `docker-compose.yml` in the **current directory**
 > [!NOTE]
 > If you also want to ensure that you only include env files in the output Nix config, set `-env_files_only=true`.
 
+#### [sops-nix](https://github.com/Mic92/sops-nix)
+
+The `sops-nix` integration allows you to reference secrets that are already configured in your NixOS system.
+
+> [!NOTE]
+> This section assumes that:
+>
+> 1. `sops-nix` is already setup in your NixOS configuration
+> 2. The secrets you want to use are already defined in your configuration
+
+To use the `sops-nix` integration:
+
+1. Add a `compose2nix.settings.sops.secrets` label with *comma-separated* secret names to your Compose services:
+
+   ```yaml
+   services:
+     webapp:
+       image: nginx:latest
+       labels:
+         - "compose2nix.settings.sops.secrets=example.env,some-folder/example-2.env"
+   ```
+
+2. Run `compose2nix` pointing to your *encrypted* secrets YAML file:
+
+   ```bash
+   compose2nix \
+     --inputs docker-compose.yml \
+     --sops_file ./secrets/secrets.yaml
+   ```
+
+This will then generate a NixOS configuration that references your existing sops secrets as environment files. Note that they'll be *appended* to env files passed during connfig generation.
+
+```nix
+virtualisation.oci-containers.containers."webapp" = {
+  image = "nginx:latest";
+  # ...
+  environmentFiles = [
+    "/etc/existing-file.env" # passed in via CLI
+
+    # sops-nix secrets
+    config.sops.secrets."example.env".path
+    config.sops.secrets."folder/example-2.env".path
+  ];
+};
+```
+
 ### Patterns
 
 In this case, the project is called `myproject` and the service name is `myservice`. Replace `podman` with `docker` if using the Docker runtime.
