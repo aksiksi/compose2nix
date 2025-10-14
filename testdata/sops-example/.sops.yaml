@@ -1,0 +1,10 @@
+keys:
+  - &user_bob agexyz
+  - &server_pinnacle agedef
+creation_rules:
+  - path_regex: secrets/pinnacle.yaml
+    key_groups:
+      - age:
+        - *user_bob
+        - *server_pinnacle
+

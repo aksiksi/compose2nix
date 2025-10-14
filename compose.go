@@ -21,34 +21,39 @@ const (
 	composeLabelPrefix = "compose2nix"
 )
 
-var (
-	// Examples:
-	// compose2nix.settings.autoStart=true
-	compose2nixSettingsRegexp = regexp.MustCompile(fmt.Sprintf(`^%s\.(settings)\.(autoStart)$`, composeLabelPrefix))
-)
-
-func parseNixContainerLabels(c *NixContainer) error {
+func parseNixContainerLabels(c *NixContainer, sopsConfig *SopsConfig) error {
 	for label, v := range c.Labels {
-		m := compose2nixSettingsRegexp.FindStringSubmatch(label)
-		if len(m) == 0 {
+		if !strings.HasPrefix(label, composeLabelPrefix) {
 			continue
 		}
-		switch key := m[1]; key {
-		case "settings":
-			switch setting := m[2]; setting {
-			case "autoStart":
-				if v == "true" {
-					c.AutoStart = true
-				} else if v == "false" {
-					c.AutoStart = false
-				} else {
-					return fmt.Errorf("compose2nix.settings.autoStart must be: true or false")
-				}
-			default:
-				return fmt.Errorf("invalid setting: %q", key)
+		switch {
+		case label == "compose2nix.settings.autoStart":
+			if v == "true" {
+				c.AutoStart = true
+			} else if v == "false" {
+				c.AutoStart = false
+			} else {
+				return fmt.Errorf("compose2nix.settings.autoStart must be: true or false")
 			}
+		case label == "compose2nix.settings.sops.secrets":
+			if sopsConfig == nil {
+				return fmt.Errorf("compose2nix.settings.sops.secrets defined, but not sops config specified")
+			}
+			for _, secret := range strings.Split(v, ",") {
+				secret = strings.TrimSpace(secret)
+				if secret == "" {
+					continue
+				}
+				if !sopsConfig.HasSecret(secret) {
+					return fmt.Errorf("sops secret %q not found in sops config file %q", secret, sopsConfig.FilePath)
+				}
+				c.SopsSecrets = append(c.SopsSecrets, secret)
+			}
+		case strings.HasPrefix(label, "compose2nix.systemd."):
+			// This will be handled later.
+			continue
 		default:
-			return fmt.Errorf("invalid key: %q", key)
+			return fmt.Errorf("invalid compose2nix container label: %q", label)
 		}
 	}
 	return nil
@@ -130,6 +135,7 @@ type Generator struct {
 	GetWorkingDir           getWorkingDir
 	OptionPrefix            string
 	EnableOption            bool
+	SopsConfig              *SopsConfig
 
 	serviceToContainerName map[string]string
 	rootPath               string
@@ -225,6 +231,7 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 		IncludeBuild:     g.IncludeBuild,
 		Option:           option,
 		EnableOption:     g.EnableOption,
+		SopsConfig:       g.SopsConfig,
 	}, nil
 }
 
@@ -327,7 +334,7 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 		AutoStart:     g.AutoStart,
 	}
 
-	if err := parseNixContainerLabels(c); err != nil {
+	if err := parseNixContainerLabels(c, g.SopsConfig); err != nil {
 		return nil, err
 	}
 

@@ -43,6 +43,7 @@ var writeNixSetup = flag.Bool("write_nix_setup", true, "if true, Nix setup code 
 var autoFormat = flag.Bool("auto_format", false, `if true, Nix output will be formatted using "nixfmt" (must be present in $PATH).`)
 var optionPrefix = flag.String("option_prefix", "", "Prefix for the option. If empty, the project name will be used as the option name. (e.g. custom.containers)")
 var enableOption = flag.Bool("enable_option", false, "generate a NixOS module option. this allows you to enable or disable the generated module from within your NixOS config. by default, the option will be named \"options.[project_name]\", but you can add a prefix using the \"option_prefix\" flag.")
+var sopsFile = flag.String("sops_file", "", "path to encrypted secrets YAML file (e.g., secrets.yaml). when set, secrets defined in compose services using \"compose2nix.sops.secret=secret1,secret2\" labels will be added as environmentFiles.")
 var version = flag.Bool("version", false, "display version and exit")
 
 type OsGetWd struct{}
@@ -93,6 +94,14 @@ func main() {
 		serviceIncludeRegexp = pat
 	}
 
+	var sopsConf *SopsConfig
+	if *sopsFile != "" {
+		sopsConf = NewSopsConfig(*sopsFile)
+		if err := sopsConf.LoadSecrets(); err != nil {
+			log.Fatalf("Failed to load sops file: %v", err)
+		}
+	}
+
 	start := time.Now()
 	g := Generator{
 		Project:                 NewProject(*project),
@@ -120,6 +129,7 @@ func main() {
 		GetWorkingDir:           &OsGetWd{},
 		OptionPrefix:            *optionPrefix,
 		EnableOption:            *enableOption,
+		SopsConfig:              sopsConf,
 	}
 	containerConfig, err := g.Run(ctx)
 	if err != nil {
