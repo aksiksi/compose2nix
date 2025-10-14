@@ -1,0 +1,8 @@
+keys:
+  - &test_key age14pr5vs2uaflylvpszywq3n4jafeyrpgffvdxhf8dg4n9l5nhwcks5qfhpt
+creation_rules:
+  - path_regex: secrets\.yaml$
+    key_groups:
+    - age:
+      - *test_key
+

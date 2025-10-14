@@ -9,6 +9,10 @@ let
     imageDigest = "sha256:f5fb3bd2fc68f768b81bccad0161f8100ac52b2de4d7b6128421edd2ce136296";
     sha256 = "sha256-yRDW3G/JA4WjVOul4zCHE/Xnpk+7qPGtkueiFje6EOE=";
   };
+  sops-nix = builtins.fetchTarball {
+    url = "https://github.com/Mic92/sops-nix/archive/master.tar.gz";
+    sha256 = "10cbj07b7hxs7bd04kyd3drhqiih4rjnfc2ccg566sxamj97fqzj";
+  };
   common = {
     virtualisation.graphics = false;
     virtualisation.oci-containers.containers."myproject-service-a".imageFile = nginxImage;
@@ -43,11 +47,32 @@ in
       {
         imports = [
           ./podman-compose.nix
+          ./sops/podman-compose.nix
+          "${sops-nix}/modules/sops"
         ];
+
         # Override restart value and ensure it takes effect.
         systemd.services."podman-service-b" = {
           serviceConfig = {
             Restart = lib.mkForce "on-success";
+          };
+        };
+
+        virtualisation.oci-containers.containers."sopstest-app".imageFile = nginxImage;
+
+        # Copy age key early in boot to ensure the sops-secrets service will
+        # have access to it for decryption.
+        boot.initrd.postDeviceCommands = ''
+          cp ${./sops/age-key.txt} /run/age-key.txt
+          chmod 700 /run/age-key.txt
+        '';
+
+        sops = {
+          age.keyFile = "/run/age-key.txt";
+          defaultSopsFile = ./sops/secrets.yaml;
+          secrets = {
+            "api.env" = {};
+            "env/env-1.env" = {};
           };
         };
       }
@@ -99,5 +124,20 @@ in
 
       # Stop the root unit.
       m.systemctl(f"stop {runtime}-compose-myproject-root.target")
+
+    # Test sops integration, only for Podman.
+    print("Testing sops integration...")
+
+    # Wait for sops compose services to come up.
+    podman.wait_for_unit(f"{runtime}-compose-sopstest-root.target")
+    podman.wait_for_unit(f"{runtime}-sopstest-app.service")
+
+    # Ensure that secret env files have been loaded by the container.
+    m.succeed(f"{runtime} exec -it sopstest-app env | grep 'VERSION' | grep '10'")
+    m.succeed(f"{runtime} exec -it sopstest-app env | grep 'APP' | grep 'myapp'")
+
+    # Stop the sops root unit.
+    podman.systemctl(f"stop {runtime}-compose-sopstest-root.target")
   '';
 }
+

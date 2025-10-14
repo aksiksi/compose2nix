@@ -1,0 +1,7 @@
+name: "sopstest"
+services:
+  app:
+    image: docker.io/library/nginx:stable-alpine-slim
+    labels:
+      - "compose2nix.settings.sops.secrets=env/env-1.env,api.env"
+    restart: unless-stopped

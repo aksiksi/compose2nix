@@ -27,6 +27,10 @@ shell:
 # the compose2nix generated config works when loaded into NixOS.
 nixos-test:
 	./nixos-test/update.sh
+	nix build .#checks.x86_64-linux.integrationTest
+
+nixos-test-verbose:
+	./nixos-test/update.sh
 	nix build -L .#checks.x86_64-linux.integrationTest
 
-.PHONY: build coverage flake nixos-test test
+.PHONY: build coverage flake nixos-test nixos-test-verbose test
