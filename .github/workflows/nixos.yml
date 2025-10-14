@@ -31,4 +31,4 @@ jobs:
     - name: NixOS test
       run: |
         sudo chmod o+rw /dev/kvm
-        make nixos-test
+        make nixos-test-verbose
