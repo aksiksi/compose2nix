@@ -1,0 +1,14 @@
+services:
+  webapp:
+    image: nginx:latest
+    labels:
+      - "compose2nix.settings.sops.secrets=example.env,folder/example-2.env"
+    ports:
+      - "8080:80"
+
+  backend:
+    image: alpine:latest
+    labels:
+      - "compose2nix.settings.sops.secrets=folder/example-2.env"
+    command: ["sleep", "3600"]
+

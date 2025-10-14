@@ -9,10 +9,13 @@ virtualisation.oci-containers.containers."{{.Name}}" = {
   };
   {{- end}}
 
-  {{- if .EnvFiles}}
+  {{- if or .EnvFiles .SopsSecrets}}
   environmentFiles = [
     {{- range .EnvFiles}}
     "{{.}}"
+    {{- end}}
+    {{- range .SopsSecrets}}
+    config.sops.secrets."{{.}}".path
     {{- end}}
   ];
   {{- end}}

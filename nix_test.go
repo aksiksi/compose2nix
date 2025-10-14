@@ -463,3 +463,21 @@ func TestBuildSpec_BuildEnabled(t *testing.T) {
 	}
 	runSubtestsWithGenerator(t, g)
 }
+
+func TestSopsIntegration(t *testing.T) {
+	composePath, _ := getPaths(t, false)
+	sopsPath := path.Join("testdata", "sops-example", "secrets", "pinnacle.yaml")
+
+	sopsConfig := NewSopsConfig(sopsPath)
+	if err := sopsConfig.LoadSecrets(); err != nil {
+		t.Fatalf("Failed to load sops config: %v", err)
+	}
+
+	g := &Generator{
+		Inputs:     []string{composePath},
+		Project:    NewProject("test"),
+		RootPath:   ".",
+		SopsConfig: sopsConfig,
+	}
+	runSubtestsWithGenerator(t, g)
+}

@@ -9,6 +9,7 @@ require (
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/compose-spec/compose-go/v2 v2.8.2
 	github.com/joho/godotenv v1.5.1
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 // Test
