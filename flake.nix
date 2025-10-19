@@ -29,6 +29,13 @@
       }
     );
 
+    # NixOS modules
+    nixosModules.compose-containers = { pkgs, config, lib, ... } @ args: let
+      inputs = { inherit nixpkgs; compose2nix = self; };
+      args' = args // { inherit inputs; };
+      module = import ./modules/compose-containers.nix;
+    in module args';
+
     # Development shell
     devShells = forAllSystems (system:
       let pkgs = pkgsFor system; in {
