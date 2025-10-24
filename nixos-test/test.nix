@@ -10,8 +10,8 @@ let
     sha256 = "sha256-yRDW3G/JA4WjVOul4zCHE/Xnpk+7qPGtkueiFje6EOE=";
   };
   sops-nix = builtins.fetchTarball {
-    url = "https://github.com/Mic92/sops-nix/archive/master.tar.gz";
-    sha256 = "10cbj07b7hxs7bd04kyd3drhqiih4rjnfc2ccg566sxamj97fqzj";
+    url = "https://github.com/Mic92/sops-nix/archive/5a7d18b5c55642df5c432aadb757140edfeb70b3.tar.gz";
+    sha256 = "1dk0kjms9a6in9flaz4pxrlngxj235xivgwcy9bvw60yy3brxvbr";
   };
   common = {
     virtualisation.graphics = false;
