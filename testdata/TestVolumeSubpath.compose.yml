@@ -1,0 +1,25 @@
+name: "myproject"
+services:
+  app:
+    container_name: app
+    image: nginx:latest
+    volumes:
+      - type: volume
+        source: data
+        target: /app/data
+        volume:
+          subpath: configs
+      - type: volume
+        source: shared
+        target: /app/shared
+        volume:
+          subpath: app1/files
+          nocopy: true
+        read_only: true
+      - data2:/regular:rw
+    restart: unless-stopped
+
+volumes:
+  data:
+  shared:
+  data2:
