@@ -357,14 +357,27 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 
 	for _, v := range service.Volumes {
 		if volume, ok := volumeMap[v.Source]; ok {
-			// Replace the Compose volume name with the actual Docker volume
-			// name (i.e., potentially prefixed with project).
-			//
-			// This is what we'll use to refer to the volume in the generated
-			// container config.
-			volumeParts := strings.Split(v.String(), ":")
-			volumeParts[0] = volume.Name
-			c.Volumes[volume.Name] = strings.Join(volumeParts, ":")
+			if v.Volume != nil && v.Volume.Subpath != "" {
+				// Handle compose volume subpath syntax through mount options.
+				mount := fmt.Sprintf(
+					"type=volume,source=%s,target=%s,volume-subpath=%s",
+					volume.Name, v.Target, v.Volume.Subpath,
+					)
+				if v.ReadOnly {
+					mount += ",readonly"
+				}
+				c.ExtraOptions = append(c.ExtraOptions, "--mount="+mount)
+			} else {
+				// Replace the Compose volume name with the actual Docker volume
+				// name (i.e., potentially prefixed with project).
+				//
+				// This is what we'll use to refer to the volume in the generated
+				// container config.
+
+				volumeParts := strings.Split(v.String(), ":")
+				volumeParts[0] = volume.Name
+				c.Volumes[volume.Name] = strings.Join(volumeParts, ":")
+			}
 			if !volume.External {
 				// Add systemd dependencies on volume(s).
 				c.SystemdConfig.Unit.After = append(c.SystemdConfig.Unit.After, g.volumeNameToService(volume.Name))
