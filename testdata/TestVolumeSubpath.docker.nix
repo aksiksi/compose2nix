@@ -17,8 +17,8 @@
     log-driver = "journald";
     autoStart = false;
     extraOptions = [
-      "--mount=type=volume,source=myproject_data,target=/app/data,volume-subpath=configs"
-      "--mount=type=volume,source=myproject_shared,target=/app/shared,volume-subpath=app1/files,readonly"
+      "--mount=type=image,source=myproject_data,target=/app/data,volume-subpath=configs"
+      "--mount=type=volume,source=myproject_shared,target=/app/shared,volume-subpath=app1/files,volume-nocopy,readonly"
       "--network-alias=app"
       "--network=myproject_default"
     ];
