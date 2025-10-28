@@ -66,6 +66,18 @@
   };
 
   # Volumes
+  systemd.services."podman-volume-myproject_data" = {
+    path = [ pkgs.podman ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    script = ''
+      podman volume inspect myproject_data || podman volume create myproject_data
+    '';
+    partOf = [ "podman-compose-myproject-root.target" ];
+    wantedBy = [ "podman-compose-myproject-root.target" ];
+  };
   systemd.services."podman-volume-myproject_data2" = {
     path = [ pkgs.podman ];
     serviceConfig = {
@@ -74,6 +86,18 @@
     };
     script = ''
       podman volume inspect myproject_data2 || podman volume create myproject_data2
+    '';
+    partOf = [ "podman-compose-myproject-root.target" ];
+    wantedBy = [ "podman-compose-myproject-root.target" ];
+  };
+  systemd.services."podman-volume-myproject_shared" = {
+    path = [ pkgs.podman ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    script = ''
+      podman volume inspect myproject_shared || podman volume create myproject_shared
     '';
     partOf = [ "podman-compose-myproject-root.target" ];
     wantedBy = [ "podman-compose-myproject-root.target" ];

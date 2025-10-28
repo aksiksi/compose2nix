@@ -60,6 +60,18 @@
   };
 
   # Volumes
+  systemd.services."docker-volume-myproject_data" = {
+    path = [ pkgs.docker ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    script = ''
+      docker volume inspect myproject_data || docker volume create myproject_data
+    '';
+    partOf = [ "docker-compose-myproject-root.target" ];
+    wantedBy = [ "docker-compose-myproject-root.target" ];
+  };
   systemd.services."docker-volume-myproject_data2" = {
     path = [ pkgs.docker ];
     serviceConfig = {
@@ -68,6 +80,18 @@
     };
     script = ''
       docker volume inspect myproject_data2 || docker volume create myproject_data2
+    '';
+    partOf = [ "docker-compose-myproject-root.target" ];
+    wantedBy = [ "docker-compose-myproject-root.target" ];
+  };
+  systemd.services."docker-volume-myproject_shared" = {
+    path = [ pkgs.docker ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    script = ''
+      docker volume inspect myproject_shared || docker volume create myproject_shared
     '';
     partOf = [ "docker-compose-myproject-root.target" ];
     wantedBy = [ "docker-compose-myproject-root.target" ];

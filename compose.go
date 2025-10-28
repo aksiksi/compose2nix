@@ -322,12 +322,14 @@ func (g *Generator) handleVolumesForService(service types.ServiceConfig, volumeM
 	for _, v := range service.Volumes {
 		if volume, ok := volumeMap[v.Source]; ok {
 
+			// compose-go does not differentiate between short and long syntax, so we'll use long-only fields to try to tell the difference.
+
 			hasLongSyntaxSubpath := v.Volume.Subpath != ""
 			hasLongSyntaxNoCopy := (v.Volume.NoCopy && c.Runtime == ContainerRuntimeDocker)
 
-			needsLongSyntax := hasLongSyntaxSubpath || hasLongSyntaxNoCopy
+			needsMountOptions := hasLongSyntaxSubpath || hasLongSyntaxNoCopy
 
-			if needsLongSyntax {
+			if needsMountOptions {
 				// Handle long syntax by passing --mount flag to the backend
 				// Docker: https://docs.docker.com/reference/cli/docker/container/run/#mount
 				// Podman: https://docs.podman.io/en/latest/markdown/podman-run.1.html#mount-type-type-type-specific-option
@@ -339,7 +341,7 @@ func (g *Generator) handleVolumesForService(service types.ServiceConfig, volumeM
 				}
 
 				if hasLongSyntaxNoCopy {
-					mount += fmt.Sprintf(",volume-nocopy")
+					mount += ",volume-nocopy"
 				}
 
 				if v.ReadOnly {
@@ -347,6 +349,10 @@ func (g *Generator) handleVolumesForService(service types.ServiceConfig, volumeM
 				}
 
 				c.ExtraOptions = append(c.ExtraOptions, "--mount="+mount)
+
+				// Used to force generation of volume creation.
+				// Empty strings are filtered from the volumes attribute.
+				c.Volumes[volume.Name] = ""
 
 			} else {
 				// Replace the Compose volume name with the actual Docker volume
