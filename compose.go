@@ -136,6 +136,7 @@ type Generator struct {
 	OptionPrefix            string
 	EnableOption            bool
 	SopsConfig              *SopsConfig
+	WarningsAsErrors        bool
 
 	serviceToContainerName map[string]string
 	rootPath               string
@@ -325,9 +326,21 @@ func (g *Generator) handleVolumesForService(service types.ServiceConfig, volumeM
 			// compose-go does not differentiate between short and long syntax, so we'll use long-only fields to try to tell the difference.
 
 			hasLongSyntaxSubpath := v.Volume.Subpath != ""
-			hasLongSyntaxNoCopy := (v.Volume.NoCopy && c.Runtime == ContainerRuntimeDocker)
 
-			needsMountOptions := hasLongSyntaxSubpath || hasLongSyntaxNoCopy
+			hasNoCopyRequested := v.Volume.NoCopy
+			noCopySupported := c.Runtime == ContainerRuntimeDocker
+			hasNoCopyEffective := hasNoCopyRequested && noCopySupported
+
+			if hasNoCopyRequested && !noCopySupported {
+				if err := g.checkOrWarn(
+					"service %q: 'nocopy' is not supported for %s runtime and will be ignored",
+					service.Name, c.Runtime,
+				); err != nil {
+					return err
+				}
+			}
+
+			needsMountOptions := hasLongSyntaxSubpath || hasNoCopyEffective
 
 			if needsMountOptions {
 				// Handle long syntax by passing --mount flag to the backend
@@ -340,7 +353,7 @@ func (g *Generator) handleVolumesForService(service types.ServiceConfig, volumeM
 					mount += fmt.Sprintf(",volume-subpath=%s", v.Volume.Subpath)
 				}
 
-				if hasLongSyntaxNoCopy {
+				if hasNoCopyEffective {
 					mount += ",volume-nocopy"
 				}
 
@@ -396,6 +409,15 @@ func (g *Generator) handleVolumesForService(service types.ServiceConfig, volumeM
 		}
 	}
 
+	return nil
+}
+
+func (g *Generator) checkOrWarn(format string, args ...any) error {
+	if g.WarningsAsErrors {
+		return fmt.Errorf(format, args...)
+	}
+
+	log.Printf("warning: "+format, args...)
 	return nil
 }
 
@@ -715,7 +737,9 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 					//
 					// TODO(aksiksi): Maybe we can do something better here?
 					c.ExtraOptions = append(c.ExtraOptions, "--device=nvidia.com/gpu=all")
-					log.Printf("WARNING: \"driver: nvidia\" is implicitly converted to CDI that matches all GPUs")
+					if err := g.checkOrWarn("\"driver: nvidia\" is implicitly converted to CDI that matches all GPUs"); err != nil {
+						return nil, err
+					}
 					continue
 				}
 				for _, deviceID := range device.IDs {
