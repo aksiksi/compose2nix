@@ -136,6 +136,7 @@ type Generator struct {
 	OptionPrefix            string
 	EnableOption            bool
 	SopsConfig              *SopsConfig
+	WarningsAsErrors        bool
 
 	serviceToContainerName map[string]string
 	rootPath               string
@@ -318,6 +319,108 @@ func parseHealthCheck(c *NixContainer, service types.ServiceConfig, runtime Cont
 	return nil
 }
 
+func (g *Generator) handleVolumesForService(service types.ServiceConfig, volumeMap map[string]*NixVolume, c *NixContainer) error {
+	for _, v := range service.Volumes {
+		if volume, ok := volumeMap[v.Source]; ok {
+
+			// compose-go does not differentiate between short and long syntax, so we'll use long-only fields to try to tell the difference.
+
+			hasLongSyntaxSubpath := v.Volume.Subpath != ""
+
+			hasNoCopyRequested := v.Volume.NoCopy
+			noCopySupported := c.Runtime == ContainerRuntimeDocker
+			hasNoCopyEffective := hasNoCopyRequested && noCopySupported
+
+			if hasNoCopyRequested && !noCopySupported {
+				if err := g.checkOrWarn(
+					"service %q: 'nocopy' is not supported for %s runtime and will be ignored",
+					service.Name, c.Runtime,
+				); err != nil {
+					return err
+				}
+			}
+
+			needsMountOptions := hasLongSyntaxSubpath || hasNoCopyEffective
+
+			if needsMountOptions {
+				// Handle long syntax by passing --mount flag to the backend
+				// Docker: https://docs.docker.com/reference/cli/docker/container/run/#mount
+				// Podman: https://docs.podman.io/en/latest/markdown/podman-run.1.html#mount-type-type-type-specific-option
+
+				mount := fmt.Sprintf("type=%s,source=%s,target=%s", v.Type, volume.Name, v.Target)
+
+				if hasLongSyntaxSubpath {
+					mount += fmt.Sprintf(",volume-subpath=%s", v.Volume.Subpath)
+				}
+
+				if hasNoCopyEffective {
+					mount += ",volume-nocopy"
+				}
+
+				if v.ReadOnly {
+					mount += ",readonly"
+				}
+
+				c.ExtraOptions = append(c.ExtraOptions, "--mount="+mount)
+
+				// Used to force generation of volume creation.
+				// Empty strings are filtered from the volumes attribute.
+				c.Volumes[volume.Name] = ""
+
+			} else {
+				// Replace the Compose volume name with the actual Docker volume
+				// name (i.e., potentially prefixed with project).
+				//
+				// This is what we'll use to refer to the volume in the generated
+				// container config.
+
+				volumeParts := strings.Split(v.String(), ":")
+				volumeParts[0] = volume.Name
+				c.Volumes[volume.Name] = strings.Join(volumeParts, ":")
+			}
+
+			if !volume.External {
+				// Add systemd dependencies on volume(s).
+				c.SystemdConfig.Unit.After = append(c.SystemdConfig.Unit.After, g.volumeNameToService(volume.Name))
+				c.SystemdConfig.Unit.Requires = append(c.SystemdConfig.Unit.Requires, g.volumeNameToService(volume.Name))
+				if g.UseUpheldBy {
+					c.SystemdConfig.Unit.UpheldBy = append(c.SystemdConfig.Unit.UpheldBy, g.volumeNameToService(volume.Name))
+				}
+			}
+
+		} else {
+			// This is a bind mount.
+			sourcePath := v.Source
+
+			if g.CheckBindMounts {
+				if _, err := os.Stat(sourcePath); os.IsNotExist(err) {
+					return fmt.Errorf("service %q: bind mount source path %q does not exist", service.Name, sourcePath)
+				}
+			}
+
+			// Replace the source path in the volume string.
+			volumeString := strings.Split(v.String(), ":")
+			volumeString[0] = sourcePath
+			c.Volumes[sourcePath] = strings.Join(volumeString, ":")
+
+			if g.CheckSystemdMounts {
+				c.SystemdConfig.Unit.RequiresMountsFor = append(c.SystemdConfig.Unit.RequiresMountsFor, sourcePath)
+			}
+		}
+	}
+
+	return nil
+}
+
+func (g *Generator) checkOrWarn(format string, args ...any) error {
+	if g.WarningsAsErrors {
+		return fmt.Errorf(format, args...)
+	}
+
+	log.Printf("warning: "+format, args...)
+	return nil
+}
+
 func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap map[string]*NixNetwork, volumeMap map[string]*NixVolume) (*NixContainer, error) {
 	name := g.serviceToContainerName[service.Name]
 
@@ -355,43 +458,8 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 		c.Environment = composeEnvironmentToMap(service.Environment)
 	}
 
-	for _, v := range service.Volumes {
-		if volume, ok := volumeMap[v.Source]; ok {
-			// Replace the Compose volume name with the actual Docker volume
-			// name (i.e., potentially prefixed with project).
-			//
-			// This is what we'll use to refer to the volume in the generated
-			// container config.
-			volumeParts := strings.Split(v.String(), ":")
-			volumeParts[0] = volume.Name
-			c.Volumes[volume.Name] = strings.Join(volumeParts, ":")
-			if !volume.External {
-				// Add systemd dependencies on volume(s).
-				c.SystemdConfig.Unit.After = append(c.SystemdConfig.Unit.After, g.volumeNameToService(volume.Name))
-				c.SystemdConfig.Unit.Requires = append(c.SystemdConfig.Unit.Requires, g.volumeNameToService(volume.Name))
-				if g.UseUpheldBy {
-					c.SystemdConfig.Unit.UpheldBy = append(c.SystemdConfig.Unit.UpheldBy, g.volumeNameToService(volume.Name))
-				}
-			}
-		} else {
-			// This is a bind mount.
-			sourcePath := v.Source
-
-			if g.CheckBindMounts {
-				if _, err := os.Stat(sourcePath); os.IsNotExist(err) {
-					return nil, fmt.Errorf("service %q: bind mount source path %q does not exist", service.Name, sourcePath)
-				}
-			}
-
-			// Replace the source path in the volume string.
-			volumeString := strings.Split(v.String(), ":")
-			volumeString[0] = sourcePath
-			c.Volumes[sourcePath] = strings.Join(volumeString, ":")
-
-			if g.CheckSystemdMounts {
-				c.SystemdConfig.Unit.RequiresMountsFor = append(c.SystemdConfig.Unit.RequiresMountsFor, sourcePath)
-			}
-		}
+	if err := g.handleVolumesForService(service, volumeMap, c); err != nil {
+		return nil, err
 	}
 
 	if !service.Command.IsZero() {
@@ -669,7 +737,9 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 					//
 					// TODO(aksiksi): Maybe we can do something better here?
 					c.ExtraOptions = append(c.ExtraOptions, "--device=nvidia.com/gpu=all")
-					log.Printf("WARNING: \"driver: nvidia\" is implicitly converted to CDI that matches all GPUs")
+					if err := g.checkOrWarn("\"driver: nvidia\" is implicitly converted to CDI that matches all GPUs"); err != nil {
+						return nil, err
+					}
 					continue
 				}
 				for _, deviceID := range device.IDs {

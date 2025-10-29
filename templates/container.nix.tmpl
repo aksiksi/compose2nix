@@ -23,7 +23,9 @@ virtualisation.oci-containers.containers."{{.Name}}" = {
   {{- if .Volumes}}
   volumes = [
     {{- range $k, $v := .Volumes}}
+    {{- if $v}}
     "{{$v}}"
+    {{- end}}
     {{- end}}
   ];
   {{- end}}
