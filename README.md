@@ -388,55 +388,6 @@ This will allow you to connect from the host, while also preventing internet acc
 
 This is where the check is done in Netavark: [link](https://github.com/containers/netavark/blob/cebebc70daec7010c4005798a7958b3b6be7151d/src/network/bridge.rs#L756)
 
-### Usage
-
-```
-$ compose2nix -h
-Usage of compose2nix:
-  -auto_format
-    	if true, Nix output will be formatted using "nixfmt" (must be present in $PATH).
-  -auto_start
-    	auto-start setting for generated service(s). this applies to all services, not just containers. (default true)
-  -check_systemd_mounts
-    	if set, volume paths will be checked against systemd mount paths on the current machine and marked as container dependencies.
-  -create_root_target
-    	if set, a root systemd target will be created, which when stopped tears down all resources. (default true)
-  -default_stop_timeout duration
-    	default stop timeout for generated container services. (default 1m30s)
-  -env_files string
-    	one or more comma-separated paths to .env file(s).
-  -env_files_only
-    	only use env file(s) in the NixOS container definitions.
-  -generate_unused_resources
-    	if set, unused resources (e.g., networks) will be generated even if no containers use them.
-  -ignore_missing_env_files
-    	if set, missing env files will be ignored.
-  -include_env_files
-    	include env files in the NixOS container definition.
-  -inputs string
-    	one or more comma-separated path(s) to Compose file(s). (default "docker-compose.yml")
-  -output string
-    	path to output Nix file. (default "docker-compose.nix")
-  -project string
-    	project name used as a prefix for generated resources. this overrides any top-level "name" set in the Compose file(s).
-  -remove_volumes
-    	if set, volumes will be removed on systemd service stop.
-  -root_path string
-    	root path to use for any relative paths in the Compose file (e.g., volumes). if unset, the current working directory will be used.
-  -runtime string
-    	one of: ["podman", "docker"]. (default "podman")
-  -service_include string
-    	regex pattern for services to include.
-  -use_compose_log_driver
-    	if set, always use the Docker Compose log driver.
-  -use_upheld_by
-    	if set, upheldBy will be used for service dependencies (NixOS 24.05+).
-  -version
-    	display version and exit
-  -write_nix_setup
-    	if true, Nix setup code is written to output (runtime, DNS, autoprune, etc.) (default true)
-```
-
 ### Supported Compose Features
 
 If a feature is missing, please feel free to [create an issue](https://github.com/aksiksi/compose2nix/issues/new). In theory, any Compose feature can be supported because `compose2nix` uses the same library as the Docker CLI under the hood.
@@ -449,7 +400,7 @@ If a feature is missing, please feel free to [create an issue](https://github.co
 | [`container_name`](https://docs.docker.com/compose/compose-file/05-services/#container_name) | ✅ | |
 | [`environment`](https://docs.docker.com/compose/compose-file/05-services/#environment) | ✅ | |
 | [`env_file`](https://docs.docker.com/compose/compose-file/05-services/#env_file) | ✅ | |
-| [`volumes`](https://docs.docker.com/compose/compose-file/05-services/#volumes) | ✅ | |
+| [`volumes`](https://docs.docker.com/compose/compose-file/05-services/#volumes) | ✅ | Short and long syntax supported.|
 | [`labels`](https://docs.docker.com/compose/compose-file/05-services/#labels) | ✅ | |
 | [`ports`](https://docs.docker.com/compose/compose-file/05-services/#ports) | ✅ | |
 | [`dns`](https://docs.docker.com/compose/compose-file/05-services/#dns) | ✅ | |
@@ -515,6 +466,68 @@ If a feature is missing, please feel free to [create an issue](https://github.co
 #### Misc
 
 * [`name`](https://docs.docker.com/compose/compose-file/04-version-and-name/#name-top-level-element) - ✅
+
+
+### Usage
+
+```
+$ compose2nix -h
+Usage of compose2nix:
+  -auto_format
+    	if true, Nix output will be formatted using "nixfmt" (must be present in $PATH).
+  -auto_start
+    	auto-start setting for generated service(s). this applies to all services, not just containers. (default true)
+  -build
+    	if set, generated container build systemd services will be enabled.
+  -check_bind_mounts
+    	if set, check that bind mount paths exist. this is useful if running the generated Nix code on the same machine.
+  -check_systemd_mounts
+    	if set, volume paths will be checked against systemd mount paths on the current machine and marked as container dependencies.
+  -create_root_target
+    	if set, a root systemd target will be created, which when stopped tears down all resources. (default true)
+  -default_stop_timeout duration
+    	default stop timeout for generated container services. (default 1m30s)
+  -enable_option
+    	generate a NixOS module option. this allows you to enable or disable the generated module from within your NixOS config. by default, the option will be named "options.[project_name]", but you can add a prefix using the "option_prefix" flag.
+  -env_files string
+    	one or more comma-separated paths to .env file(s).
+  -env_files_only
+    	only use env file(s) in the NixOS container definitions.
+  -generate_unused_resources
+    	if set, unused resources (e.g., networks) will be generated even if no containers use them.
+  -ignore_missing_env_files
+    	if set, missing env files will be ignored.
+  -include_env_files
+    	include env files in the NixOS container definition.
+  -inputs string
+    	one or more comma-separated path(s) to Compose file(s). (default "docker-compose.yml")
+  -option_prefix string
+    	Prefix for the option. If empty, the project name will be used as the option name. (e.g. custom.containers)
+  -output string
+    	path to output Nix file. (default "docker-compose.nix")
+  -project string
+    	project name used as a prefix for generated resources. this overrides any top-level "name" set in the Compose file(s).
+  -remove_volumes
+    	if set, volumes will be removed on systemd service stop.
+  -root_path string
+    	absolute path to use as the root for any relative paths in the Compose file (e.g., volumes, env files). defaults to the current working directory.
+  -runtime string
+    	one of: ["podman", "docker"]. (default "podman")
+  -service_include string
+    	regex pattern for services to include.
+  -sops_file string
+    	path to encrypted secrets YAML file (e.g., secrets.yaml). when set, secrets defined in compose services using "compose2nix.sops.secret=secret1,secret2" labels will be added as environmentFiles.
+  -use_compose_log_driver
+    	if set, always use the Docker Compose log driver.
+  -use_upheld_by
+    	if set, upheldBy will be used for service dependencies (NixOS 24.05+).
+  -version
+    	display version and exit
+  -warnings_as_errors
+    	if set, treat generator warnings as hard errors.
+  -write_nix_setup
+    	if true, Nix setup code is written to output (runtime, DNS, autoprune, etc.) (default true)
+```
 
 ### Alternative Installation Methods
 
