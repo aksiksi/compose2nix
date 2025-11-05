@@ -1,0 +1,16 @@
+services:
+  test-ipc-host:
+    image: alpine:latest
+    ipc: host
+  test-ipc-private:
+    image: alpine:latest
+    ipc: private
+  test-ipc-shareable:
+    image: alpine:latest
+    ipc: shareable
+  test-ipc-service:
+    image: alpine:latest
+    ipc: "service:test-ipc-shareable"
+  test-ipc-container:
+    image: alpine:latest
+    ipc: "container:external-container"

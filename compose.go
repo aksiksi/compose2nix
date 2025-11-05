@@ -679,6 +679,20 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 		c.ExtraOptions = append(c.ExtraOptions, "--group-add="+group)
 	}
 
+	// https://docs.docker.com/compose/compose-file/05-services/#ipc
+	// https://docs.docker.com/engine/reference/run/#ipc-settings---ipc
+	// https://docs.podman.io/en/latest/markdown/podman-run.1.html#ipc-ipc
+	if ipc := strings.TrimSpace(service.Ipc); ipc != "" {
+		if strings.HasPrefix(ipc, "service:") {
+			// Convert the Compose "service" IPC mode to a "container" IPC mode.
+			// Note: compose-go automatically validates the service exists and adds it as a dependency.
+			targetService := strings.Split(ipc, ":")[1]
+			c.ExtraOptions = append(c.ExtraOptions, "--ipc=container:"+g.serviceToContainerName[targetService])
+		} else {
+			c.ExtraOptions = append(c.ExtraOptions, "--ipc="+ipc)
+		}
+	}
+
 	// https://docs.docker.com/compose/compose-file/05-services/#sysctls
 	// https://docs.docker.com/engine/reference/commandline/run/#sysctl
 	// https://docs.podman.io/en/latest/markdown/podman-run.1.html#sysctl-name-value
