@@ -672,6 +672,13 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 		c.ExtraOptions = append(c.ExtraOptions, "--hostname="+service.Hostname)
 	}
 
+	// https://docs.docker.com/compose/compose-file/05-services/#group_add
+	// https://docs.docker.com/engine/reference/commandline/run/#group-add
+	// https://docs.podman.io/en/latest/markdown/podman-run.1.html#group-add-group
+	for _, group := range service.GroupAdd {
+		c.ExtraOptions = append(c.ExtraOptions, "--group-add="+group)
+	}
+
 	// https://docs.docker.com/compose/compose-file/05-services/#sysctls
 	// https://docs.docker.com/engine/reference/commandline/run/#sysctl
 	// https://docs.podman.io/en/latest/markdown/podman-run.1.html#sysctl-name-value
