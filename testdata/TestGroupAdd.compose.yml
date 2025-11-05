@@ -1,0 +1,12 @@
+services:
+  test-group-add-single:
+    image: alpine:latest
+    group_add:
+      - audio
+  
+  test-group-add-multiple:
+    image: alpine:latest
+    group_add:
+      - audio
+      - video
+      - "1000"
