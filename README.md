@@ -430,6 +430,7 @@ If a feature is missing, please feel free to [create an issue](https://github.co
 | [`mac_address`](https://docs.docker.com/compose/compose-file/05-services/#mac_address) | ✅ | |
 | [`user`](https://docs.docker.com/compose/compose-file/05-services/#user) | ✅ | |
 | [`group_add`](https://docs.docker.com/compose/compose-file/05-services/#group_add) | ✅ | |
+| [`ipc`](https://docs.docker.com/compose/compose-file/05-services/#ipc) | ✅ | |
 
 #### [`networks`](https://docs.docker.com/compose/compose-file/06-networks/)
 
