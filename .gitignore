@@ -7,3 +7,4 @@ out.nix*
 result
 .pre-commit-config.yaml
 coverage.out
+compose2nix
