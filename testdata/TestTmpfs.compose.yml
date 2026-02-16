@@ -1,0 +1,14 @@
+services:
+  tmpfs-short:
+    image: alpine
+    tmpfs:
+      - /short-tmpfs
+      - /tmpfs-with-opts:size=64M,mode=1777
+  tmpfs-long:
+    image: alpine
+    volumes:
+      - type: tmpfs
+        target: /cache
+        tmpfs:
+          size: 512M
+          mode: 1777
