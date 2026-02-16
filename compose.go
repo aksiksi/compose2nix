@@ -656,6 +656,10 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 		c.ExtraOptions = append(c.ExtraOptions, "--security-opt="+opt)
 	}
 
+	if service.Init != nil && *service.Init {
+		c.ExtraOptions = append(c.ExtraOptions, "--init=true")
+	}
+
 	// https://docs.docker.com/compose/compose-file/05-services/#extra_hosts
 	// https://github.com/compose-spec/compose-spec/blob/master/spec.md#extra_hosts
 	// https://docs.docker.com/engine/reference/commandline/run/#add-host
