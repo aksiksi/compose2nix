@@ -321,13 +321,37 @@ func parseHealthCheck(c *NixContainer, service types.ServiceConfig, runtime Cont
 
 func (g *Generator) handleVolumesForService(service types.ServiceConfig, volumeMap map[string]*NixVolume, c *NixContainer) error {
 	for _, v := range service.Volumes {
+		// Handle tmpfs volumes first.
+		if v.Type == types.VolumeTypeTmpfs || v.Tmpfs != nil {
+			if v.Target == "" {
+				return fmt.Errorf("service %q: tmpfs volume missing target", service.Name)
+			}
+
+			var options []string
+			if v.ReadOnly {
+				options = append(options, "ro")
+			}
+			if v.Tmpfs != nil {
+				if v.Tmpfs.Mode != 0 {
+					options = append(options, fmt.Sprintf("mode=%d", v.Tmpfs.Mode))
+				}
+				if v.Tmpfs.Size != 0 {
+					options = append(options, fmt.Sprintf("size=%d", v.Tmpfs.Size))
+				}
+			}
+
+			tmpfs := v.Target
+			if len(options) > 0 {
+				tmpfs = fmt.Sprintf("%s:%s", v.Target, strings.Join(options, ","))
+			}
+			c.ExtraOptions = append(c.ExtraOptions, "--tmpfs="+tmpfs)
+			continue
+		}
+
 		if volume, ok := volumeMap[v.Source]; ok {
-
 			// compose-go does not differentiate between short and long syntax, so we'll use long-only fields to try to tell the difference.
-
-			hasLongSyntaxSubpath := v.Volume.Subpath != ""
-
-			hasNoCopyRequested := v.Volume.NoCopy
+			hasLongSyntaxSubpath := v.Volume != nil && v.Volume.Subpath != ""
+			hasNoCopyRequested := v.Volume != nil && v.Volume.NoCopy
 			noCopySupported := c.Runtime == ContainerRuntimeDocker
 			hasNoCopyEffective := hasNoCopyRequested && noCopySupported
 
@@ -387,7 +411,6 @@ func (g *Generator) handleVolumesForService(service types.ServiceConfig, volumeM
 					c.SystemdConfig.Unit.UpheldBy = append(c.SystemdConfig.Unit.UpheldBy, g.volumeNameToService(volume.Name))
 				}
 			}
-
 		} else {
 			// This is a bind mount.
 			sourcePath := v.Source
@@ -407,6 +430,12 @@ func (g *Generator) handleVolumesForService(service types.ServiceConfig, volumeM
 				c.SystemdConfig.Unit.RequiresMountsFor = append(c.SystemdConfig.Unit.RequiresMountsFor, sourcePath)
 			}
 		}
+	}
+
+	// Handle tmpfs short syntax.
+	// https://docs.docker.com/reference/compose-file/services/#tmpfs
+	for _, tmpfs := range service.Tmpfs {
+		c.ExtraOptions = append(c.ExtraOptions, "--tmpfs="+tmpfs)
 	}
 
 	return nil

@@ -491,6 +491,15 @@ func TestVolumeSubpath(t *testing.T) {
 	runSubtestsWithGenerator(t, g)
 }
 
+func TestTmpfs(t *testing.T) {
+	composePath := path.Join("testdata", "TestTmpfs.compose.yml")
+	g := &Generator{
+		Inputs:  []string{composePath},
+		Project: NewProject("test"),
+	}
+	runSubtestsWithGenerator(t, g)
+}
+
 func TestGroupAdd(t *testing.T) {
 	composePath, _ := getPaths(t, false)
 	g := &Generator{

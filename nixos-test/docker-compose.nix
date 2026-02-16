@@ -155,6 +155,7 @@
         "--ip=192.168.8.20"
         "--network-alias=service-b"
         "--network=myproject_something"
+        "--tmpfs=/run/cache:size=64M,mode=1777"
       ];
     };
     systemd.services."docker-service-b" = {
