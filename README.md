@@ -431,6 +431,7 @@ If a feature is missing, please feel free to [create an issue](https://github.co
 | [`user`](https://docs.docker.com/compose/compose-file/05-services/#user) | ✅ | |
 | [`group_add`](https://docs.docker.com/compose/compose-file/05-services/#group_add) | ✅ | |
 | [`ipc`](https://docs.docker.com/compose/compose-file/05-services/#ipc) | ✅ | |
+| [`init`](https://docs.docker.com/compose/compose-file/05-services/#init) | ✅ | |
 
 #### [`networks`](https://docs.docker.com/compose/compose-file/06-networks/)
 

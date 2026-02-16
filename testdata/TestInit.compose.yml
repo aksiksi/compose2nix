@@ -1,0 +1,8 @@
+services:
+  basic:
+    image: alpine:latest
+    init: true
+  unset:
+    image: alpine:latest
+    init: false
+
