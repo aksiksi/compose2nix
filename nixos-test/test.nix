@@ -111,6 +111,10 @@ in
       m.succeed(f"systemctl show -p Restart {runtime}-service-b.service | grep -E '=on-success$'")
       m.succeed(f"systemctl show -p Restart {runtime}-myproject-no-restart.service | grep -E '=no$'")
 
+      # Verify tmpfs mount exists and is writable.
+      m.succeed(f"{runtime} exec -it service-b mount | grep '/run/cache' | grep tmpfs")
+      m.succeed(f"{runtime} exec -it service-b sh -c 'echo tmpfs-ok > /run/cache/probe && cat /run/cache/probe'")
+
       # Ensure we can reach a container in the same network. Regression test
       # for DNS settings, especially for Podman.
       m.succeed(f"{runtime} exec -it myproject-service-a wget http://no-restart")
@@ -140,4 +144,3 @@ in
     podman.systemctl(f"stop {runtime}-compose-sopstest-root.target")
   '';
 }
-
