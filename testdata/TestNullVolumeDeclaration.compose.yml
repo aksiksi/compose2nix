@@ -1,0 +1,15 @@
+services:
+  app:
+    image: nginx:latest
+    volumes:
+      - type: volume
+        source: data
+        target: /app/data
+      - type: volume
+        source: cache
+        target: /app/cache
+        read_only: true
+
+volumes:
+  data:
+  cache:
