@@ -1,0 +1,20 @@
+services:
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    volumes:
+      - type: bind
+        source: /media/raid/books
+        target: /media/books
+      - type: bind
+        source: /media/raid/music
+        target: /media/music
+      - type: volume
+        source: jellyfin-config
+        target: /config
+      - type: volume
+        source: jellyfin-cache
+        target: /cache
+
+volumes:
+  jellyfin-config: null
+  jellyfin-cache: null
