@@ -689,6 +689,24 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 		c.ExtraOptions = append(c.ExtraOptions, "--init=true")
 	}
 
+	// https://docs.docker.com/compose/compose-file/05-services/#ulimits
+	// https://docs.docker.com/reference/cli/docker/container/run/#ulimit
+	// https://docs.podman.io/en/latest/markdown/podman-run.1.html#ulimit-option
+	//
+	// NOTE: Single, Soft, and Hard can all be 0 due to Go zero-values, so
+	// the single vs. soft/hard form is ambiguous when all are 0 (upstream
+	// compose-go limitation). We emit the short form when soft == hard
+	// since --ulimit=X=V is equivalent to --ulimit=X=V:V.
+	for name, ulimit := range service.Ulimits {
+		if ulimit.Single != 0 {
+			c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--ulimit=%s=%d", name, ulimit.Single))
+		} else if ulimit.Soft == ulimit.Hard {
+			c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--ulimit=%s=%d", name, ulimit.Soft))
+		} else {
+			c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--ulimit=%s=%d:%d", name, ulimit.Soft, ulimit.Hard))
+		}
+	}
+
 	// https://docs.docker.com/compose/compose-file/05-services/#extra_hosts
 	// https://github.com/compose-spec/compose-spec/blob/master/spec.md#extra_hosts
 	// https://docs.docker.com/engine/reference/commandline/run/#add-host
