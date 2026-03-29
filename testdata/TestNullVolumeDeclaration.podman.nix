@@ -20,32 +20,34 @@
   virtualisation.oci-containers.backend = "podman";
 
   # Containers
-  virtualisation.oci-containers.containers."test-app" = {
-    image = "nginx:latest";
+  virtualisation.oci-containers.containers."test-jellyfin" = {
+    image = "lscr.io/linuxserver/jellyfin:latest";
     volumes = [
-      "test_cache:/app/cache:ro"
-      "test_data:/app/data:rw"
+      "/media/raid/books:/media/books:rw"
+      "/media/raid/music:/media/music:rw"
+      "test_jellyfin-cache:/cache:rw"
+      "test_jellyfin-config:/config:rw"
     ];
     log-driver = "journald";
     autoStart = false;
     extraOptions = [
-      "--network-alias=app"
+      "--network-alias=jellyfin"
       "--network=test_default"
     ];
   };
-  systemd.services."podman-test-app" = {
+  systemd.services."podman-test-jellyfin" = {
     serviceConfig = {
       Restart = lib.mkOverride 90 "no";
     };
     after = [
       "podman-network-test_default.service"
-      "podman-volume-test_cache.service"
-      "podman-volume-test_data.service"
+      "podman-volume-test_jellyfin-cache.service"
+      "podman-volume-test_jellyfin-config.service"
     ];
     requires = [
       "podman-network-test_default.service"
-      "podman-volume-test_cache.service"
-      "podman-volume-test_data.service"
+      "podman-volume-test_jellyfin-cache.service"
+      "podman-volume-test_jellyfin-config.service"
     ];
   };
 
@@ -65,26 +67,26 @@
   };
 
   # Volumes
-  systemd.services."podman-volume-test_cache" = {
+  systemd.services."podman-volume-test_jellyfin-cache" = {
     path = [ pkgs.podman ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
     };
     script = ''
-      podman volume inspect test_cache || podman volume create test_cache
+      podman volume inspect test_jellyfin-cache || podman volume create test_jellyfin-cache
     '';
     partOf = [ "podman-compose-test-root.target" ];
     wantedBy = [ "podman-compose-test-root.target" ];
   };
-  systemd.services."podman-volume-test_data" = {
+  systemd.services."podman-volume-test_jellyfin-config" = {
     path = [ pkgs.podman ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
     };
     script = ''
-      podman volume inspect test_data || podman volume create test_data
+      podman volume inspect test_jellyfin-config || podman volume create test_jellyfin-config
     '';
     partOf = [ "podman-compose-test-root.target" ];
     wantedBy = [ "podman-compose-test-root.target" ];

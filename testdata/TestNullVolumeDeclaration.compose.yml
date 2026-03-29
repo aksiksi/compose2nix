@@ -1,15 +1,20 @@
 services:
-  app:
-    image: nginx:latest
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
     volumes:
+      - type: bind
+        source: /media/raid/books
+        target: /media/books
+      - type: bind
+        source: /media/raid/music
+        target: /media/music
       - type: volume
-        source: data
-        target: /app/data
+        source: jellyfin-config
+        target: /config
       - type: volume
-        source: cache
-        target: /app/cache
-        read_only: true
+        source: jellyfin-cache
+        target: /cache
 
 volumes:
-  data:
-  cache:
+  jellyfin-config: null
+  jellyfin-cache: null

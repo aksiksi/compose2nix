@@ -11,32 +11,34 @@
   virtualisation.oci-containers.backend = "docker";
 
   # Containers
-  virtualisation.oci-containers.containers."test-app" = {
-    image = "nginx:latest";
+  virtualisation.oci-containers.containers."test-jellyfin" = {
+    image = "lscr.io/linuxserver/jellyfin:latest";
     volumes = [
-      "test_cache:/app/cache:ro"
-      "test_data:/app/data:rw"
+      "/media/raid/books:/media/books:rw"
+      "/media/raid/music:/media/music:rw"
+      "test_jellyfin-cache:/cache:rw"
+      "test_jellyfin-config:/config:rw"
     ];
     log-driver = "journald";
     autoStart = false;
     extraOptions = [
-      "--network-alias=app"
+      "--network-alias=jellyfin"
       "--network=test_default"
     ];
   };
-  systemd.services."docker-test-app" = {
+  systemd.services."docker-test-jellyfin" = {
     serviceConfig = {
       Restart = lib.mkOverride 90 "no";
     };
     after = [
       "docker-network-test_default.service"
-      "docker-volume-test_cache.service"
-      "docker-volume-test_data.service"
+      "docker-volume-test_jellyfin-cache.service"
+      "docker-volume-test_jellyfin-config.service"
     ];
     requires = [
       "docker-network-test_default.service"
-      "docker-volume-test_cache.service"
-      "docker-volume-test_data.service"
+      "docker-volume-test_jellyfin-cache.service"
+      "docker-volume-test_jellyfin-config.service"
     ];
   };
 
@@ -56,26 +58,26 @@
   };
 
   # Volumes
-  systemd.services."docker-volume-test_cache" = {
+  systemd.services."docker-volume-test_jellyfin-cache" = {
     path = [ pkgs.docker ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
     };
     script = ''
-      docker volume inspect test_cache || docker volume create test_cache
+      docker volume inspect test_jellyfin-cache || docker volume create test_jellyfin-cache
     '';
     partOf = [ "docker-compose-test-root.target" ];
     wantedBy = [ "docker-compose-test-root.target" ];
   };
-  systemd.services."docker-volume-test_data" = {
+  systemd.services."docker-volume-test_jellyfin-config" = {
     path = [ pkgs.docker ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
     };
     script = ''
-      docker volume inspect test_data || docker volume create test_data
+      docker volume inspect test_jellyfin-config || docker volume create test_jellyfin-config
     '';
     partOf = [ "docker-compose-test-root.target" ];
     wantedBy = [ "docker-compose-test-root.target" ];
