@@ -1,0 +1,30 @@
+services:
+  test-ulimits-short:
+    image: alpine:latest
+    ulimits:
+      rtprio: 99
+      memlock: -1
+
+  test-ulimits-long:
+    image: alpine:latest
+    ulimits:
+      nofile:
+        soft: 1024
+        hard: 2048
+
+  test-ulimits-mixed:
+    image: alpine:latest
+    ulimits:
+      rtprio: 99
+      memlock: -1
+      nofile:
+        soft: 1024
+        hard: 524288
+
+  test-ulimits-zero:
+    image: alpine:latest
+    ulimits:
+      core: 0
+      nofile:
+        soft: 0
+        hard: 0
