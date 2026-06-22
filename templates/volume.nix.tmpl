@@ -10,7 +10,7 @@ systemd.services."{{.Runtime}}-volume-{{.Name}}" = {
   {{- if .RequiresMountsFor}}
   unitConfig.RequiresMountsFor = [
     {{- range .RequiresMountsFor}}
-    "{{escapeNixString (escapeSystemdValue .)}}"
+    "{{escapeSystemdValue .}}"
     {{- end}}
   ];
   {{- end}}

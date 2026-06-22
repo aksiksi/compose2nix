@@ -43,7 +43,7 @@
       "podman-network-test_default.service"
     ];
     unitConfig.RequiresMountsFor = [
-      "/a/b/c/d\\x20e\\x20f"
+      "/a/b/c/d\\ e\\ f"
     ];
   };
 

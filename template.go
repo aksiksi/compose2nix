@@ -78,9 +78,9 @@ func escapeSystemdValue(s string) string {
 	for _, r := range s {
 		switch r {
 		case ' ':
-			b.WriteString(`\x20`)
+			b.WriteString(`\\ `)
 		case '\t':
-			b.WriteString(`\x09`)
+			b.WriteString(`\\\t`)
 		default:
 			b.WriteRune(r)
 		}
