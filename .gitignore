@@ -8,3 +8,6 @@ result
 .pre-commit-config.yaml
 coverage.out
 compose2nix
+
+# ide specific 
+.idea

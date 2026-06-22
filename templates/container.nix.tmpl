@@ -135,7 +135,7 @@ systemd.services."{{.Runtime}}-{{.Name}}" = {
   {{- if .SystemdConfig.Unit.RequiresMountsFor}}
   unitConfig.RequiresMountsFor = [
     {{- range .SystemdConfig.Unit.RequiresMountsFor}}
-    "{{.}}"
+    "{{escapeNixString (escapeSystemdValue .)}}"
     {{- end}}
   ];
   {{- end}}

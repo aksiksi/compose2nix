@@ -1,0 +1,6 @@
+name: test
+services:
+  systemd-mount-with-spaces:
+    image: alpine
+    volumes:
+      - "/a/b/c/d e f:/data:ro"

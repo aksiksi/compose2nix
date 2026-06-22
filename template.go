@@ -68,6 +68,26 @@ func escapeNixString(s string) string {
 	return s
 }
 
+// escapeSystemdValue escapes whitespace so the string is treated as a single
+// token when it appears in a space-separated systemd unit setting such as
+// RequiresMountsFor=
+// The result is intended to be wrapped by escapeNixString, which doubles the
+// backslash so the Nix string literal evaluates back to a single backslash.
+func escapeSystemdValue(s string) string {
+	var b strings.Builder
+	for _, r := range s {
+		switch r {
+		case ' ':
+			b.WriteString(`\x20`)
+		case '\t':
+			b.WriteString(`\x09`)
+		default:
+			b.WriteRune(r)
+		}
+	}
+	return b.String()
+}
+
 func escapeIndentedNixString(s string) string {
 	// https://nix.dev/manual/nix/latest/language/syntax#string-literal
 	s = strings.ReplaceAll(s, `''`, `'''`)
@@ -81,4 +101,5 @@ var funcMap template.FuncMap = template.FuncMap{
 	"toNixList":               toNixList,
 	"escapeNixString":         escapeNixString,
 	"escapeIndentedNixString": escapeIndentedNixString,
+	"escapeSystemdValue":      escapeSystemdValue,
 }
