@@ -78,14 +78,14 @@ func escapeSystemdValue(s string) string {
 	for _, r := range s {
 		switch r {
 		case ' ':
-			b.WriteString(`\\ `)
+			b.WriteString(`\ `)
 		case '\t':
-			b.WriteString(`\\\t`)
+			b.WriteString(`\\t`)
 		default:
 			b.WriteRune(r)
 		}
 	}
-	return b.String()
+	return escapeNixString(b.String())
 }
 
 func escapeIndentedNixString(s string) string {
