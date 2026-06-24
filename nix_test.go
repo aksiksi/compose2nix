@@ -169,6 +169,15 @@ func TestSystemdMount(t *testing.T) {
 	runSubtestsWithGenerator(t, g)
 }
 
+func TestSystemdMountPathEscaping(t *testing.T) {
+	composePath, _ := getPaths(t, false)
+	g := &Generator{
+		Inputs:             []string{composePath},
+		CheckSystemdMounts: true,
+	}
+	runSubtestsWithGenerator(t, g)
+}
+
 func TestUpheldBy(t *testing.T) {
 	composePath, envFilePath := getPaths(t, true)
 	g := &Generator{
