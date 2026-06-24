@@ -23,6 +23,7 @@
   virtualisation.oci-containers.containers."test-systemd-mount-with-spaces" = {
     image = "alpine";
     volumes = [
+      "/a/b/c/d	e	f:/data2:ro"
       "/a/b/c/d e f:/data:ro"
     ];
     log-driver = "journald";
@@ -43,6 +44,7 @@
       "podman-network-test_default.service"
     ];
     unitConfig.RequiresMountsFor = [
+      "/a/b/c/d\\\\te\\\\tf"
       "/a/b/c/d\\ e\\ f"
     ];
   };

@@ -4,3 +4,4 @@ services:
     image: alpine
     volumes:
       - "/a/b/c/d e f:/data:ro"
+      - "/a/b/c/d\te\tf:/data2:ro"

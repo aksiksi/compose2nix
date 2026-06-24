@@ -169,7 +169,7 @@ func TestSystemdMount(t *testing.T) {
 	runSubtestsWithGenerator(t, g)
 }
 
-func TestSystemdMountWithSpaces(t *testing.T) {
+func TestSystemdMountPathEscaping(t *testing.T) {
 	composePath, _ := getPaths(t, false)
 	g := &Generator{
 		Inputs:             []string{composePath},
