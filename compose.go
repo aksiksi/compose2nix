@@ -589,6 +589,24 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 			for _, alias := range net.Aliases {
 				c.ExtraOptions = append(c.ExtraOptions, "--network-alias="+alias)
 			}
+
+			// For multiple networks, use the inline --network=name=X,ip=Y,ip6=Z
+			// syntax so each static IP is bound to its network in a single
+			// token. The trailing --ip/--ip6 flags below handle the
+			// single-network case.
+			// https://docs.docker.com/reference/cli/docker/container/run/#network
+			if len(service.Networks) > 1 {
+				var networkOpts []string
+				if net.Ipv4Address != "" {
+					networkOpts = append(networkOpts, "ip="+net.Ipv4Address)
+				}
+				if net.Ipv6Address != "" {
+					networkOpts = append(networkOpts, "ip6="+net.Ipv6Address)
+				}
+				if len(networkOpts) > 0 {
+					networkFlag = fmt.Sprintf("--network=name=%s,%s", networkName, strings.Join(networkOpts, ","))
+				}
+			}
 		case ContainerRuntimePodman:
 			// Aliases are scoped to the current network.
 			// https://docs.podman.io/en/latest/markdown/podman-run.1.html#network-mode-net
@@ -616,12 +634,8 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 		c.ExtraOptions = append(c.ExtraOptions, networkFlag)
 	}
 
-	// NOTE(aksiksi): Docker might actually support network-scoped IPs.
-	//
-	// But, we need to think about this carefully because the flags seem to be
-	// order-depdendent. That is, the order of --network and --ip/--ip6 needs
-	// to be maintained. Since we sort the ExtraOptions array, the ordering
-	// would break without some changes.
+	// Single-network containers use the standalone --ip/--ip6 flags. For
+	// multiple networks, IPs are emitted inline above as part of --network.
 	if net := service.Networks[firstNetworkName]; len(service.Networks) == 1 && net != nil {
 		if net.Ipv4Address != "" {
 			c.ExtraOptions = append(c.ExtraOptions, "--ip="+net.Ipv4Address)

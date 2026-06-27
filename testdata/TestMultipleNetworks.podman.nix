@@ -30,8 +30,8 @@
     autoStart = false;
     extraOptions = [
       "--network-alias=traefik"
-      "--network=myproject_test1:alias=my-container"
-      "--network=myproject_test2"
+      "--network=myproject_test1:alias=my-container,ip=192.168.10.5"
+      "--network=myproject_test2:ip=192.168.11.5,ip=2001:db8:11::5"
       "--network=myproject_test3"
     ];
   };
@@ -60,7 +60,7 @@
       ExecStop = "podman network rm -f myproject_test1";
     };
     script = ''
-      podman network inspect myproject_test1 || podman network create myproject_test1 --internal
+      podman network inspect myproject_test1 || podman network create myproject_test1 --subnet=192.168.10.0/24 --internal
     '';
     partOf = [ "podman-compose-myproject-root.target" ];
     wantedBy = [ "podman-compose-myproject-root.target" ];
@@ -73,7 +73,7 @@
       ExecStop = "podman network rm -f myproject_test2";
     };
     script = ''
-      podman network inspect myproject_test2 || podman network create myproject_test2
+      podman network inspect myproject_test2 || podman network create myproject_test2 --subnet=192.168.11.0/24 --subnet=2001:db8:11::/64 --ipv6
     '';
     partOf = [ "podman-compose-myproject-root.target" ];
     wantedBy = [ "podman-compose-myproject-root.target" ];
