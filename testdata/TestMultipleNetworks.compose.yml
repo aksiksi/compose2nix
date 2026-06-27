@@ -10,13 +10,23 @@ services:
       test1:
         aliases:
           - my-container
+        ipv4_address: 192.168.10.5
       test2:
+        ipv4_address: 192.168.11.5
+        ipv6_address: 2001:db8:11::5
       test3:
     restart: unless-stopped
 
 networks:
   test1:
     internal: true
+    ipam:
+      config:
+        - subnet: 192.168.10.0/24
   test2:
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: 192.168.11.0/24
+        - subnet: 2001:db8:11::/64
   test3:
-
