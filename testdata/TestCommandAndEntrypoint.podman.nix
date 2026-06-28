@@ -22,11 +22,11 @@
   # Containers
   virtualisation.oci-containers.containers."test-both" = {
     image = "nginx:latest";
-    cmd = [ "ls" "-la" "\"escape me please\"" ];
+    cmd = [ "-g" "daemon off;" "-c" "/etc/config/nginx/conf/nginx.conf" "ls" "-la" "\"escape me please\"" ];
     log-driver = "journald";
     autoStart = false;
     extraOptions = [
-      "--entrypoint=[\"nginx\", \"-g\", \"daemon off;\", \"-c\", \"/etc/config/nginx/conf/nginx.conf\"]"
+      "--entrypoint=nginx"
       "--network-alias=both"
       "--network=test_default"
     ];
@@ -48,7 +48,7 @@
     log-driver = "journald";
     autoStart = false;
     extraOptions = [
-      "--entrypoint=[]"
+      "--entrypoint="
       "--network-alias=empty-command-and-entrypoint"
       "--network=test_default"
     ];
@@ -86,10 +86,11 @@
   };
   virtualisation.oci-containers.containers."test-string" = {
     image = "nginx:latest";
+    cmd = [ "bash" "/abc.sh" ];
     log-driver = "journald";
     autoStart = false;
     extraOptions = [
-      "--entrypoint=[\"ENV_VAR=\${ABC}\", \"bash\", \"/abc.sh\"]"
+      "--entrypoint=ENV_VAR=\${ABC}"
       "--network-alias=string"
       "--network=test_default"
     ];
