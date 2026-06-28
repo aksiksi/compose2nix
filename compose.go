@@ -495,7 +495,17 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 		c.Command = service.Command
 	}
 	if entrypoint := service.Entrypoint; !entrypoint.IsZero() {
-		c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--entrypoint=%s", sliceToStringArray(entrypoint)))
+		// Docker's --entrypoint takes a single executable
+		// Any extra argv after the executable belongs to CMD, so we prepend
+		// it to the container's command, matching compose semantics.
+		if len(entrypoint) == 0 {
+			c.ExtraOptions = append(c.ExtraOptions, `--entrypoint=`)
+		} else {
+			c.ExtraOptions = append(c.ExtraOptions, "--entrypoint="+entrypoint[0])
+			if len(entrypoint) > 1 {
+				c.Command = append(append([]string{}, entrypoint[1:]...), c.Command...)
+			}
+		}
 	}
 
 	// Figure out explicit dependencies for this container.
