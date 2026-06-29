@@ -495,7 +495,21 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 		c.Command = service.Command
 	}
 	if entrypoint := service.Entrypoint; !entrypoint.IsZero() {
-		c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--entrypoint=%s", sliceToStringArray(entrypoint)))
+		// Docker's --entrypoint flag only accepts a single argument (the
+		// executable). When Compose specifies a multi-element entrypoint, the
+		// first element is the entrypoint and the remaining elements are
+		// prepended to the command. An explicitly empty entrypoint ([]) clears
+		// the image's entrypoint, which maps to an empty --entrypoint value.
+		//
+		// See: https://github.com/aksiksi/compose2nix/issues/120
+		if len(entrypoint) == 0 {
+			c.ExtraOptions = append(c.ExtraOptions, "--entrypoint=")
+		} else {
+			c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--entrypoint=%s", entrypoint[0]))
+			if len(entrypoint) > 1 {
+				c.Command = append(append([]string{}, entrypoint[1:]...), c.Command...)
+			}
+		}
 	}
 
 	// Figure out explicit dependencies for this container.
