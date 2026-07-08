@@ -22,9 +22,9 @@
     extraOptions = [
       "--network-alias=my-container"
       "--network-alias=traefik"
-      "--network=myproject_test1"
-      "--network=myproject_test2"
       "--network=myproject_test3"
+      "--network=name=myproject_test1,ip=192.168.10.5"
+      "--network=name=myproject_test2,ip=192.168.11.5,ip6=2001:db8:11::5"
     ];
   };
   systemd.services."docker-traefik" = {
@@ -55,7 +55,7 @@
       ExecStop = "docker network rm -f myproject_test1";
     };
     script = ''
-      docker network inspect myproject_test1 || docker network create myproject_test1 --internal
+      docker network inspect myproject_test1 || docker network create myproject_test1 --subnet=192.168.10.0/24 --internal
     '';
     partOf = [ "docker-compose-myproject-root.target" ];
     wantedBy = [ "docker-compose-myproject-root.target" ];
@@ -68,7 +68,7 @@
       ExecStop = "docker network rm -f myproject_test2";
     };
     script = ''
-      docker network inspect myproject_test2 || docker network create myproject_test2
+      docker network inspect myproject_test2 || docker network create myproject_test2 --subnet=192.168.11.0/24 --subnet=2001:db8:11::/64 --ipv6
     '';
     partOf = [ "docker-compose-myproject-root.target" ];
     wantedBy = [ "docker-compose-myproject-root.target" ];
