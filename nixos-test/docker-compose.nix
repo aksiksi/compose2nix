@@ -152,6 +152,10 @@
       log-driver = "journald";
       extraOptions = [
         "--health-cmd=echo abc && true"
+        "--health-interval=2s"
+        "--health-retries=3"
+        "--health-start-period=1s"
+        "--health-timeout=5s"
         "--ip=192.168.8.20"
         "--network-alias=service-b"
         "--network=myproject_something"
