@@ -8,7 +8,8 @@
   };
 
   outputs = { self, nixpkgs, onchg, ... }: let
-    supportedSystems = [ "x86_64-linux" "x86_64-darwin" "aarch64-linux" "aarch64-darwin" ];
+    # Nixpkgs 26.11 dropped support for x86_64-darwin.
+    supportedSystems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ];
     forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
     pkgsFor = system: nixpkgs.legacyPackages.${system};
     pname = "compose2nix";
@@ -24,7 +25,7 @@
           inherit pname;
           inherit version;
           src = ./.;
-          vendorHash = "sha256-8boWHIGvenGugKq+8ysPCsUib7QQ0ov+jbKFDKpls3g=";
+          vendorHash = "sha256-kSQflAh9QuosJUvw0JhG8hjF/Q3zt3XhlPYQswEs7t4=";
         };
       }
     );
@@ -55,7 +56,7 @@
       # This test is meant to be run by nixos-test/test.sh.
       # https://nixos.org/manual/nixos/stable/index.html#sec-nixos-tests
       # https://nix.dev/tutorials/nixos/integration-testing-using-virtual-machines
-      integrationTest = pkgs.nixosTest (import ./nixos-test/test.nix);
+      integrationTest = pkgs.testers.nixosTest (import ./nixos-test/test.nix);
     };
   };
 }

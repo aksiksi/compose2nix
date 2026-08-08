@@ -10,14 +10,15 @@ let
     sha256 = "sha256-yRDW3G/JA4WjVOul4zCHE/Xnpk+7qPGtkueiFje6EOE=";
   };
   sops-nix = builtins.fetchTarball {
-    url = "https://github.com/Mic92/sops-nix/archive/5a7d18b5c55642df5c432aadb757140edfeb70b3.tar.gz";
-    sha256 = "1dk0kjms9a6in9flaz4pxrlngxj235xivgwcy9bvw60yy3brxvbr";
+    url = "https://github.com/Mic92/sops-nix/archive/f1406619a3884cd5c47992a70b8b35c9c0fcb4c9.tar.gz";
+    sha256 = "1iswdpzlyngqlipy14mjmpazx9yybvidpm4sfk74ww9jg3r849b8";
   };
   common = {
     virtualisation.graphics = false;
     virtualisation.oci-containers.containers."myproject-service-a".imageFile = nginxImage;
     virtualisation.oci-containers.containers."service-b".imageFile = nginxImage;
     virtualisation.oci-containers.containers."myproject-no-restart".imageFile = nginxImage;
+    virtualisation.oci-containers.containers."myproject-entrypoint".imageFile = nginxImage;
     environment.systemPackages = [ pkgs.jq ];
     system.stateVersion = "23.05";
   };
@@ -62,6 +63,11 @@ in
 
         # Copy age key early in boot to ensure the sops-secrets service will
         # have access to it for decryption.
+        #
+        # nixpkgs now enables the systemd stage-1 initrd by default, which does
+        # not support boot.initrd.postDeviceCommands. Keep using the scripted
+        # initrd so the command below still runs.
+        boot.initrd.systemd.enable = false;
         boot.initrd.postDeviceCommands = ''
           cp ${./sops/age-key.txt} /run/age-key.txt
           chmod 700 /run/age-key.txt
