@@ -18,9 +18,10 @@
     # Containers
     virtualisation.oci-containers.containers."myproject-entrypoint" = {
       image = "docker.io/library/nginx:stable-alpine-slim";
+      cmd = [ "abc" ];
       log-driver = "journald";
       extraOptions = [
-        "--entrypoint=[\"echo\", \"abc\"]"
+        "--entrypoint=echo"
         "--network-alias=entrypoint"
         "--network=myproject_default"
       ];
