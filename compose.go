@@ -142,6 +142,31 @@ type Generator struct {
 	rootPath               string
 }
 
+// dockerSocketPaths are the canonical bind mount source paths for the Docker
+// socket. When a container mounts one of these, the Podman runtime needs
+// dockerSocket.enable = true so that /var/run/docker.sock is exposed.
+var dockerSocketPaths = []string{"/var/run/docker.sock", "/run/docker.sock"}
+
+// enableDockerSocket returns true if the Podman runtime needs to expose a
+// Docker-compatible socket, i.e., when any container bind mounts the Docker
+// socket. This is always false for the Docker runtime, which exposes the
+// socket natively.
+func (g *Generator) enableDockerSocket(containers []*NixContainer) bool {
+	if g.Runtime != ContainerRuntimePodman {
+		return false
+	}
+	for _, container := range containers {
+		for source := range container.Volumes {
+			for _, socketPath := range dockerSocketPaths {
+				if source == socketPath {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
 func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 	rootPath, err := g.GetRootPath()
 	if err != nil {
@@ -218,21 +243,22 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 	}
 
 	return &NixContainerConfig{
-		Version:          version,
-		Project:          g.Project,
-		Runtime:          g.Runtime,
-		Containers:       containers,
-		Builds:           builds,
-		Networks:         networks,
-		Volumes:          volumes,
-		CreateRootTarget: !g.NoCreateRootTarget,
-		AutoStart:        g.AutoStart,
-		WriteNixSetup:    !g.NoWriteNixSetup,
-		AutoFormat:       g.AutoFormat,
-		IncludeBuild:     g.IncludeBuild,
-		Option:           option,
-		EnableOption:     g.EnableOption,
-		SopsConfig:       g.SopsConfig,
+		Version:            version,
+		Project:            g.Project,
+		Runtime:            g.Runtime,
+		Containers:         containers,
+		Builds:             builds,
+		Networks:           networks,
+		Volumes:            volumes,
+		CreateRootTarget:   !g.NoCreateRootTarget,
+		AutoStart:          g.AutoStart,
+		WriteNixSetup:      !g.NoWriteNixSetup,
+		EnableDockerSocket: g.enableDockerSocket(containers),
+		AutoFormat:         g.AutoFormat,
+		IncludeBuild:       g.IncludeBuild,
+		Option:             option,
+		EnableOption:       g.EnableOption,
+		SopsConfig:         g.SopsConfig,
 	}, nil
 }
 

@@ -211,6 +211,19 @@ systemd.timers."podman-auto-update".wantedBy = [ "timers.target" ];
 
 See this page for details: https://docs.podman.io/en/latest/markdown/podman-auto-update.1.html
 
+#### **Podman**: Docker socket access
+
+Some containers (e.g., Traefik) need access to the Docker socket at `/var/run/docker.sock`. If any Compose service bind mounts the Docker socket (`/var/run/docker.sock` or `/run/docker.sock`) and the runtime is Podman, `compose2nix` will automatically set `dockerSocket.enable = true;` under `virtualisation.podman` so that Podman exposes a Docker-compatible socket:
+
+```nix
+virtualisation.podman = {
+  # ...
+  dockerSocket.enable = true;
+};
+```
+
+This is a no-op for the Docker runtime, which exposes the socket natively.
+
 #### Auto-start services on boot
 
 By default, all generated services will be started by systemd on boot.

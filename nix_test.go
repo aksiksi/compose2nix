@@ -115,6 +115,15 @@ func TestProject(t *testing.T) {
 	runSubtestsWithGenerator(t, g)
 }
 
+func TestEnableDockerSocket(t *testing.T) {
+	composePath, _ := getPaths(t, false)
+	g := &Generator{
+		Inputs:    []string{composePath},
+		AutoStart: true,
+	}
+	runSubtestsWithGenerator(t, g)
+}
+
 func TestEnableOption(t *testing.T) {
 	composePath, envFilePath := getPaths(t, true)
 	g := &Generator{

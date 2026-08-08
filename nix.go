@@ -273,21 +273,22 @@ func (b *NixBuild) Command() string {
 }
 
 type NixContainerConfig struct {
-	Version          string
-	Project          *Project
-	Runtime          ContainerRuntime
-	Containers       []*NixContainer
-	Builds           []*NixBuild
-	Networks         []*NixNetwork
-	Volumes          []*NixVolume
-	CreateRootTarget bool
-	WriteNixSetup    bool
-	AutoFormat       bool
-	AutoStart        bool
-	IncludeBuild     bool
-	Option           string
-	EnableOption     bool
-	SopsConfig       *SopsConfig
+	Version            string
+	Project            *Project
+	Runtime            ContainerRuntime
+	Containers         []*NixContainer
+	Builds             []*NixBuild
+	Networks           []*NixNetwork
+	Volumes            []*NixVolume
+	CreateRootTarget   bool
+	WriteNixSetup      bool
+	EnableDockerSocket bool
+	AutoFormat         bool
+	AutoStart          bool
+	IncludeBuild       bool
+	Option             string
+	EnableOption       bool
+	SopsConfig         *SopsConfig
 }
 
 func (c *NixContainerConfig) HasSopsSecrets() bool {

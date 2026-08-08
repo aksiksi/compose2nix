@@ -5,6 +5,9 @@ virtualisation.{{.Runtime}} = {
   autoPrune.enable = true;
   {{- if eq (.Runtime | printf "%s") "podman"}}
   dockerCompat = true;
+  {{- if .EnableDockerSocket}}
+  dockerSocket.enable = true;
+  {{- end}}
   {{- end}}
 };
 {{- if eq (.Runtime | printf "%s") "podman"}}
