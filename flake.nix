@@ -24,7 +24,7 @@
           inherit pname;
           inherit version;
           src = ./.;
-          vendorHash = "sha256-8boWHIGvenGugKq+8ysPCsUib7QQ0ov+jbKFDKpls3g=";
+          vendorHash = "sha256-kSQflAh9QuosJUvw0JhG8hjF/Q3zt3XhlPYQswEs7t4=";
         };
       }
     );
@@ -55,7 +55,7 @@
       # This test is meant to be run by nixos-test/test.sh.
       # https://nixos.org/manual/nixos/stable/index.html#sec-nixos-tests
       # https://nix.dev/tutorials/nixos/integration-testing-using-virtual-machines
-      integrationTest = pkgs.nixosTest (import ./nixos-test/test.nix);
+      integrationTest = pkgs.testers.nixosTest (import ./nixos-test/test.nix);
     };
   };
 }
