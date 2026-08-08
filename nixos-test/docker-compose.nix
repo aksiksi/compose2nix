@@ -18,9 +18,10 @@
     # Containers
     virtualisation.oci-containers.containers."myproject-entrypoint" = {
       image = "docker.io/library/nginx:stable-alpine-slim";
+      cmd = [ "abc" ];
       log-driver = "journald";
       extraOptions = [
-        "--entrypoint=[\"echo\", \"abc\"]"
+        "--entrypoint=echo"
         "--network-alias=entrypoint"
         "--network=myproject_default"
       ];
@@ -152,6 +153,10 @@
       log-driver = "journald";
       extraOptions = [
         "--health-cmd=echo abc && true"
+        "--health-interval=2s"
+        "--health-retries=3"
+        "--health-start-period=1s"
+        "--health-timeout=5s"
         "--ip=192.168.8.20"
         "--network-alias=service-b"
         "--network=myproject_something"

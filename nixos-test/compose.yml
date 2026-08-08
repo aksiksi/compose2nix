@@ -39,6 +39,10 @@ services:
       - service-a
     healthcheck:
       test: echo abc && true
+      interval: 2s
+      timeout: 5s
+      start_period: 1s
+      retries: 3
     networks:
       something:
         ipv4_address: 192.168.8.20
