@@ -1,5 +1,9 @@
 
-{ pkgs, lib, ... }:
+{ pkgs, ... }:
+
+let
+  lib = pkgs.lib;
+in
 
 {
 
