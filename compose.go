@@ -893,6 +893,14 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 		c.SystemdConfig.Service.Set("TimeoutStopSec", int(g.DefaultStopTimeout.Seconds()))
 	}
 
+	// The Compose "stop_grace_period" maps to the systemd stop timeout. It takes
+	// precedence over the default stop timeout above, but can still be overridden
+	// via systemd labels below.
+	// https://docs.docker.com/reference/compose-file/services/#stop_grace_period
+	if service.StopGracePeriod != nil {
+		c.SystemdConfig.Service.Set("TimeoutStopSec", int(time.Duration(*service.StopGracePeriod).Seconds()))
+	}
+
 	// Sort slices now that we're done processing the container.
 	slices.Sort(c.DependsOn)
 	slices.Sort(c.EnvFiles)

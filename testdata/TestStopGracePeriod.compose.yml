@@ -1,0 +1,11 @@
+services:
+  # Uses stop_grace_period to configure the systemd stop timeout.
+  grace:
+    image: alpine
+    stop_grace_period: 30s
+  # A systemd label always overrides stop_grace_period.
+  grace-override:
+    image: alpine
+    stop_grace_period: 30s
+    labels:
+      compose2nix.systemd.service.TimeoutStopSec: 60

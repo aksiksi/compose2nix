@@ -422,6 +422,7 @@ If a feature is missing, please feel free to [create an issue](https://github.co
 | [`logging`](https://docs.docker.com/compose/compose-file/05-services/#logging) | ✅ | |
 | [`depends_on`](https://docs.docker.com/compose/compose-file/05-services/#depends_on) | ⚠️  | Only short syntax is supported. |
 | [`restart`](https://docs.docker.com/compose/compose-file/05-services/#restart) | ✅ | |
+| [`stop_grace_period`](https://docs.docker.com/reference/compose-file/services/#stop_grace_period) | ✅ | Maps to the systemd `TimeoutStopSec`. |
 | [`deploy.restart_policy`](https://docs.docker.com/compose/compose-file/deploy/#restart_policy) | ✅ | |
 | [`deploy.resources.limits`](https://docs.docker.com/compose/compose-file/deploy/#resources) | ✅ | |
 | [`deploy.resources.reservations.cpus`](https://docs.docker.com/compose/compose-file/deploy/#cpus) | ✅ | |

@@ -273,6 +273,15 @@ func TestOverrideSystemdStopTimeout(t *testing.T) {
 	runSubtestsWithGenerator(t, g)
 }
 
+func TestStopGracePeriod(t *testing.T) {
+	composePath, _ := getPaths(t, false)
+	g := &Generator{
+		Inputs:  []string{composePath},
+		Project: NewProject("test"),
+	}
+	runSubtestsWithGenerator(t, g)
+}
+
 func TestNoWriteNixSetup(t *testing.T) {
 	composePath, envFilePath := getPaths(t, true)
 	g := &Generator{
