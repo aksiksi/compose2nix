@@ -73,6 +73,17 @@ Install the `compose2nix` CLI via one of the following methods:
     ];
     ```
 
+    You can also `compose-containers` module by adding the to following your NixOS system:
+    ```nix
+    nixosConfigurations."yourhostname" = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      modules = [
+        compose2nix.nixosModules.compose-containers
+        ./configuration.nix
+      ];
+    };
+    ```
+
 Run `compose2nix`. Note that project must either be passed in **or** set in the Compose file's top-level "name".
 
 ```bash
@@ -80,6 +91,21 @@ compose2nix -project=myproject
 ```
 
 By default, the tool looks for `docker-compose.yml` in the **current directory** and outputs the NixOS config to `docker-compose.nix`.
+
+To use `compose-containers` module specify `virtualisation.oci-containers.compose-containers.<name>` in your NixOS config.
+
+```nix
+virtualisation.oci-containers.compose-containers."myservice" = {
+  path = ./myservice/docker-compose.yml;
+  convertOptions = {
+    default_stop_timeout = "5m";
+  };
+};
+```
+
+Specify the location of the docker compose file in the `path` attribute
+
+You can also specify options for the compose2nix command in the `convertOptions` attribute
 
 ## Roadmap
 
