@@ -54,17 +54,17 @@ func (*OsGetWd) GetWd() (string, error) {
 	return os.Getwd()
 }
 
-func parseRuntimeEnvFiles(value string, only, ignoreMissing bool) ([]string, error) {
-	if only || ignoreMissing {
+func handleRuntimeEnvFileFlags() ([]string, error) {
+	if *envFilesOnly || *ignoreMissingEnvFiles {
 		return nil, fmt.Errorf("-env_files_only and -ignore_missing_env_files are deprecated; pass runtime paths to -include_env_files and use -env_files only for build-time interpolation")
 	}
-	if value == "" {
+	if *includeEnvFiles == "" {
 		return nil, nil
 	}
-	if _, err := strconv.ParseBool(value); err == nil {
+	if _, err := strconv.ParseBool(*includeEnvFiles); err == nil {
 		return nil, fmt.Errorf("-include_env_files now requires comma-separated file paths, not a boolean; use -include_env_files=/path/to/file.env or omit it (use ./true or ./false for files with those names)")
 	}
-	files := strings.Split(value, ",")
+	files := strings.Split(*includeEnvFiles, ",")
 	for _, file := range files {
 		if strings.TrimSpace(file) == "" {
 			return nil, fmt.Errorf("-include_env_files must not contain an empty file path")
@@ -96,7 +96,7 @@ func main() {
 	if *envFiles != "" {
 		envFilesList = strings.Split(*envFiles, ",")
 	}
-	includeEnvFilesList, err := parseRuntimeEnvFiles(*includeEnvFiles, *envFilesOnly, *ignoreMissingEnvFiles)
+	includeEnvFilesList, err := handleRuntimeEnvFileFlags()
 	if err != nil {
 		log.Fatal(err)
 	}

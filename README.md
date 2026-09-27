@@ -95,6 +95,35 @@ By default, the tool looks for `docker-compose.yml` in the **current directory**
 * Output (Docker): https://github.com/aksiksi/compose2nix/blob/main/testdata/TestBasic.docker.nix
 * Output (Podman): https://github.com/aksiksi/compose2nix/blob/main/testdata/TestBasic.podman.nix
 
+### Environment files
+
+`compose2nix` handles environment files at two separate stages:
+
+- `-env_files` accepts comma-separated paths to files used for build-time
+  interpolation. These files must be available when running `compose2nix`.
+  Variables from the process environment take precedence over variables in these files.
+- `-include_env_files` accepts comma-separated paths added to `environmentFiles`
+  for all generated containers. These files are read at runtime and do not need
+  to exist on the machine running `compose2nix`.
+
+To use a file at both stages, pass it to both flags:
+
+```bash
+compose2nix -env_files=app.env -include_env_files=app.env
+```
+
+#### Migrating from the old flags
+
+Replace runtime-only usage such as
+`-env_files=secrets.env -include_env_files=true -env_files_only=true`
+with `-include_env_files=secrets.env`. Keep `-env_files` only for files needed
+for build-time interpolation.
+
+Boolean values for `-include_env_files` and enabled deprecated flags
+(`-env_files_only` and `-ignore_missing_env_files`) produce a migration error
+instead of silently changing behavior. Runtime-only files do not require
+`-ignore_missing_env_files`.
+
 ### Working with Secrets
 
 #### [agenix](https://github.com/ryantm/agenix)
@@ -110,15 +139,8 @@ By default, the tool looks for `docker-compose.yml` in the **current directory**
    ```
 
 > [!NOTE]
-> Runtime env files do not need to exist on the machine running `compose2nix`. To also use a file for build-time interpolation, pass it to both `-env_files` and `-include_env_files`.
-
-`-include_env_files` applies to all generated containers. When migrating from the
-old boolean flag, replace `-env_files=secrets.env -include_env_files=true
--env_files_only=true` with `-include_env_files=secrets.env`. Keep `-env_files`
-only for files needed for build-time interpolation. Boolean values for
-`-include_env_files` and enabled deprecated flags (`-env_files_only` and
-`-ignore_missing_env_files`) produce a migration error instead of silently
-changing behavior. Runtime-only files do not require `-ignore_missing_env_files`.
+> Runtime env files do not need to exist on the machine running `compose2nix`.
+> See [Environment files](#environment-files) for build-time interpolation and migration details.
 
 #### [sops-nix](https://github.com/Mic92/sops-nix)
 

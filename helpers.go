@@ -42,10 +42,9 @@ func sliceToStringArray(s []string) string {
 
 // ReadEnvFiles reads the given set of env files into a list of KEY=VAL entries.
 //
-// If mergeWithEnv is set, the running env is merged with the provided env files. Any
+// The running env is merged with the provided env files. Any
 // duplicate variables will be overridden by the running env.
-//
-func ReadEnvFiles(envFiles []string, mergeWithEnv bool) (env []string, _ error) {
+func ReadEnvFiles(envFiles []string) (env []string, _ error) {
 	for _, p := range envFiles {
 		if strings.TrimSpace(p) == "" {
 			continue
@@ -59,9 +58,7 @@ func ReadEnvFiles(envFiles []string, mergeWithEnv bool) (env []string, _ error) 
 		}
 	}
 
-	if mergeWithEnv {
-		env = append(env, os.Environ()...)
-	}
+	env = append(env, os.Environ()...)
 
 	return env, nil
 }

@@ -185,7 +185,7 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 		}
 	}
 
-	env, err := ReadEnvFiles(g.EnvFiles, true)
+	env, err := ReadEnvFiles(g.EnvFiles)
 	if err != nil {
 		return nil, err
 	}
