@@ -223,25 +223,22 @@ func TestEnvFiles(t *testing.T) {
 		Project:         NewProject("test"),
 		Inputs:          []string{composePath},
 		EnvFiles:        []string{envFilePath},
-		IncludeEnvFiles: true,
+		IncludeEnvFiles: []string{envFilePath},
 	}
 	runSubtestsWithGenerator(t, g)
 }
 
-func TestEnvFilesOnly(t *testing.T) {
+func TestIncludeEnvFiles(t *testing.T) {
 	composePath, envFilePath := getPaths(t, false)
 	g := &Generator{
 		Project:         NewProject("test"),
 		Inputs:          []string{composePath},
-		EnvFiles:        []string{envFilePath},
-		IncludeEnvFiles: true,
-		EnvFilesOnly:    true,
+		IncludeEnvFiles: []string{envFilePath},
 	}
 	runSubtestsWithGenerator(t, g)
 }
 
-// TODO(aksiksi): Clean this test up.
-func TestIgnoreMissingEnvFiles(t *testing.T) {
+func TestIncludeMissingEnvFiles(t *testing.T) {
 	ctx := context.Background()
 	composePath, envFilePath := getPaths(t, true)
 	cwd, err := os.Getwd()
@@ -249,13 +246,10 @@ func TestIgnoreMissingEnvFiles(t *testing.T) {
 		t.Fatal(err)
 	}
 	g := &Generator{
-		Runtime:               ContainerRuntimeDocker,
-		RootPath:              cwd,
-		Inputs:                []string{composePath},
-		EnvFiles:              []string{path.Join(t.TempDir(), "bad-path"), envFilePath},
-		IncludeEnvFiles:       true,
-		EnvFilesOnly:          true,
-		IgnoreMissingEnvFiles: true,
+		Runtime:         ContainerRuntimeDocker,
+		RootPath:        cwd,
+		Inputs:          []string{composePath},
+		IncludeEnvFiles: []string{"/missing/runtime.env", envFilePath},
 	}
 
 	if _, err := g.Run(ctx); err != nil {
@@ -424,8 +418,7 @@ func TestComposeEnvFiles(t *testing.T) {
 	g := &Generator{
 		Inputs:          []string{composePath},
 		Project:         NewProject("test"),
-		EnvFiles:        []string{"testdata/first.env"},
-		IncludeEnvFiles: true,
+		IncludeEnvFiles: []string{"testdata/first.env"},
 	}
 	runSubtestsWithGenerator(t, g)
 }

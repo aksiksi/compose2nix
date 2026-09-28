@@ -18,7 +18,6 @@
       "NAME" = "first";
     };
     environmentFiles = [
-      "override.env"
       "testdata/first.env"
     ];
     log-driver = "journald";
@@ -48,7 +47,6 @@
     };
     environmentFiles = [
       "testdata/first.env"
-      "testdata/second.env"
     ];
     log-driver = "journald";
     autoStart = false;
@@ -73,7 +71,6 @@
     image = "nginx:latest";
     environmentFiles = [
       "testdata/first.env"
-      "unknown.env"
     ];
     log-driver = "journald";
     autoStart = false;

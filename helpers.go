@@ -2,9 +2,7 @@ package main
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"slices"
@@ -44,22 +42,15 @@ func sliceToStringArray(s []string) string {
 
 // ReadEnvFiles reads the given set of env files into a list of KEY=VAL entries.
 //
-// If mergeWithEnv is set, the running env is merged with the provided env files. Any
+// The running env is merged with the provided env files. Any
 // duplicate variables will be overridden by the running env.
-//
-// If ignoreMissing is set, any missing env files will be ignored. This is useful for cases
-// where an env file is not available during conversion to Nix.
-func ReadEnvFiles(envFiles []string, mergeWithEnv, ignoreMissing bool) (env []string, _ error) {
+func ReadEnvFiles(envFiles []string) (env []string, _ error) {
 	for _, p := range envFiles {
 		if strings.TrimSpace(p) == "" {
 			continue
 		}
 		envMap, err := godotenv.Read(p)
 		if err != nil {
-			if ignoreMissing && errors.Is(err, os.ErrNotExist) {
-				log.Printf("Ignoring missing env file %q...", p)
-				continue
-			}
 			return nil, fmt.Errorf("failed to parse env file %q: %w", p, err)
 		}
 		for k, v := range envMap {
@@ -67,9 +58,7 @@ func ReadEnvFiles(envFiles []string, mergeWithEnv, ignoreMissing bool) (env []st
 		}
 	}
 
-	if mergeWithEnv {
-		env = append(env, os.Environ()...)
-	}
+	env = append(env, os.Environ()...)
 
 	return env, nil
 }

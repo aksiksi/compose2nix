@@ -9,7 +9,7 @@ bin/compose2nix \
   -inputs=nixos-test/compose.yml \
   -output=nixos-test/docker-compose.nix \
   -check_systemd_mounts \
-  -include_env_files=true \
+  -include_env_files=/tmp/test.env \
   -generate_unused_resources=true \
   -use_upheld_by \
   -option_prefix="custom.prefix" \
@@ -19,7 +19,7 @@ bin/compose2nix \
   -inputs=nixos-test/compose.yml \
   -output=nixos-test/podman-compose.nix \
   -check_systemd_mounts \
-  -include_env_files=true \
+  -include_env_files=/tmp/test.env \
   -generate_unused_resources=true \
   -use_upheld_by
 

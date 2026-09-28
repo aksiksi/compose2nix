@@ -18,6 +18,9 @@
     # Containers
     virtualisation.oci-containers.containers."myproject-entrypoint" = {
       image = "docker.io/library/nginx:stable-alpine-slim";
+      environmentFiles = [
+        "/tmp/test.env"
+      ];
       cmd = [ "abc" ];
       log-driver = "journald";
       extraOptions = [
@@ -49,6 +52,9 @@
     };
     virtualisation.oci-containers.containers."myproject-no-restart" = {
       image = "docker.io/library/nginx:stable-alpine-slim";
+      environmentFiles = [
+        "/tmp/test.env"
+      ];
       log-driver = "journald";
       extraOptions = [
         "--network-alias=no-restart"
@@ -140,6 +146,9 @@
       environment = {
         "TZ" = "America/New_York";
       };
+      environmentFiles = [
+        "/tmp/test.env"
+      ];
       volumes = [
         "/var/volumes/service-b:/config:rw"
         "myproject_books:/books:rw"

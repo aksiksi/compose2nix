@@ -115,9 +115,7 @@ type Generator struct {
 	Inputs                  []string
 	EnvFiles                []string
 	RootPath                string
-	IncludeEnvFiles         bool
-	EnvFilesOnly            bool
-	IgnoreMissingEnvFiles   bool
+	IncludeEnvFiles         []string
 	ServiceInclude          *regexp.Regexp
 	AutoStart               bool
 	UseComposeLogDriver     bool
@@ -181,8 +179,13 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 			g.EnvFiles[i] = path.Join(rootPath, p)
 		}
 	}
+	for i, p := range g.IncludeEnvFiles {
+		if !path.IsAbs(p) {
+			g.IncludeEnvFiles[i] = path.Join(rootPath, p)
+		}
+	}
 
-	env, err := ReadEnvFiles(g.EnvFiles, !g.EnvFilesOnly, g.IgnoreMissingEnvFiles)
+	env, err := ReadEnvFiles(g.EnvFiles)
 	if err != nil {
 		return nil, err
 	}
@@ -496,22 +499,11 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 		return nil, err
 	}
 
-	if g.IncludeEnvFiles || g.EnvFilesOnly {
-		// Env files provided via CLI.
-		c.EnvFiles = append(c.EnvFiles, g.EnvFiles...)
-
-		// Env files set on the Compose service.
-		for _, e := range service.EnvFiles {
-			// It's possible that an env file that was passed in via CLI is
-			// _also_ present in the Compose service (as an env_file).
-			if !slices.Contains(c.EnvFiles, e.Path) {
-				c.EnvFiles = append(c.EnvFiles, e.Path)
-			}
-		}
-	}
-	if !g.EnvFilesOnly {
-		c.Environment = composeEnvironmentToMap(service.Environment)
-	}
+	// Runtime env files are intentionally not read during generation. This
+	// allows them to exist only on the target machine (for example, when they
+	// are managed by agenix).
+	c.EnvFiles = append(c.EnvFiles, g.IncludeEnvFiles...)
+	c.Environment = composeEnvironmentToMap(service.Environment)
 
 	if err := g.handleVolumesForService(service, volumeMap, c); err != nil {
 		return nil, err

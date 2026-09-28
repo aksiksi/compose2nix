@@ -22,9 +22,19 @@
   # Containers
   virtualisation.oci-containers.containers."test-first" = {
     image = "nginx:latest";
+    environment = {
+      "CLOUDFLARE_API_KEY" = "yomama";
+      "CLOUDFLARE_EMAIL" = "aaa@aaa.com";
+      "DEPTH" = "10";
+      "DOMAIN" = "hello.us";
+      "HOME_DOMAIN" = "hey.hello.us";
+      "NAME" = "first";
+      "PGID" = "1000";
+      "PUID" = "";
+      "THEMEPARK_THEME" = "potato";
+      "TIMEZONE" = "America/New_York";
+    };
     environmentFiles = [
-      "override.env"
-      "testdata/first.env"
       "testdata/input.env"
     ];
     log-driver = "journald";
@@ -48,9 +58,12 @@
   };
   virtualisation.oci-containers.containers."test-second" = {
     image = "nginx:latest";
+    environment = {
+      "DEPTH" = "20";
+      "NAME" = "second";
+    };
     environmentFiles = [
       "testdata/input.env"
-      "testdata/second.env"
     ];
     log-driver = "journald";
     autoStart = false;

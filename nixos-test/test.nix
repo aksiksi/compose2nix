@@ -97,7 +97,7 @@ in
       m.succeed("mkdir -p /var/volumes/service-a")
       m.succeed("mkdir -p /var/volumes/service-b")
 
-      # Create env file used by service-a.
+      # Create the runtime env file shared by the generated containers.
       m.succeed("echo 'ABC=100' > /tmp/test.env")
 
     for runtime, m in d.items():
@@ -111,6 +111,10 @@ in
 
       # Wait until the health check succeeds.
       m.wait_until_succeeds(f"{runtime} inspect service-b | jq .[0].State.Health.Status | grep healthy", timeout=30)
+
+      # Runtime env files must be loaded by each container, not just service-a.
+      for container in ["myproject-service-a", "service-b", "myproject-no-restart"]:
+        m.succeed(f"{runtime} exec {container} env | grep -x 'ABC=100'")
 
       # Ensure that services have correct systemd restart settings.
       m.succeed(f"systemctl show -p Restart {runtime}-myproject-service-a.service | grep -E '=no$'")
