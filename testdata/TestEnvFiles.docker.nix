@@ -26,8 +26,6 @@
       "TIMEZONE" = "America/New_York";
     };
     environmentFiles = [
-      "override.env"
-      "testdata/first.env"
       "testdata/input.env"
     ];
     log-driver = "journald";
@@ -57,7 +55,6 @@
     };
     environmentFiles = [
       "testdata/input.env"
-      "testdata/second.env"
     ];
     log-driver = "journald";
     autoStart = false;

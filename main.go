@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -23,11 +24,11 @@ var inputs = flag.String("inputs", "docker-compose.yml", "one or more comma-sepa
 var output = flag.String("output", "docker-compose.nix", "path to output Nix file.")
 var project = flag.String("project", "", "project name used as a prefix for generated resources. this overrides any top-level \"name\" set in the Compose file(s).")
 var serviceInclude = flag.String("service_include", "", "regex pattern for services to include.")
-var envFiles = flag.String("env_files", "", "one or more comma-separated paths to .env file(s).")
+var envFiles = flag.String("env_files", "", "one or more comma-separated paths to .env file(s) to interpolate at build time.")
 var rootPath = flag.String("root_path", "", "absolute path to use as the root for any relative paths in the Compose file (e.g., volumes, env files). defaults to the current working directory.")
-var includeEnvFiles = flag.Bool("include_env_files", false, "include env files in the NixOS container definition.")
-var envFilesOnly = flag.Bool("env_files_only", false, "only use env file(s) in the NixOS container definitions.")
-var ignoreMissingEnvFiles = flag.Bool("ignore_missing_env_files", false, "if set, missing env files will be ignored.")
+var includeEnvFiles = flag.String("include_env_files", "", "one or more comma-separated paths to .env file(s) to include at runtime.")
+var envFilesOnly = flag.Bool("env_files_only", false, "deprecated: use -include_env_files with explicit runtime paths instead.")
+var ignoreMissingEnvFiles = flag.Bool("ignore_missing_env_files", false, "deprecated: runtime files passed to -include_env_files need not exist at build time.")
 var autoStart = flag.Bool("auto_start", true, "auto-start setting for generated service(s). this applies to all services, not just containers.")
 var runtime = flag.String("runtime", "podman", `one of: ["podman", "docker"].`)
 var useComposeLogDriver = flag.Bool("use_compose_log_driver", false, "if set, always use the Docker Compose log driver.")
@@ -53,6 +54,25 @@ func (*OsGetWd) GetWd() (string, error) {
 	return os.Getwd()
 }
 
+func handleRuntimeEnvFileFlags() ([]string, error) {
+	if *envFilesOnly || *ignoreMissingEnvFiles {
+		return nil, fmt.Errorf("-env_files_only and -ignore_missing_env_files are deprecated; pass runtime paths to -include_env_files and use -env_files only for build-time interpolation")
+	}
+	if *includeEnvFiles == "" {
+		return nil, nil
+	}
+	if _, err := strconv.ParseBool(*includeEnvFiles); err == nil {
+		return nil, fmt.Errorf("-include_env_files now requires comma-separated file paths, not a boolean; use -include_env_files=/path/to/file.env or omit it (use ./true or ./false for files with those names)")
+	}
+	files := strings.Split(*includeEnvFiles, ",")
+	for _, file := range files {
+		if strings.TrimSpace(file) == "" {
+			return nil, fmt.Errorf("-include_env_files must not contain an empty file path")
+		}
+	}
+	return files, nil
+}
+
 func main() {
 	flag.Parse()
 
@@ -75,6 +95,10 @@ func main() {
 	var envFilesList []string
 	if *envFiles != "" {
 		envFilesList = strings.Split(*envFiles, ",")
+	}
+	includeEnvFilesList, err := handleRuntimeEnvFileFlags()
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	var containerRuntime ContainerRuntime
@@ -110,9 +134,7 @@ func main() {
 		Inputs:                  inputs,
 		EnvFiles:                envFilesList,
 		RootPath:                *rootPath,
-		IncludeEnvFiles:         *includeEnvFiles,
-		EnvFilesOnly:            *envFilesOnly,
-		IgnoreMissingEnvFiles:   *ignoreMissingEnvFiles,
+		IncludeEnvFiles:         includeEnvFilesList,
 		ServiceInclude:          serviceIncludeRegexp,
 		AutoStart:               *autoStart,
 		UseComposeLogDriver:     *useComposeLogDriver,
