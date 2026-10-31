@@ -1,0 +1,4 @@
+services:
+  signal:
+    image: alpine
+    stop_signal: SIGINT
