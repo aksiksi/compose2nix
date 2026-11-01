@@ -898,6 +898,10 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 		c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--stop-timeout=%d", periodSeconds))
 	}
 
+	if service.StopSignal != "" {
+		c.ExtraOptions = append(c.ExtraOptions, fmt.Sprintf("--stop-signal=%s", service.StopSignal))
+	}
+
 	// Sort slices now that we're done processing the container.
 	slices.Sort(c.DependsOn)
 	slices.Sort(c.EnvFiles)
