@@ -1,0 +1,12 @@
+services:
+  always:
+    image: nginx:latest
+    pull_policy: always
+  never:
+    image: nginx:latest
+    pull_policy: never
+  missing:
+    image: nginx:latest
+    pull_policy: if_not_present
+  unset:
+    image: nginx:latest
