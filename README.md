@@ -440,7 +440,7 @@ If a feature is missing, please feel free to [create an issue](https://github.co
 |   |     | Notes |
 |---|:---:|-------|
 | [`image`](https://docs.docker.com/compose/compose-file/05-services/#image) | ✅ | |
-| [`pull_policy`](https://docs.docker.com/reference/compose-file/services/#pull_policy) | ✅ | Mapped to the oci-container `pull` option for image-only services. |
+| [`pull_policy`](https://docs.docker.com/reference/compose-file/services/#pull_policy) | ⚠️ | Only `always`, `never`, and `missing` (the canonical name for `if_not_present`) are mapped to the oci-container `pull` option for image-only services; `build`/unset keep the default and time-based policies are ignored. |
 | [`container_name`](https://docs.docker.com/compose/compose-file/05-services/#container_name) | ✅ | |
 | [`environment`](https://docs.docker.com/compose/compose-file/05-services/#environment) | ✅ | |
 | [`env_file`](https://docs.docker.com/compose/compose-file/05-services/#env_file) | ✅ | |
