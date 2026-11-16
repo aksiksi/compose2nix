@@ -499,12 +499,10 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 	// applies to services that reference a published image, not local builds.
 	if service.Build == nil {
 		switch NewServicePullPolicy(service.PullPolicy) {
-		case ServicePullPolicyAlways:
-			c.PullPolicy = "always"
-		case ServicePullPolicyNever:
-			c.PullPolicy = "never"
+		case ServicePullPolicyAlways, ServicePullPolicyNever:
+			c.PullPolicy = service.PullPolicy
 		case ServicePullPolicyMissing:
-			c.PullPolicy = "missing"
+			c.PullPolicy = "missing" // canonical name
 		}
 	}
 

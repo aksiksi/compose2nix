@@ -8,5 +8,8 @@ services:
   missing:
     image: nginx:latest
     pull_policy: if_not_present
+  missing-canonical:
+    image: nginx:latest
+    pull_policy: missing
   unset:
     image: nginx:latest
