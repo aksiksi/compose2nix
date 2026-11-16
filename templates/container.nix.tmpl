@@ -1,5 +1,8 @@
 virtualisation.oci-containers.containers."{{.Name}}" = {
   image = "{{.Image}}";
+  {{- if .PullPolicy}}
+  pull = "{{.PullPolicy}}";
+  {{- end}}
 
   {{- if .Environment}}
   environment = {

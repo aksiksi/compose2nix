@@ -177,6 +177,7 @@ type NixContainer struct {
 	Runtime       ContainerRuntime
 	Name          string
 	Image         string
+	PullPolicy    string
 	Environment   map[string]string
 	EnvFiles      []string
 	Volumes       map[string]string

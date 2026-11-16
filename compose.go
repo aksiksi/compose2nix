@@ -495,6 +495,17 @@ func (g *Generator) buildNixContainer(service types.ServiceConfig, networkMap ma
 		AutoStart:     g.AutoStart,
 	}
 
+	// NixOS pulls an image before starting the container. The policy only
+	// applies to services that reference a published image, not local builds.
+	if service.Build == nil {
+		switch NewServicePullPolicy(service.PullPolicy) {
+		case ServicePullPolicyAlways, ServicePullPolicyNever:
+			c.PullPolicy = service.PullPolicy
+		case ServicePullPolicyMissing:
+			c.PullPolicy = "missing" // canonical name
+		}
+	}
+
 	if err := parseNixContainerLabels(c, g.SopsConfig); err != nil {
 		return nil, err
 	}
