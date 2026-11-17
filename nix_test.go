@@ -168,6 +168,37 @@ func TestSystemdValueEscaping(t *testing.T) {
 	runSubtestsWithGenerator(t, g)
 }
 
+func TestEnableOption_NumericProject(t *testing.T) {
+	composePath, envFilePath := getPaths(t, true)
+	g := &Generator{
+		Project:      NewProject("1proj"),
+		Inputs:       []string{composePath},
+		EnvFiles:     []string{envFilePath},
+		EnableOption: true,
+	}
+	runSubtestsWithGenerator(t, g)
+}
+
+func TestNixAttributePath(t *testing.T) {
+	cases := []struct {
+		in   string
+		want string
+	}{
+		{"myproject", "myproject"},
+		{"custom.containers.myproject", "custom.containers.myproject"},
+		{"1proj", `"1proj"`},
+		{"with", `"with"`},
+		{"a.1b", `a."1b"`},
+		{`weird"name`, `"weird\"name"`},
+		{"${x}", `"\${x}"`},
+	}
+	for _, c := range cases {
+		if got := nixAttributePath(c.in); got != c.want {
+			t.Errorf("nixAttributePath(%q) = %q, want %q", c.in, got, c.want)
+		}
+	}
+}
+
 func TestUnusedResources(t *testing.T) {
 	composePath, _ := getPaths(t, false)
 	g := &Generator{
