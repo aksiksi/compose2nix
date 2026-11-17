@@ -348,6 +348,49 @@ func parseHealthCheck(c *NixContainer, service types.ServiceConfig, runtime Cont
 	return nil
 }
 
+// volumeMountOptions returns the long-syntax mount options that a --volume
+// string cannot express, and warns when nocopy is requested on a runtime that
+// ignores it. Read-only is not included: named volumes express it in their
+// short form, and the anonymous path adds it when it uses --mount anyway.
+func (g *Generator) volumeMountOptions(serviceName string, v types.ServiceVolumeConfig, runtime ContainerRuntime) ([]string, error) {
+	var options []string
+	if v.Volume != nil && v.Volume.Subpath != "" {
+		options = append(options, "volume-subpath="+v.Volume.Subpath)
+	}
+
+	noCopyRequested := v.Volume != nil && v.Volume.NoCopy
+	noCopySupported := runtime == ContainerRuntimeDocker
+	if noCopyRequested && !noCopySupported {
+		if err := g.checkOrWarn(
+			"service %q: 'nocopy' is not supported for %s runtime and will be ignored",
+			serviceName, runtime,
+		); err != nil {
+			return nil, err
+		}
+	}
+	if noCopyRequested && noCopySupported {
+		options = append(options, "volume-nocopy")
+	}
+	return options, nil
+}
+
+// volumeMountFlag renders the --mount flag for a volume. An empty source means
+// an anonymous volume, which Docker and Podman accept without a source.
+func volumeMountFlag(v types.ServiceVolumeConfig, source string, options []string, readOnly bool) string {
+	// Docker: https://docs.docker.com/reference/cli/docker/container/run/#mount
+	// Podman: https://docs.podman.io/en/latest/markdown/podman-run.1.html#mount-type-type-type-specific-option
+	parts := []string{"type=" + v.Type}
+	if source != "" {
+		parts = append(parts, "source="+source)
+	}
+	parts = append(parts, "target="+v.Target)
+	parts = append(parts, options...)
+	if readOnly {
+		parts = append(parts, "readonly")
+	}
+	return "--mount=" + strings.Join(parts, ",")
+}
+
 func (g *Generator) handleVolumesForService(service types.ServiceConfig, volumeMap map[string]*NixVolume, c *NixContainer) error {
 	for _, v := range service.Volumes {
 		// Handle tmpfs volumes first.
@@ -385,31 +428,12 @@ func (g *Generator) handleVolumesForService(service types.ServiceConfig, volumeM
 		// ":/<target>" spec under the shared "" map key and drops all but the
 		// last anonymous volume.
 		if v.Type == types.VolumeTypeVolume && v.Source == "" {
-			hasLongSyntaxSubpath := v.Volume != nil && v.Volume.Subpath != ""
-			hasNoCopyRequested := v.Volume != nil && v.Volume.NoCopy
-			hasNoCopyEffective := hasNoCopyRequested && c.Runtime == ContainerRuntimeDocker
-
-			if hasNoCopyRequested && !hasNoCopyEffective {
-				if err := g.checkOrWarn(
-					"service %q: 'nocopy' is not supported for %s runtime and will be ignored",
-					service.Name, c.Runtime,
-				); err != nil {
-					return err
-				}
+			options, err := g.volumeMountOptions(service.Name, v, c.Runtime)
+			if err != nil {
+				return err
 			}
-
-			if v.ReadOnly || hasLongSyntaxSubpath || hasNoCopyEffective {
-				mount := fmt.Sprintf("type=volume,target=%s", v.Target)
-				if hasLongSyntaxSubpath {
-					mount += fmt.Sprintf(",volume-subpath=%s", v.Volume.Subpath)
-				}
-				if hasNoCopyEffective {
-					mount += ",volume-nocopy"
-				}
-				if v.ReadOnly {
-					mount += ",readonly"
-				}
-				c.ExtraOptions = append(c.ExtraOptions, "--mount="+mount)
+			if v.ReadOnly || len(options) > 0 {
+				c.ExtraOptions = append(c.ExtraOptions, volumeMountFlag(v, "", options, v.ReadOnly))
 			} else {
 				// Docker and Podman create a fresh anonymous volume per entry.
 				// The prefix keeps the key distinct from a bind mount whose
@@ -420,43 +444,13 @@ func (g *Generator) handleVolumesForService(service types.ServiceConfig, volumeM
 		}
 
 		if volume, ok := volumeMap[v.Source]; ok {
-			// compose-go does not differentiate between short and long syntax, so we'll use long-only fields to try to tell the difference.
-			hasLongSyntaxSubpath := v.Volume != nil && v.Volume.Subpath != ""
-			hasNoCopyRequested := v.Volume != nil && v.Volume.NoCopy
-			noCopySupported := c.Runtime == ContainerRuntimeDocker
-			hasNoCopyEffective := hasNoCopyRequested && noCopySupported
-
-			if hasNoCopyRequested && !noCopySupported {
-				if err := g.checkOrWarn(
-					"service %q: 'nocopy' is not supported for %s runtime and will be ignored",
-					service.Name, c.Runtime,
-				); err != nil {
-					return err
-				}
+			options, err := g.volumeMountOptions(service.Name, v, c.Runtime)
+			if err != nil {
+				return err
 			}
 
-			needsMountOptions := hasLongSyntaxSubpath || hasNoCopyEffective
-
-			if needsMountOptions {
-				// Handle long syntax by passing --mount flag to the backend
-				// Docker: https://docs.docker.com/reference/cli/docker/container/run/#mount
-				// Podman: https://docs.podman.io/en/latest/markdown/podman-run.1.html#mount-type-type-type-specific-option
-
-				mount := fmt.Sprintf("type=%s,source=%s,target=%s", v.Type, volume.Name, v.Target)
-
-				if hasLongSyntaxSubpath {
-					mount += fmt.Sprintf(",volume-subpath=%s", v.Volume.Subpath)
-				}
-
-				if hasNoCopyEffective {
-					mount += ",volume-nocopy"
-				}
-
-				if v.ReadOnly {
-					mount += ",readonly"
-				}
-
-				c.ExtraOptions = append(c.ExtraOptions, "--mount="+mount)
+			if len(options) > 0 {
+				c.ExtraOptions = append(c.ExtraOptions, volumeMountFlag(v, volume.Name, options, v.ReadOnly))
 
 				// Used to force generation of volume creation.
 				// Empty strings are filtered from the volumes attribute.

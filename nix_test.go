@@ -422,7 +422,7 @@ func TestAnonymousVolumeNoCopyWarningAsError(t *testing.T) {
 		Runtime:          ContainerRuntimePodman,
 		WarningsAsErrors: true,
 	}
-	if _, err := g.Run(context.Background()); err == nil || !strings.Contains(err.Error(), "'nocopy' is not supported") {
+	if _, err := g.Run(t.Context()); err == nil || !strings.Contains(err.Error(), "'nocopy' is not supported") {
 		t.Fatalf("expected the nocopy warning to fail generation, got %v", err)
 	}
 }
