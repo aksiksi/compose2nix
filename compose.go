@@ -377,6 +377,48 @@ func (g *Generator) handleVolumesForService(service types.ServiceConfig, volumeM
 			continue
 		}
 
+		// Compose treats a volume with no source as an anonymous volume: the
+		// engine creates one per entry. A target-only --volume is the direct
+		// equivalent for the common case; options the short syntax cannot
+		// express need --mount. Without this branch the empty source falls
+		// through to the bind-mount path, which renders an invalid
+		// ":/<target>" spec under the shared "" map key and drops all but the
+		// last anonymous volume.
+		if v.Type == types.VolumeTypeVolume && v.Source == "" {
+			hasLongSyntaxSubpath := v.Volume != nil && v.Volume.Subpath != ""
+			hasNoCopyRequested := v.Volume != nil && v.Volume.NoCopy
+			hasNoCopyEffective := hasNoCopyRequested && c.Runtime == ContainerRuntimeDocker
+
+			if hasNoCopyRequested && !hasNoCopyEffective {
+				if err := g.checkOrWarn(
+					"service %q: 'nocopy' is not supported for %s runtime and will be ignored",
+					service.Name, c.Runtime,
+				); err != nil {
+					return err
+				}
+			}
+
+			if v.ReadOnly || hasLongSyntaxSubpath || hasNoCopyEffective {
+				mount := fmt.Sprintf("type=volume,target=%s", v.Target)
+				if hasLongSyntaxSubpath {
+					mount += fmt.Sprintf(",volume-subpath=%s", v.Volume.Subpath)
+				}
+				if hasNoCopyEffective {
+					mount += ",volume-nocopy"
+				}
+				if v.ReadOnly {
+					mount += ",readonly"
+				}
+				c.ExtraOptions = append(c.ExtraOptions, "--mount="+mount)
+			} else {
+				// Docker and Podman create a fresh anonymous volume per entry.
+				// The prefix keeps the key distinct from a bind mount whose
+				// source equals this target; the template renders values only.
+				c.Volumes["anonymous:"+v.Target] = v.Target
+			}
+			continue
+		}
+
 		if volume, ok := volumeMap[v.Source]; ok {
 			// compose-go does not differentiate between short and long syntax, so we'll use long-only fields to try to tell the difference.
 			hasLongSyntaxSubpath := v.Volume != nil && v.Volume.Subpath != ""
