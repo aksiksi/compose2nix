@@ -165,6 +165,33 @@ func (g *Generator) enableDockerSocket(containers []*NixContainer) bool {
 	return false
 }
 
+// Nix keywords cannot be bare attribute names in an attrset path.
+var nixKeywords = map[string]bool{
+	"assert": true, "else": true, "if": true, "in": true, "inherit": true,
+	"let": true, "or": true, "rec": true, "then": true, "with": true,
+}
+
+var nixIdentifierRegexp = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_'-]*$`)
+
+// nixAttributePath renders a dotted option path, quoting each segment that is
+// not a bare Nix identifier. Compose project names may start with a digit
+// (valid in Compose, invalid as a Nix identifier) and option_prefix segments
+// are free form, so interpolating the path unquoted can produce unparseable
+// Nix.
+func nixAttributePath(option string) string {
+	if option == "" {
+		return option
+	}
+	segments := strings.Split(option, ".")
+	for i, segment := range segments {
+		if nixIdentifierRegexp.MatchString(segment) && !nixKeywords[segment] {
+			continue
+		}
+		segments[i] = `"` + escapeNixString(segment) + `"`
+	}
+	return strings.Join(segments, ".")
+}
+
 func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 	rootPath, err := g.GetRootPath()
 	if err != nil {
@@ -259,7 +286,7 @@ func (g *Generator) Run(ctx context.Context) (*NixContainerConfig, error) {
 		EnableDockerSocket: g.enableDockerSocket(containers),
 		AutoFormat:         g.AutoFormat,
 		IncludeBuild:       g.IncludeBuild,
-		Option:             option,
+		Option:             nixAttributePath(option),
 		EnableOption:       g.EnableOption,
 		SopsConfig:         g.SopsConfig,
 	}, nil
