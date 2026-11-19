@@ -1,0 +1,6 @@
+services:
+  escaping:
+    image: alpine
+    labels:
+      compose2nix.systemd.service.ExecStartPre: "/bin/echo $${HOME}"
+      compose2nix.systemd.unit.Description: 'back\slash'
