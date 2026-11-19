@@ -444,7 +444,7 @@ If a feature is missing, please feel free to [create an issue](https://github.co
 | [`container_name`](https://docs.docker.com/compose/compose-file/05-services/#container_name) | ✅ | |
 | [`environment`](https://docs.docker.com/compose/compose-file/05-services/#environment) | ✅ | |
 | [`env_file`](https://docs.docker.com/compose/compose-file/05-services/#env_file) | ✅ | |
-| [`volumes`](https://docs.docker.com/compose/compose-file/05-services/#volumes) | ✅ | Short/long syntax and tmpfs mounts (via `type: tmpfs`) supported.|
+| [`volumes`](https://docs.docker.com/compose/compose-file/05-services/#volumes) | ✅ | Short/long syntax, anonymous (source-less) volumes, and tmpfs mounts (via `type: tmpfs`) supported. Anonymous volumes are recreated whenever the container unit starts. |
 | [`tmpfs`](https://docs.docker.com/compose/compose-file/05-services/#tmpfs) | ✅ | Accepts both list syntax and per-mount options.|
 | [`labels`](https://docs.docker.com/compose/compose-file/05-services/#labels) | ✅ | |
 | [`ports`](https://docs.docker.com/compose/compose-file/05-services/#ports) | ✅ | |

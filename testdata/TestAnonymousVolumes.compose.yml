@@ -1,0 +1,31 @@
+services:
+  app:
+    image: alpine
+    volumes:
+      - /data
+      - /cache
+  readonly:
+    image: alpine
+    volumes:
+      - type: volume
+        target: /state
+        read_only: true
+  collision:
+    image: alpine
+    volumes:
+      - /srv/data:/host-data
+      - /srv/data
+  nocopy:
+    image: alpine
+    volumes:
+      - type: volume
+        target: /tmpcache
+        volume:
+          nocopy: true
+  subpath:
+    image: alpine
+    volumes:
+      - type: volume
+        target: /withsub
+        volume:
+          subpath: nested
