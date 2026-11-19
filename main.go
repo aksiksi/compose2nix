@@ -65,10 +65,12 @@ func handleRuntimeEnvFileFlags() ([]string, error) {
 		return nil, fmt.Errorf("-include_env_files now requires comma-separated file paths, not a boolean; use -include_env_files=/path/to/file.env or omit it (use ./true or ./false for files with those names)")
 	}
 	files := strings.Split(*includeEnvFiles, ",")
-	for _, file := range files {
-		if strings.TrimSpace(file) == "" {
+	for i, file := range files {
+		file = strings.TrimSpace(file)
+		if file == "" {
 			return nil, fmt.Errorf("-include_env_files must not contain an empty file path")
 		}
+		files[i] = file
 	}
 	return files, nil
 }
