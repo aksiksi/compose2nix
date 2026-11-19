@@ -42,9 +42,6 @@ func derefInt(v *int) int {
 func toNixValue(v any) any {
 	switch v := v.(type) {
 	case string:
-		// Do not use %q here: escapeNixString already produced Nix escapes,
-		// and %q would double-escape backslashes and turn a literal ${...}
-		// into an interpolation.
 		return fmt.Sprintf(`"%s"`, escapeNixString(v))
 	default:
 		return v
