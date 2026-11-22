@@ -597,6 +597,15 @@ func TestNullVolumeDeclaration(t *testing.T) {
 	runSubtestsWithGenerator(t, g)
 }
 
+func TestPortsWithHostIP(t *testing.T) {
+	composePath, _ := getPaths(t, false)
+	g := &Generator{
+		Inputs:  []string{composePath},
+		Project: NewProject("test"),
+	}
+	runSubtestsWithGenerator(t, g)
+}
+
 func TestUlimits(t *testing.T) {
 	composePath, _ := getPaths(t, false)
 	g := &Generator{

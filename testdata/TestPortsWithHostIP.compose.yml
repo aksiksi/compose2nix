@@ -1,0 +1,15 @@
+# Ports that pin a host IP without pinning a host port. The generated
+# --publish/ports entries must keep the empty host-port field, otherwise the
+# host IP is read back as a host port and the runtime rejects the spec.
+name: test
+services:
+  app:
+    image: nginx
+    ports:
+      - "8080:80"
+      - "127.0.0.1::9090"
+      - "[::1]::9092"
+      - target: 9091
+        host_ip: 127.0.0.1
+        protocol: tcp
+      - "80"

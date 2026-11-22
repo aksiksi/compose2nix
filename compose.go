@@ -74,9 +74,24 @@ func composeEnvironmentToMap(env types.MappingWithEquals) map[string]string {
 func portConfigsToPortStrings(portConfigs []types.ServicePortConfig) []string {
 	var ports []string
 	for _, c := range portConfigs {
+		hostIP := c.HostIP
+		// Podman's --publish parser only recognises an IPv6 host address when it
+		// is bracketed, and the bracketed form is also what the Compose spec
+		// documents for IPv6. Without the brackets "::1:8080:80" is ambiguous.
+		if strings.Contains(hostIP, ":") && !strings.HasPrefix(hostIP, "[") {
+			hostIP = "[" + hostIP + "]"
+		}
+
 		var ipAndPorts []string
-		if c.HostIP != "" {
-			ipAndPorts = append(ipAndPorts, c.HostIP)
+		if hostIP != "" {
+			ipAndPorts = append(ipAndPorts, hostIP)
+			// The short syntax is [HOST_IP:][HOST_PORT:]CONTAINER_PORT. A host IP
+			// without a host port must still emit the empty host-port field;
+			// otherwise "ip:containerPort" is parsed as a host port, and the
+			// runtime rejects the port spec.
+			if c.Published == "" {
+				ipAndPorts = append(ipAndPorts, "")
+			}
 		}
 		if c.Published != "" {
 			ipAndPorts = append(ipAndPorts, c.Published)
