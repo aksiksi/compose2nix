@@ -42,7 +42,7 @@ func derefInt(v *int) int {
 func toNixValue(v any) any {
 	switch v := v.(type) {
 	case string:
-		return fmt.Sprintf("%q", escapeNixString(v))
+		return fmt.Sprintf(`"%s"`, escapeNixString(v))
 	default:
 		return v
 	}

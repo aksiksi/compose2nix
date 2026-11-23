@@ -159,6 +159,15 @@ func TestOptionPrefix(t *testing.T) {
 	runSubtestsWithGenerator(t, g)
 }
 
+func TestSystemdValueEscaping(t *testing.T) {
+	composePath, _ := getPaths(t, false)
+	g := &Generator{
+		Inputs:  []string{composePath},
+		Project: NewProject("test"),
+	}
+	runSubtestsWithGenerator(t, g)
+}
+
 func TestUnusedResources(t *testing.T) {
 	composePath, _ := getPaths(t, false)
 	g := &Generator{
