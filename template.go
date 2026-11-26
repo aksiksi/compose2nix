@@ -3,6 +3,7 @@ package main
 import (
 	"embed"
 	"fmt"
+	"regexp"
 	"strings"
 	"text/template"
 
@@ -37,6 +38,20 @@ func indentNonEmpty(spaces int, text string) string {
 
 func derefInt(v *int) int {
 	return *v
+}
+
+var nixIdentifierRegexp = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_'-]*$`)
+
+// toNixAttrName quotes names which cannot be used as a bare attribute name.
+func toNixAttrName(name string) string {
+	switch name {
+	case "assert", "else", "if", "in", "inherit", "let", "or", "rec", "then", "with":
+	default:
+		if nixIdentifierRegexp.MatchString(name) {
+			return name
+		}
+	}
+	return fmt.Sprintf(`"%s"`, escapeNixString(name))
 }
 
 func toNixValue(v any) any {
@@ -102,4 +117,5 @@ var funcMap template.FuncMap = template.FuncMap{
 	"escapeNixString":         escapeNixString,
 	"escapeIndentedNixString": escapeIndentedNixString,
 	"escapeSystemdValue":      escapeSystemdValue,
+	"toNixAttrName":           toNixAttrName,
 }
